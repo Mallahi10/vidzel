@@ -1,11 +1,25 @@
-node_modules
-.next
-.DS_Store
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# env files
 .env
 .env.local
-build
-dist
+.env.development.local
+.env.test.local
+.env.production.local
+
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.vscode
+
+# OS
+.DS_Store
+Thumbs.db
