@@ -1,0 +1,117 @@
+/* =========================
+   HEADER CONTAINER (SOFT GLASS)
+========================= */
+.header {
+  width: 100%;
+  padding: 0.60rem 3rem;
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  /* 🧊 SOFT GLASS */
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =========================
+   BRAND
+========================= */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.tagline {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navItem {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.navItem:hover {
+  text-decoration: underline;
+}
+
+/* 🔴 Logout */
+.logout {
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.logout:hover {
+  opacity: 0.85;
+}
+
+/* =========================
+   DARK MODE (SOFT)
+========================= */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .name {
+    color: #f8fafc;
+  }
+
+  .tagline {
+    color: #94a3b8;
+  }
+
+  .navItem {
+    color: #e5e7eb;
+  }
+}

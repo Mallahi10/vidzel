@@ -1,0 +1,98 @@
+/* =========================
+   WRAPPER
+========================= */
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* =========================
+   NOTIFICATIONS BUTTON
+========================= */
+.bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin: 0 0.75rem;
+
+  /* 🔵 Logo blue */
+  color: #2563eb;
+
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Text label */
+.label {
+  white-space: nowrap;
+}
+
+/* =========================
+   UNREAD BADGE
+========================= */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+/* =========================
+   DROPDOWN
+========================= */
+.dropdown {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+}
+
+/* =========================
+   NOTIFICATION ITEMS
+========================= */
+.notification {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+}
+
+.notification:last-child {
+  border-bottom: none;
+}
+
+.notification:hover {
+  background: #f8fafc;
+}
+
+/* Unread notification */
+.unread {
+  background: #eff6ff;
+}
+
+/* Message text */
+.message {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Empty state */
+.empty {
+  padding: 1rem;
+  color: #64748b;
+  text-align: center;
+}

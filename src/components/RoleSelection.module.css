@@ -1,0 +1,56 @@
+/* =============================
+   Role Cards Layout
+============================= */
+
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.roleCard {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: left;
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.roleCard:hover {
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* =============================
+   Connected Journey Arrows
+============================= */
+
+.roleCard::after {
+  content: "→";
+  position: absolute;
+  right: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+/* Remove arrow from last card */
+.roleCard:last-child::after {
+  display: none;
+}
+
+/* Hide arrows on mobile */
+@media (max-width: 768px) {
+  .roleCard::after {
+    display: none;
+  }
+}
