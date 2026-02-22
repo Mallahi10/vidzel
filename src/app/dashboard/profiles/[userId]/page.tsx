@@ -1,9 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
+
+/* ================= TYPES ================= */
 
 type UserProfile = {
   userId: string;
@@ -16,31 +19,37 @@ type UserProfile = {
   education?: string;
   experience: string;
   resumeFileName?: string;
-  resumeUrl?: string; // ✅ ADDED
+  resumeUrl?: string;
   updatedAt: string;
 };
 
-export default function Page() {
+/* ================= PAGE ================= */
+
+function Page() {
   const { user } = useAuth();
   const router = useRouter();
 
   const params = useParams();
-  const userId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const userId = Array.isArray(params.userId)
+    ? params.userId[0]
+    : params.userId;
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [inviteStatus, setInviteStatus] = useState<
     "none" | "pending" | "accepted" | "declined"
   >("none");
 
+  /* ================= LOAD DATA ================= */
+
   useEffect(() => {
     if (!user || user.role !== "organization") return;
 
-    const storedProfiles = JSON.parse(
+    const storedProfiles: UserProfile[] = JSON.parse(
       localStorage.getItem("vidzel_profiles") || "[]"
     );
 
     const foundProfile = storedProfiles.find(
-      (p: UserProfile) => p.userId === userId
+      (p) => String(p.userId) === String(userId)
     );
 
     setProfile(foundProfile || null);
@@ -51,7 +60,7 @@ export default function Page() {
 
     const existingInvite = invitations.find(
       (i: any) =>
-        i.invitedUserId === userId &&
+        String(i.invitedUserId) === String(userId) &&
         i.invitedByOrgEmail === user.email
     );
 
@@ -126,10 +135,7 @@ export default function Page() {
       respondedAt: null,
     });
 
-    localStorage.setItem(
-      "vidzel_invitations",
-      JSON.stringify(invitations)
-    );
+    localStorage.setItem("vidzel_invitations", JSON.stringify(invitations));
 
     setInviteStatus("pending");
     alert("Invitation sent successfully.");
@@ -160,66 +166,36 @@ export default function Page() {
         {profile.fullName} ({profile.role})
       </h1>
 
-      <div style={section}>
-        <div style={label}>Location</div>
-        <div style={value}>{profile.location || "—"}</div>
-      </div>
-
-      <div style={section}>
-        <div style={label}>Bio</div>
-        <div style={value}>{profile.bio || "—"}</div>
-      </div>
-
-      <div style={section}>
-        <div style={label}>Skills</div>
-        <div style={value}>{profile.skills || "—"}</div>
-      </div>
-
+      <Section label="Location" value={profile.location} />
+      <Section label="Bio" value={profile.bio} />
+      <Section label="Skills" value={profile.skills} />
       {profile.education && (
-        <div style={section}>
-          <div style={label}>Education</div>
-          <div style={value}>{profile.education}</div>
-        </div>
+        <Section label="Education" value={profile.education} />
       )}
-
       {profile.availability && (
-        <div style={section}>
-          <div style={label}>Availability</div>
-          <div style={value}>{profile.availability}</div>
-        </div>
+        <Section label="Availability" value={profile.availability} />
       )}
+      <Section label="Experience" value={profile.experience} />
 
+      {/* RESUME */}
       <div style={section}>
-        <div style={label}>Experience</div>
-        <div style={value}>{profile.experience || "—"}</div>
-      </div>
-
-      {/* ✅ RESUME — FIXED */}
-      {profile.resumeUrl ? (
-        <div style={section}>
-          <div style={label}>Resume</div>
+        <div style={label}>Resume</div>
+        {profile.resumeUrl ? (
           <a
             href={profile.resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              color: "#2563eb",
-              fontWeight: 600,
-              textDecoration: "underline",
-            }}
+            style={{ color: "#2563eb", fontWeight: 600 }}
           >
-            📄 View / Download Resume
+            📄 View / Download
             {profile.resumeFileName
               ? ` (${profile.resumeFileName})`
               : ""}
           </a>
-        </div>
-      ) : (
-        <div style={section}>
-          <div style={label}>Resume</div>
+        ) : (
           <div style={value}>—</div>
-        </div>
-      )}
+        )}
+      </div>
 
       <p style={{ marginTop: "2rem", fontSize: "0.9rem", color: "#666" }}>
         Last updated: {formatUpdatedAt(profile.updatedAt)}
@@ -232,36 +208,36 @@ export default function Page() {
       )}
 
       {inviteStatus === "pending" && (
-        <div style={pill("#fef3c7", "#92400e")}>
-          ⏳ Invitation Pending
-        </div>
+        <div style={pill("#fef3c7", "#92400e")}>⏳ Invitation Pending</div>
       )}
 
       {inviteStatus === "accepted" && (
-        <div style={pill("#dcfce7", "#166534")}>
-          ✅ Invitation Accepted
-        </div>
+        <div style={pill("#dcfce7", "#166534")}>✅ Invitation Accepted</div>
       )}
 
       {inviteStatus === "declined" && (
-        <div style={pill("#fee2e2", "#991b1b")}>
-          ❌ Invitation Declined
-        </div>
+        <div style={pill("#fee2e2", "#991b1b")}>❌ Invitation Declined</div>
       )}
+    </div>
+  );
+}
+
+/* ================= HELPERS ================= */
+
+function Section({ label: l, value: v }: { label: string; value?: string }) {
+  return (
+    <div style={section}>
+      <div style={label}>{l}</div>
+      <div style={value}>{v || "—"}</div>
     </div>
   );
 }
 
 /* ================= STYLES ================= */
 
-const section = {
-  marginBottom: "1.25rem",
-};
+const section = { marginBottom: "1.25rem" };
 
-const label = {
-  fontWeight: 700,
-  marginBottom: "0.25rem",
-};
+const label = { fontWeight: 700, marginBottom: "0.25rem" };
 
 const value = {
   color: "#0f172a",
@@ -276,4 +252,10 @@ const pill = (bg: string, color: string) => ({
   color,
   fontWeight: 600,
   display: "inline-block",
+});
+
+/* ================= EXPORT (CRITICAL) ================= */
+
+export default dynamic(() => Promise.resolve(Page), {
+  ssr: false,
 });
