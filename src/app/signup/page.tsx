@@ -6,20 +6,30 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 
+/* ======================
+   TYPES
+====================== */
+
+type Role = "organization" | "student" | "volunteer" | "mentor";
+
+/* ======================
+   SIGNUP CONTENT
+====================== */
+
 function SignupContent() {
   const searchParams = useSearchParams();
-  const roleFromUrl = searchParams.get("role");
+  const router = useRouter();
+  const { signup } = useAuth();
 
-  const [role, setRole] = useState<
-    "organization" | "student" | "volunteer" | "mentor"
-  >((roleFromUrl as any) || "student");
+  // ✅ Normalize role from URL (always lowercase)
+  const roleFromUrl = searchParams
+    .get("role")
+    ?.toLowerCase() as Role | undefined;
 
+  const [role, setRole] = useState<Role>(roleFromUrl || "student");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const { signup } = useAuth();
-  const router = useRouter();
 
   const handleSignup = () => {
     if (!name || !email || !password) {
@@ -34,12 +44,20 @@ function SignupContent() {
       return;
     }
 
+    // ✅ Organization never goes to profile creation
     if (role === "organization") {
       router.push("/dashboard/projects");
     } else {
       router.push("/dashboard/profile");
     }
   };
+
+  const roles: { value: Role; label: string }[] = [
+    { value: "organization", label: "Organization" },
+    { value: "student", label: "Student" },
+    { value: "volunteer", label: "Volunteer" },
+    { value: "mentor", label: "Mentor" },
+  ];
 
   return (
     <main style={container}>
@@ -76,16 +94,16 @@ function SignupContent() {
 
         <div style={{ marginBottom: "1.25rem" }}>
           <p>Select your role:</p>
-          {["Organization", "Student", "Volunteer", "Mentor"].map((r) => (
-            <label key={r} style={{ display: "block" }}>
+          {roles.map(({ value, label }) => (
+            <label key={value} style={{ display: "block" }}>
               <input
                 type="radio"
-                value={r}
-                checked={role === r}
-                onChange={() => setRole(r as any)}
+                value={value}
+                checked={role === value}
+                onChange={() => setRole(value)}
                 style={{ marginRight: "0.4rem" }}
               />
-              {r}
+              {label}
             </label>
           ))}
         </div>
@@ -105,6 +123,10 @@ function SignupContent() {
   );
 }
 
+/* ======================
+   PAGE WRAPPER
+====================== */
+
 export default function SignupPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -122,8 +144,6 @@ const container = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-
-  /* Strong visible contrast so glass effect shows */
   background:
     "radial-gradient(circle at top, rgba(37,99,235,0.18), transparent 60%)",
 };
@@ -132,19 +152,13 @@ const card = {
   width: "100%",
   maxWidth: "420px",
   padding: "2.5rem",
-
-  /* 🧊 GLASS EFFECT */
   background:
     "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65))",
-
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-
   borderRadius: "18px",
   border: "1px solid rgba(255,255,255,0.5)",
-
-  boxShadow:
-    "0 25px 50px rgba(15, 23, 42, 0.2)",
+  boxShadow: "0 25px 50px rgba(15, 23, 42, 0.2)",
 };
 
 const roleBadge = {

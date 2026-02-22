@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +9,7 @@ import Button from "@/components/Button";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
 
   const handleLogin = () => {
@@ -19,9 +19,20 @@ export default function LoginPage() {
       alert("Invalid email or password");
       return;
     }
-
-    router.push("/dashboard");
+    // ⛔ DO NOT redirect here
+    // We wait for user to be set
   };
+
+  // ✅ Redirect AFTER auth state is ready
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.role === "organization") {
+      router.push("/dashboard/projects");
+    } else {
+      router.push("/dashboard/profile");
+    }
+  }, [user, router]);
 
   return (
     <main style={container}>
@@ -68,8 +79,6 @@ const container = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-
-  /* 🔥 Force visible background contrast */
   background:
     "radial-gradient(circle at top, rgba(37,99,235,0.18), transparent 60%)",
 };
@@ -78,19 +87,13 @@ const card = {
   width: "100%",
   maxWidth: "420px",
   padding: "2.5rem",
-
-  /* 🧊 GLASS — VISIBLE IN ALL BROWSERS */
   background:
     "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65))",
-
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-
   borderRadius: "18px",
   border: "1px solid rgba(255,255,255,0.5)",
-
-  boxShadow:
-    "0 25px 50px rgba(15, 23, 42, 0.2)",
+  boxShadow: "0 25px 50px rgba(15, 23, 42, 0.2)",
 };
 
 const input = {

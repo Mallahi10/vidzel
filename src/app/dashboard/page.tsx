@@ -2,16 +2,34 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/Button";
 
 import styles from "./dashboard.module.css";
 
+type Role = "organization" | "volunteer" | "student" | "mentor";
+
+function normalizeRole(role: unknown): Role | "unknown" {
+  if (typeof role !== "string") return "unknown";
+  const r = role.trim().toLowerCase();
+  if (r === "organization" || r === "volunteer" || r === "student" || r === "mentor") {
+    return r as Role;
+  }
+  return "unknown";
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [hasProfile, setHasProfile] = useState(false);
+
+  const role = useMemo(() => normalizeRole(user?.role), [user?.role]);
+  const isOrg = role === "organization";
+  const roleLabel =
+    role === "unknown"
+      ? "Dashboard"
+      : `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`;
 
   // Redirect if not logged in
   useEffect(() => {
@@ -19,49 +37,44 @@ export default function Dashboard() {
       router.push("/signup");
       return;
     }
-
-    if (user.role !== "organization") {
-      const profiles = JSON.parse(
-        localStorage.getItem("vidzel_profiles") || "[]"
-      );
-
-      const found = profiles.some((p: any) => p.userId === user.id);
-      setHasProfile(found);
-    }
   }, [user, router]);
+
+  // Check profile existence only for non-organizations
+  useEffect(() => {
+    if (!user) return;
+
+    // Prevent stale state if you previously logged in as a member
+    if (isOrg) {
+      setHasProfile(false);
+      return;
+    }
+
+    const profiles = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
+    const found = profiles.some((p: any) => p?.userId === user.id);
+    setHasProfile(found);
+  }, [user, isOrg]);
 
   if (!user) return null;
 
   return (
     <div className={styles.dashboard}>
       {/* ===== HEADER ===== */}
-      <header
-        className={styles.header}
-        style={{ position: "relative" }}
-      >
+      <header className={styles.header} style={{ position: "relative" }}>
         <div>
-          <h1 className={styles.pageTitle}>
-            Welcome back, {user.name}
-          </h1>
+          <h1 className={styles.pageTitle}>Welcome back, {user.name}</h1>
 
           <p className={styles.pageSubtitle}>
             Manage your activity and track your work in one place.
           </p>
 
-          <span className={styles.roleBadge}>
-            {user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard
-          </span>
+          <span className={styles.roleBadge}>{roleLabel}</span>
         </div>
 
         {/* ORG CREATE PROJECT BUTTON */}
-        {user.role === "organization" && (
+        {isOrg && (
           <Link
             href="/dashboard/projects/create"
-            style={{
-              position: "absolute",
-              top: "0",
-              right: "0",
-            }}
+            style={{ position: "absolute", top: "0", right: "0" }}
           >
             <Button>+ Create Project</Button>
           </Link>
@@ -69,7 +82,7 @@ export default function Dashboard() {
       </header>
 
       {/* ================= ORGANIZATION VIEW ================= */}
-      {user.role === "organization" && (
+      {isOrg && (
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
@@ -88,9 +101,7 @@ export default function Dashboard() {
               </div>
 
               <Link href="/dashboard/projects">
-                <Button variant="secondary">
-                  View My Projects →
-                </Button>
+                <Button variant="secondary">View My Projects →</Button>
               </Link>
             </div>
 
@@ -101,9 +112,7 @@ export default function Dashboard() {
               </div>
 
               <Link href="/dashboard/profiles">
-                <Button variant="secondary">
-                  Browse Profiles →
-                </Button>
+                <Button variant="secondary">Browse Profiles →</Button>
               </Link>
             </div>
 
@@ -114,9 +123,7 @@ export default function Dashboard() {
               </div>
 
               <Link href="/dashboard/workspaces">
-                <Button variant="secondary">
-                  View Workspaces →
-                </Button>
+                <Button variant="secondary">View Workspaces →</Button>
               </Link>
             </div>
           </div>
@@ -124,7 +131,7 @@ export default function Dashboard() {
       )}
 
       {/* ================= VOLUNTEER / STUDENT / MENTOR ================= */}
-      {user.role !== "organization" && (
+      {!isOrg && (
         <>
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
@@ -172,9 +179,7 @@ export default function Dashboard() {
                 </div>
 
                 <Link href="/dashboard/invitations">
-                  <Button variant="secondary">
-                    View Invitations →
-                  </Button>
+                  <Button variant="secondary">View Invitations →</Button>
                 </Link>
               </div>
 
@@ -186,13 +191,11 @@ export default function Dashboard() {
                 </div>
 
                 <Link href="/dashboard/workspaces">
-                  <Button variant="secondary">
-                    View Workspaces →
-                  </Button>
+                  <Button variant="secondary">View Workspaces →</Button>
                 </Link>
               </div>
 
-              {/* ✅ NEW — Completed Projects */}
+              {/* Completed Projects */}
               <div className={styles.card}>
                 <div className={styles.cardTitle}>Completed Projects</div>
                 <div className={styles.cardMeta}>
@@ -200,11 +203,8 @@ export default function Dashboard() {
                 </div>
 
                 <Link href="/dashboard/completed-projects">
-  <Button variant="secondary">
-    Completed Projects →
-  </Button>
-</Link>
-
+                  <Button variant="secondary">Completed Projects →</Button>
+                </Link>
               </div>
             </div>
           </section>
@@ -221,9 +221,7 @@ export default function Dashboard() {
 
             <div className={styles.card}>
               <Link href="/dashboard/explore">
-                <Button variant="secondary">
-                  Browse Projects →
-                </Button>
+                <Button variant="secondary">Browse Projects →</Button>
               </Link>
             </div>
           </section>

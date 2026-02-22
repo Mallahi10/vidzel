@@ -1,14 +1,17 @@
-// @ts-nocheck
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+
+/* ================= TYPES ================= */
+
+type Role = "organization" | "student" | "volunteer" | "mentor";
 
 type User = {
   id: string;
   name: string;
   email: string;
   password: string;
-  role: "organization" | "student" | "volunteer" | "mentor";
+  role: Role;
 };
 
 type AuthContextType = {
@@ -17,11 +20,24 @@ type AuthContextType = {
     name: string,
     email: string,
     password: string,
-    role: User["role"]
+    role: Role
   ) => boolean;
   login: (email: string, password: string) => User | null;
   logout: () => void;
 };
+
+/* ================= HELPERS ================= */
+
+function normalizeRole(role: unknown): Role {
+  if (typeof role !== "string") return "volunteer";
+  const r = role.trim().toLowerCase();
+  if (r === "organization" || r === "student" || r === "volunteer" || r === "mentor") {
+    return r as Role;
+  }
+  return "volunteer";
+}
+
+/* ================= CONTEXT ================= */
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -31,19 +47,27 @@ export const useAuth = () => {
   return ctx;
 };
 
+/* ================= PROVIDER ================= */
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  /* ================= RESTORE SESSION ================= */
-
+  /* ========== RESTORE SESSION ========== */
   useEffect(() => {
     const session = localStorage.getItem("vidzel_session");
-    if (session) {
-      setUser(JSON.parse(session));
-    }
+    if (!session) return;
+
+    const parsed = JSON.parse(session);
+    const restored: User = {
+      ...parsed,
+      role: normalizeRole(parsed.role),
+    };
+
+    setUser(restored);
+    localStorage.setItem("vidzel_session", JSON.stringify(restored));
   }, []);
 
-  /* ================= HELPERS ================= */
+  /* ========== STORAGE HELPERS ========== */
 
   const getAccounts = (): User[] =>
     JSON.parse(localStorage.getItem("vidzel_accounts") || "[]");
@@ -63,10 +87,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     name: string,
     email: string,
     password: string,
-    role: User["role"]
+    role: Role
   ) => {
     const accounts = getAccounts();
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedRole = normalizeRole(role);
 
     if (accounts.some((u) => u.email === normalizedEmail)) {
       return false;
@@ -77,45 +102,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       name: name.trim(),
       email: normalizedEmail,
       password: password.trim(),
-      role,
+      role: normalizedRole,
     };
 
-    // 1️⃣ Save account
-    const updatedAccounts = [...accounts, newUser];
-    saveAccounts(updatedAccounts);
+    saveAccounts([...accounts, newUser]);
 
-    // 2️⃣ AUTO-CREATE PROFILE (NON-ORGANIZATIONS ONLY)
-    if (role !== "organization") {
+    // auto-create profile ONLY for non-organizations
+    if (normalizedRole !== "organization") {
       const profiles = getProfiles();
-
-      const alreadyExists = profiles.some(
-        (p: any) => p.userId === newUser.id
-      );
-
-      if (!alreadyExists) {
-        profiles.push({
-          userId: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          bio: "",
-          location: "",
-          skills: [],
-          createdAt: new Date().toISOString(),
-        });
-
-        saveProfiles(profiles);
-      }
+      profiles.push({
+        userId: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        bio: "",
+        location: "",
+        skills: [],
+        createdAt: new Date().toISOString(),
+      });
+      saveProfiles(profiles);
     }
 
-    // 3️⃣ Start session
     localStorage.setItem("vidzel_session", JSON.stringify(newUser));
     setUser(newUser);
 
     return true;
   };
 
-  /* ================= LOGIN ================= */
+  /* ================= LOGIN (CRITICAL FIX) ================= */
 
   const login = (email: string, password: string): User | null => {
     const accounts = getAccounts();
@@ -123,18 +137,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPassword = password.trim();
 
-    const found = accounts.find(
-      (u) =>
-        u.email === normalizedEmail &&
-        u.password === normalizedPassword
-    );
+    // 🔴 SEARCH FROM LAST TO FIRST (FIXES ROLE OVERRIDE BUG)
+    const found = [...accounts]
+      .reverse()
+      .find(
+        (u) =>
+          u.email === normalizedEmail &&
+          u.password === normalizedPassword
+      );
 
     if (!found) return null;
 
-    localStorage.setItem("vidzel_session", JSON.stringify(found));
-    setUser(found);
+    const normalizedUser: User = {
+      ...found,
+      role: normalizeRole(found.role),
+    };
 
-    return found;
+    localStorage.setItem("vidzel_session", JSON.stringify(normalizedUser));
+    setUser(normalizedUser);
+
+    return normalizedUser;
   };
 
   /* ================= LOGOUT ================= */
