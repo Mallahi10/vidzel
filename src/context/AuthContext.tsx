@@ -31,7 +31,12 @@ type AuthContextType = {
 function normalizeRole(role: unknown): Role {
   if (typeof role !== "string") return "volunteer";
   const r = role.trim().toLowerCase();
-  if (r === "organization" || r === "student" || r === "volunteer" || r === "mentor") {
+  if (
+    r === "organization" ||
+    r === "student" ||
+    r === "volunteer" ||
+    r === "mentor"
+  ) {
     return r as Role;
   }
   return "volunteer";
@@ -52,19 +57,19 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  /* ========== RESTORE SESSION ========== */
+  /* ========== RESTORE SESSION (SINGLE SOURCE) ========== */
   useEffect(() => {
-    const session = localStorage.getItem("vidzel_session");
-    if (!session) return;
+    const stored = localStorage.getItem("vidzel_user");
+    if (!stored) return;
 
-    const parsed = JSON.parse(session);
+    const parsed = JSON.parse(stored);
     const restored: User = {
       ...parsed,
       role: normalizeRole(parsed.role),
     };
 
     setUser(restored);
-    localStorage.setItem("vidzel_session", JSON.stringify(restored));
+    localStorage.setItem("vidzel_user", JSON.stringify(restored));
   }, []);
 
   /* ========== STORAGE HELPERS ========== */
@@ -107,7 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     saveAccounts([...accounts, newUser]);
 
-    // auto-create profile ONLY for non-organizations
+    // ✅ create profile ONLY for non-organization
     if (normalizedRole !== "organization") {
       const profiles = getProfiles();
       profiles.push({
@@ -123,21 +128,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       saveProfiles(profiles);
     }
 
-    localStorage.setItem("vidzel_session", JSON.stringify(newUser));
+    localStorage.setItem("vidzel_user", JSON.stringify(newUser));
     setUser(newUser);
 
     return true;
   };
 
-  /* ================= LOGIN (CRITICAL FIX) ================= */
+  /* ================= LOGIN ================= */
 
   const login = (email: string, password: string): User | null => {
     const accounts = getAccounts();
-
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPassword = password.trim();
 
-    // 🔴 SEARCH FROM LAST TO FIRST (FIXES ROLE OVERRIDE BUG)
     const found = [...accounts]
       .reverse()
       .find(
@@ -153,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       role: normalizeRole(found.role),
     };
 
-    localStorage.setItem("vidzel_session", JSON.stringify(normalizedUser));
+    localStorage.setItem("vidzel_user", JSON.stringify(normalizedUser));
     setUser(normalizedUser);
 
     return normalizedUser;
@@ -162,7 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   /* ================= LOGOUT ================= */
 
   const logout = () => {
-    localStorage.removeItem("vidzel_session");
+    localStorage.removeItem("vidzel_user");
     setUser(null);
   };
 

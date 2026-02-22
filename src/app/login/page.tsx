@@ -28,9 +28,11 @@ export default function LoginPage() {
     if (!user) return;
 
     if (user.role === "organization") {
-      router.push("/dashboard/projects");
+      // ✅ go to ORGANIZATION dashboard router
+      router.push("/dashboard");
     } else {
-      router.push("/dashboard/profile");
+      // ✅ members go to dashboard router too
+      router.push("/dashboard");
     }
   }, [user, router]);
 
