@@ -37,7 +37,6 @@ function normalizeSubmission(s: any): Submission {
     return s;
   }
 
-  // Convert old single submission → versioned submission
   return {
     id: s.id,
     workspaceId: s.workspaceId,
@@ -94,12 +93,12 @@ export default function SubmissionSection({
     if (!user || isOrganization) return;
     if (!title.trim() || !link.trim()) return;
 
-    const stored: any[] = JSON.parse(
+    const stored: Submission[] = JSON.parse(
       localStorage.getItem("vidzel_workspace_submissions") || "[]"
     ).map(normalizeSubmission);
 
     const existing = stored.find(
-      (s: Submission) =>
+      (s) =>
         String(s.workspaceId) === String(workspaceId) &&
         String(s.userId) === String(user.id)
     );
@@ -115,7 +114,7 @@ export default function SubmissionSection({
     let updated: Submission[];
 
     if (existing) {
-      updated = stored.map((s: Submission) =>
+      updated = stored.map((s) =>
         s.id === existing.id
           ? { ...s, versions: [...s.versions, newVersion] }
           : s
@@ -157,7 +156,7 @@ export default function SubmissionSection({
     submissionId: string,
     versionId: string,
     comment: string,
-    status: SubmissionVersion["feedback"]["status"]
+    status: NonNullable<SubmissionVersion["feedback"]>["status"]
   ) => {
     if (!isOrganization || !comment.trim()) return;
 
@@ -209,7 +208,6 @@ export default function SubmissionSection({
     <section>
       <h2 style={{ marginBottom: "1rem" }}>Submissions</h2>
 
-      {/* SUBMIT FORM */}
       {!isOrganization && (
         <div style={{ marginBottom: "1.5rem" }}>
           <input
@@ -239,7 +237,6 @@ export default function SubmissionSection({
         </div>
       )}
 
-      {/* SUBMISSIONS LIST */}
       {visibleSubmissions.length === 0 ? (
         <p style={{ color: "#64748b" }}>No submissions yet.</p>
       ) : (
@@ -280,9 +277,7 @@ export default function SubmissionSection({
                       borderRadius: "8px",
                     }}
                   >
-                    <strong>
-                      Feedback ({v.feedback.status})
-                    </strong>
+                    <strong>Feedback ({v.feedback.status})</strong>
                     <p>{v.feedback.comment}</p>
                   </div>
                 )}

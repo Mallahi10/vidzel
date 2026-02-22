@@ -152,7 +152,9 @@ export default function ExploreProjectsPage() {
             }}
           >
             <Link href={`/dashboard/projects/${project.id}`}>
-              <Button variant="outline">View Details</Button>
+              <Button variant="secondary">
+                View Details
+              </Button>
             </Link>
 
             {appliedIds.includes(project.id) ? (

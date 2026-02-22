@@ -1,30 +1,61 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { UserRole } from '@/context/AuthContext';
-import styles from '../app/page.module.css';
-import { Shield, GraduationCap, Heart, Users } from 'lucide-react';
-import { Sora } from 'next/font/google';
+import React from "react";
+import { useRouter } from "next/navigation";
+import styles from "../app/page.module.css";
+import { Shield, GraduationCap, Heart, Users } from "lucide-react";
+import { Sora } from "next/font/google";
 
-/* Load Sora locally for role cards */
+/* ================= TYPES ================= */
+
+type UserRole = "organization" | "student" | "volunteer" | "mentor";
+
+/* ================= FONT ================= */
+
 const sora = Sora({
-  subsets: ['latin'],
-  weight: ['400', '600'],
+  subsets: ["latin"],
+  weight: ["400", "600"],
 });
+
+/* ================= COMPONENT ================= */
 
 export default function RoleSelection() {
   const router = useRouter();
 
   const handleSelect = (role: UserRole) => {
-    router.push(`/login?role=${role.toLowerCase()}`);
+    router.push(`/login?role=${role}`);
   };
 
-  const roles = [
-    { id: 'ORGANIZATION', label: 'Organization', icon: Shield, desc: 'Setup projects & enable impact.' },
-    { id: 'STUDENT', label: 'Student', icon: GraduationCap, desc: 'Find verifiable project work.' },
-    { id: 'VOLUNTEER', label: 'Volunteer', icon: Heart, desc: 'Contribute skills meaningfully.' },
-    { id: 'MENTOR', label: 'Mentor', icon: Users, desc: 'Share expertise & guide teams.' },
+  const roles: {
+    id: UserRole;
+    label: string;
+    icon: React.ElementType;
+    desc: string;
+  }[] = [
+    {
+      id: "organization",
+      label: "Organization",
+      icon: Shield,
+      desc: "Setup projects & enable impact.",
+    },
+    {
+      id: "student",
+      label: "Student",
+      icon: GraduationCap,
+      desc: "Find verifiable project work.",
+    },
+    {
+      id: "volunteer",
+      label: "Volunteer",
+      icon: Heart,
+      desc: "Contribute skills meaningfully.",
+    },
+    {
+      id: "mentor",
+      label: "Mentor",
+      icon: Users,
+      desc: "Share expertise & guide teams.",
+    },
   ];
 
   return (
@@ -33,9 +64,9 @@ export default function RoleSelection() {
         <div
           key={item.id}
           className={`${styles.roleCard} glass-card`}
-          onClick={() => handleSelect(item.id as UserRole)}
+          onClick={() => handleSelect(item.id)}
         >
-          {/* 🔹 Icon + Title aligned horizontally */}
+          {/* Icon + Title */}
           <div className={styles.roleHeader}>
             <item.icon size={28} className={styles.roleIcon} />
 

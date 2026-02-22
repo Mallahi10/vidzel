@@ -1,94 +1,168 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import Button from "@/components/Button";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Button from "@/components/Button";
 
-export default function ApplicantsPage() {
-  const { id } = useParams();
-  const router = useRouter();
+/* ================= TYPES ================= */
+
+type Application = {
+  id: string;
+  projectId: string;
+
+  applicantId?: string;
+  applicantName?: string;
+  applicantEmail?: string;
+  applicantRole?: string;
+
+  status?: "pending" | "accepted" | "rejected";
+  createdAt?: string;
+};
+
+type Account = {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+};
+
+/* ================= STORAGE KEYS ================= */
+
+const LS = {
+  applications: "vidzel_applications",
+  accounts: "vidzel_accounts",
+};
+
+function readLS<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/* ================= PAGE ================= */
+
+export default function ProjectApplicantsPage() {
   const { user } = useAuth();
+  const params = useParams();
+  const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !projectId) return;
 
-    const apps = JSON.parse(
-      localStorage.getItem("vidzel_applications") || "[]"
-    );
+    setApplications(readLS<Application[]>(LS.applications, []));
+    setAccounts(readLS<Account[]>(LS.accounts, []));
+  }, [user, projectId]);
 
-    setApplications(
-      apps.filter(
-        (a: any) => String(a.projectId) === String(id)
-      )
-    );
-  }, [id, user]);
+  if (!user) {
+    return <div style={{ padding: "3rem" }}>Please log in.</div>;
+  }
 
-  /* 🔐 HARD ACCESS RULE */
-  if (!user || user.role !== "organization") {
+  if (user.role !== "organization") {
     return (
       <div style={{ padding: "3rem" }}>
-        Access denied.
+        Only organizations can view applicants.
       </div>
     );
   }
 
-  return (
-    <div style={{ padding: "3rem", maxWidth: "900px" }}>
-      <h1>Applicants</h1>
+  /* ================= FILTER ================= */
 
-      {applications.length === 0 && (
-        <p style={{ color: "#64748b" }}>
-          No applications yet.
-        </p>
+  const projectApplications = useMemo(() => {
+    return applications.filter(
+      (a) => String(a.projectId) === String(projectId)
+    );
+  }, [applications, projectId]);
+
+  const accountById = useMemo(() => {
+    const map = new Map<string, Account>();
+    accounts.forEach((a) => map.set(String(a.id), a));
+    return map;
+  }, [accounts]);
+
+  const resolveAccount = (app: Application): Account | null => {
+    if (app.applicantId && accountById.has(String(app.applicantId))) {
+      return accountById.get(String(app.applicantId)) || null;
+    }
+    return null;
+  };
+
+  /* ================= UI ================= */
+
+  return (
+    <div style={{ padding: "3rem", maxWidth: "1000px" }}>
+      <h1>Project Applicants</h1>
+
+      {projectApplications.length === 0 && (
+        <p style={{ color: "#64748b" }}>No applicants yet.</p>
       )}
 
-      {applications.map((app) => (
-        <div
-          key={app.id}
-          style={{
-            marginTop: "1rem",
-            padding: "1.25rem",
-            border: "1px solid #e5e7eb",
-            borderRadius: "12px",
-            background: "white",
-          }}
-        >
-          <strong>
-            {app.applicantName || "Unnamed Applicant"}
-          </strong>{" "}
-          <span style={{ color: "#64748b" }}>
-            ({app.applicantRole})
-          </span>
+      {projectApplications.map((app) => {
+        const account = resolveAccount(app);
 
-          {app.applicantEmail && (
-            <p style={{ marginTop: "0.25rem", color: "#64748b" }}>
-              {app.applicantEmail}
-            </p>
-          )}
+        const displayName =
+          app.applicantName ||
+          account?.name ||
+          "Unnamed Applicant";
 
-          <p>Status: {app.status}</p>
+        return (
+          <div
+            key={app.id}
+            style={{
+              marginTop: "1rem",
+              padding: "1.25rem",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              background: "white",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "1rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <p style={{ margin: 0 }}>
+                  <strong>{displayName}</strong>{" "}
+                  <span style={{ color: "#64748b" }}>
+                    ({app.applicantRole || account?.role || "—"})
+                  </span>
+                </p>
 
-          {app.applicantId && (
-            <Link href={`/dashboard/profiles/${app.applicantId}`}>
-              <Button variant="outline">
-                View Profile
-              </Button>
-            </Link>
-          )}
-        </div>
-      ))}
+                {(app.applicantEmail || account?.email) && (
+                  <p style={{ margin: "0.25rem 0 0", color: "#64748b" }}>
+                    {app.applicantEmail || account?.email}
+                  </p>
+                )}
 
-      <Button
-        variant="secondary"
-        onClick={() => router.back()}
-        style={{ marginTop: "2rem" }}
-      >
-        ← Back
-      </Button>
+                <p style={{ margin: "0.5rem 0 0" }}>
+                  Status: {app.status || "pending"}
+                </p>
+              </div>
+
+              {app.applicantId && (
+                <Link href={`/dashboard/profiles/${app.applicantId}`}>
+                  <Button variant="secondary">
+                    View Profile
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

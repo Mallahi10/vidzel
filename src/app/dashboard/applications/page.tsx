@@ -183,12 +183,12 @@ export default function ApplicationsPage() {
 
               {applicantAccountId ? (
                 <Link href={`/dashboard/profiles/${applicantAccountId}`}>
-                  <Button variant="outline">
+                  <Button variant="secondary">
                     View Profile
                   </Button>
                 </Link>
               ) : (
-                <Button variant="outline" disabled>
+                <Button variant="secondary" disabled>
                   View Profile
                 </Button>
               )}

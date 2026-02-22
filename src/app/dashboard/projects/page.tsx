@@ -92,7 +92,8 @@ export default function Page() {
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
-          <Button variant="outline" onClick={() => router.back()}>
+          {/* ✅ FIXED */}
+          <Button variant="secondary" onClick={() => router.back()}>
             ← Back
           </Button>
 
@@ -152,7 +153,6 @@ export default function Page() {
             </div>
 
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {/* ✅ FIXED LINK */}
               <Link href={`/dashboard/projects/${project.id}/applicants`}>
                 <Button variant="secondary">👤➕ Applicants</Button>
               </Link>
@@ -161,8 +161,9 @@ export default function Page() {
                 <Button variant="secondary">✏️ Edit</Button>
               </Link>
 
+              {/* ✅ FIXED */}
               <Link href={`/dashboard/workspaces/${project.id}`}>
-                <Button variant="outline">📂 Open Workspace</Button>
+                <Button variant="secondary">📂 Open Workspace</Button>
               </Link>
 
               {!isCompleted && (
