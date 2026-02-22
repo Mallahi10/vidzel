@@ -2,11 +2,13 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import { addNotification } from "@/lib/notifications";
 
 export default function InvitationsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [invitations, setInvitations] = useState<any[]>([]);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export default function InvitationsPage() {
         // =========================
         addNotification({
           id: crypto.randomUUID(),
-          userId: newMember.userId, // invited user
+          userId: newMember.userId,
           type: "invitation",
           title: "Project Invitation Accepted",
           message: `You’ve joined the project "${project.title}"`,
@@ -146,6 +148,16 @@ export default function InvitationsPage() {
 
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
+      {/* 🔙 BACK BUTTON */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <button
+          onClick={() => router.push("/dashboard")}
+          style={backButtonStyle}
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+
       <h1>My Invitations</h1>
 
       {invitations.length === 0 && (
@@ -193,3 +205,15 @@ export default function InvitationsPage() {
     </div>
   );
 }
+
+/* ================= STYLES ================= */
+
+const backButtonStyle = {
+  padding: "0.5rem 1.2rem",
+  borderRadius: "999px",
+  border: "2px solid #2563eb",
+  background: "white",
+  color: "#2563eb",
+  fontWeight: 600,
+  cursor: "pointer",
+};

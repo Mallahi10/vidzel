@@ -117,7 +117,10 @@ export default function ProfilePage() {
 
     const updated = stored.filter((p: UserProfile) => p.userId !== user.id);
 
-    localStorage.setItem("vidzel_profiles", JSON.stringify([...updated, updatedProfile]));
+    localStorage.setItem(
+      "vidzel_profiles",
+      JSON.stringify([...updated, updatedProfile])
+    );
 
     setIsSaved(true);
   };
@@ -136,7 +139,12 @@ export default function ProfilePage() {
 
         <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
           <Button onClick={() => setIsSaved(false)}>Edit Profile</Button>
-          <Button onClick={() => router.push("/dashboard/explore")}>Explore Projects</Button>
+          <Button onClick={() => router.push("/dashboard/explore")}>
+            Explore Projects
+          </Button>
+          <Button variant="secondary" onClick={() => router.push("/dashboard")}>
+            ← Back to Dashboard
+          </Button>
         </div>
       </div>
     );
@@ -147,6 +155,16 @@ export default function ProfilePage() {
   ====================== */
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
+      {/* 🔙 BACK BUTTON */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <button
+          onClick={() => router.push("/dashboard")}
+          style={backButtonStyle}
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+
       <h1 style={{ marginBottom: "1.5rem" }}>
         {role.charAt(0).toUpperCase() + role.slice(1)} Profile
       </h1>
@@ -184,7 +202,9 @@ export default function ProfilePage() {
           <label>Availability</label>
           <input
             value={profile.availability}
-            onChange={(e) => setProfile({ ...profile, availability: e.target.value })}
+            onChange={(e) =>
+              setProfile({ ...profile, availability: e.target.value })
+            }
             style={input}
           />
         </>
@@ -195,7 +215,9 @@ export default function ProfilePage() {
           <label>Education</label>
           <input
             value={profile.education || ""}
-            onChange={(e) => setProfile({ ...profile, education: e.target.value })}
+            onChange={(e) =>
+              setProfile({ ...profile, education: e.target.value })
+            }
             style={input}
           />
         </>
@@ -204,7 +226,9 @@ export default function ProfilePage() {
       <label>Experience</label>
       <textarea
         value={profile.experience}
-        onChange={(e) => setProfile({ ...profile, experience: e.target.value })}
+        onChange={(e) =>
+          setProfile({ ...profile, experience: e.target.value })
+        }
         style={textarea}
       />
 
@@ -239,4 +263,14 @@ const textarea = {
   padding: "0.75rem",
   marginBottom: "1rem",
   minHeight: "100px",
+};
+
+const backButtonStyle = {
+  padding: "0.5rem 1.2rem",
+  borderRadius: "999px",
+  border: "2px solid #2563eb",
+  background: "white",
+  color: "#2563eb",
+  fontWeight: 600,
+  cursor: "pointer",
 };
