@@ -1,16 +1,15 @@
 /* ========== Layout ========== */
 .dashboard {
   min-height: 100vh;
-/* ========== Layout ========== */
-.dashboard {
-  min-height: 100vh;
   background: #f9fafb;
   padding: 2.5rem 3rem;
 }
 
+/* ========== Header ========== */
 .header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -46,6 +45,8 @@
 .sectionHeader {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
@@ -122,120 +123,30 @@
   font-weight: 600;
   cursor: pointer;
 }
-  padding: 2.5rem 3rem;
-}
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
+/* ========== Responsive (MOBILE ONLY) ========== */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1.5rem 1.25rem;
+  }
 
-.pageTitle {
-  font-size: 1.75rem;
-  font-weight: 650;
-  color: #111827;
-}
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.pageSubtitle {
-  margin-top: 0.4rem;
-  font-size: 0.95rem;
-  color: #6b7280;
-}
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.roleBadge {
-  display: inline-block;
-  background: #eef2ff;
-  color: #3730a3;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  margin-top: 0.75rem;
-}
+  .card {
+    padding: 1.25rem;
+  }
 
-/* ========== Sections ========== */
-.section {
-  margin-top: 2rem;
-}
-
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.sectionTitle {
-  font-size: 1.1rem;
-  font-weight: 650;
-  color: #111827;
-}
-
-.sectionSubtitle {
-  font-size: 0.9rem;
-  color: #6b7280;
-}
-
-/* ========== Cards ========== */
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.cardTitle {
-  font-weight: 650;
-  margin-bottom: 0.5rem;
-}
-
-.cardMeta {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-/* ========== Empty State ========== */
-.emptyState {
-  background: white;
-  border: 1px dashed #d1d5db;
-  border-radius: 12px;
-  padding: 3rem;
-  text-align: center;
-}
-
-.emptyTitle {
-  font-weight: 650;
-  margin-bottom: 0.25rem;
-}
-
-.emptyText {
-  color: #6b7280;
-}
-
-/* ========== Buttons ========== */
-.primaryButton {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.65rem 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.secondaryButton {
-  background: transparent;
-  color: #2563eb;
-  border: 1px solid #c7d2fe;
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  font-weight: 600;
-  cursor: pointer;
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+    text-align: center;
+  }
 }
