@@ -24,9 +24,7 @@ export default function Page() {
   const router = useRouter();
 
   const params = useParams();
-  const userId = Array.isArray(params.userId)
-    ? params.userId[0]
-    : params.userId;
+  const userId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [inviteStatus, setInviteStatus] = useState<
@@ -53,9 +51,7 @@ export default function Page() {
     );
 
     const existingInvite = invitations.find(
-      (i: any) =>
-        i.invitedUserId === userId &&
-        i.invitedByOrgEmail === user.email
+      (i: any) => i.invitedUserId === userId && i.invitedByOrgEmail === user.email
     );
 
     if (existingInvite) {
@@ -84,13 +80,9 @@ export default function Page() {
 
   // 📨 Invite logic
   const inviteToProject = () => {
-    const projects = JSON.parse(
-      localStorage.getItem("vidzel_projects") || "[]"
-    );
+    const projects = JSON.parse(localStorage.getItem("vidzel_projects") || "[]");
 
-    const myProjects = projects.filter(
-      (p: any) => p.createdBy === user.email
-    );
+    const myProjects = projects.filter((p: any) => p.createdBy === user.email);
 
     if (myProjects.length === 0) {
       alert("You have no projects to invite to.");
@@ -109,9 +101,7 @@ export default function Page() {
     );
 
     const alreadyInvited = invitations.find(
-      (i: any) =>
-        i.projectId === projectId &&
-        i.invitedUserId === profile.userId
+      (i: any) => i.projectId === projectId && i.invitedUserId === profile.userId
     );
 
     if (alreadyInvited) {
@@ -131,13 +121,17 @@ export default function Page() {
       respondedAt: null,
     });
 
-    localStorage.setItem(
-      "vidzel_invitations",
-      JSON.stringify(invitations)
-    );
+    localStorage.setItem("vidzel_invitations", JSON.stringify(invitations));
 
     setInviteStatus("pending");
     alert("Invitation sent successfully.");
+  };
+
+  const formatUpdatedAt = (iso: string) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString();
   };
 
   return (
@@ -152,85 +146,98 @@ export default function Page() {
         </Button>
       </div>
 
-      <h1 style={{ marginBottom: "1.5rem" }}>
+      <h1 style={{ marginBottom: "1.75rem" }}>
         {profile.fullName} ({profile.role})
       </h1>
 
-      <p><strong>Location:</strong> {profile.location || "—"}</p>
-      <p><strong>Bio:</strong> {profile.bio || "—"}</p>
-      <p><strong>Skills:</strong> {profile.skills || "—"}</p>
+      {/* ✅ Sections with spacing */}
+      <div style={section}>
+        <div style={label}>Location</div>
+        <div style={value}>{profile.location || "—"}</div>
+      </div>
+
+      <div style={section}>
+        <div style={label}>Bio</div>
+        <div style={value}>{profile.bio || "—"}</div>
+      </div>
+
+      <div style={section}>
+        <div style={label}>Skills</div>
+        <div style={value}>{profile.skills || "—"}</div>
+      </div>
 
       {profile.education && (
-        <p><strong>Education:</strong> {profile.education}</p>
+        <div style={section}>
+          <div style={label}>Education</div>
+          <div style={value}>{profile.education}</div>
+        </div>
       )}
 
       {profile.availability && (
-        <p><strong>Availability:</strong> {profile.availability}</p>
+        <div style={section}>
+          <div style={label}>Availability</div>
+          <div style={value}>{profile.availability}</div>
+        </div>
       )}
 
-      <p><strong>Experience:</strong> {profile.experience || "—"}</p>
+      <div style={section}>
+        <div style={label}>Experience</div>
+        <div style={value}>{profile.experience || "—"}</div>
+      </div>
 
       {profile.resumeFileName && (
-        <p><strong>Resume:</strong> {profile.resumeFileName}</p>
+        <div style={section}>
+          <div style={label}>Resume</div>
+          <div style={value}>{profile.resumeFileName}</div>
+        </div>
       )}
 
       <p style={{ marginTop: "2rem", fontSize: "0.9rem", color: "#666" }}>
-        Last updated: {new Date(profile.updatedAt).toLocaleString()}
+        Last updated: {formatUpdatedAt(profile.updatedAt)}
       </p>
 
       {/* Invite Section */}
       <hr style={{ margin: "2.5rem 0" }} />
 
-      {inviteStatus === "none" && (
-        <Button onClick={inviteToProject}>
-          Invite to Project
-        </Button>
-      )}
+      {inviteStatus === "none" && <Button onClick={inviteToProject}>Invite to Project</Button>}
 
       {inviteStatus === "pending" && (
-        <div
-          style={{
-            padding: "0.75rem 1.25rem",
-            borderRadius: "999px",
-            background: "#fef3c7",
-            color: "#92400e",
-            fontWeight: 600,
-            display: "inline-block",
-          }}
-        >
-          ⏳ Invitation Pending
-        </div>
+        <div style={pill("#fef3c7", "#92400e")}>⏳ Invitation Pending</div>
       )}
 
       {inviteStatus === "accepted" && (
-        <div
-          style={{
-            padding: "0.75rem 1.25rem",
-            borderRadius: "999px",
-            background: "#dcfce7",
-            color: "#166534",
-            fontWeight: 600,
-            display: "inline-block",
-          }}
-        >
-          ✅ Invitation Accepted
-        </div>
+        <div style={pill("#dcfce7", "#166534")}>✅ Invitation Accepted</div>
       )}
 
       {inviteStatus === "declined" && (
-        <div
-          style={{
-            padding: "0.75rem 1.25rem",
-            borderRadius: "999px",
-            background: "#fee2e2",
-            color: "#991b1b",
-            fontWeight: 600,
-            display: "inline-block",
-          }}
-        >
-          ❌ Invitation Declined
-        </div>
+        <div style={pill("#fee2e2", "#991b1b")}>❌ Invitation Declined</div>
       )}
     </div>
   );
 }
+
+/* ================= STYLES ================= */
+
+const section = {
+  marginBottom: "1.25rem",
+};
+
+const label = {
+  fontWeight: 700,
+  marginBottom: "0.25rem",
+};
+
+const value = {
+  color: "#0f172a",
+  lineHeight: 1.7,
+  whiteSpace: "pre-wrap" as const, // ✅ keeps line breaks if user pasted multi-line text
+};
+
+const pill = (bg: string, color: string) => ({
+  padding: "0.75rem 1.25rem",
+  borderRadius: "999px",
+  background: bg,
+  color,
+  fontWeight: 600,
+  display: "inline-block",
+});
