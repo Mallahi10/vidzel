@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Button from "@/components/Button";
 
@@ -35,6 +35,7 @@ type WorkspaceMember = {
 ======================== */
 export default function WorkspacePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const params = useParams();
 
   const workspaceId = useMemo(() => {
@@ -59,7 +60,6 @@ export default function WorkspacePage() {
       (w) => String(w.id) === String(workspaceId)
     );
 
-    // Safety net: auto-create workspace for organization
     if (!found && user.role === "organization") {
       found = {
         id: workspaceId,
@@ -104,9 +104,6 @@ export default function WorkspacePage() {
     return <div style={{ padding: "3rem" }}>Loading workspace…</div>;
   }
 
-  /* ========================
-     ACCESS CONTROL
-  ======================== */
   const isOrganizationOwner =
     user.role === "organization" &&
     workspace.organizationEmail.toLowerCase() === user.email?.toLowerCase();
@@ -155,45 +152,83 @@ export default function WorkspacePage() {
      UI
   ======================== */
   return (
-    <div style={{ padding: "3rem", maxWidth: "960px" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>
-        {workspace.projectTitle}
-      </h1>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "2fr 1fr",
+        gap: "2rem",
+        padding: "3rem",
+        maxWidth: "1400px",
+        margin: "0 auto",
+        alignItems: "start",
+      }}
+    >
+      {/* ================= LEFT COLUMN ================= */}
+      <div>
+        <h1 style={{ marginBottom: "1.5rem" }}>
+          {workspace.projectTitle}
+        </h1>
 
-      {isArchived && (
-        <div style={{ marginBottom: "1rem", color: "#b45309" }}>
-          This workspace is archived (read-only).
+        {isArchived && (
+          <div style={{ marginBottom: "1rem", color: "#b45309" }}>
+            This workspace is archived (read-only).
+          </div>
+        )}
+
+        <div style={panelStyle}>
+          <TaskSection workspaceId={workspaceId} />
         </div>
-      )}
 
-      {/* TASKS */}
-      <div style={panelStyle}>
-        <TaskSection workspaceId={workspaceId} />
+        <div style={panelStyle}>
+          <ResourceSection workspaceId={workspaceId} />
+        </div>
+
+        <div style={panelStyle}>
+          <SubmissionSection workspaceId={workspaceId} />
+        </div>
+
+        {/* ✅ BOTTOM ACTION BAR */}
+        <div
+          style={{
+            marginTop: "3rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {/* Back to Dashboard */}
+          <Button
+            variant="secondary"
+            onClick={() => router.push("/dashboard")}
+          >
+            ← Back to Dashboard
+          </Button>
+
+          {/* Mark Complete (org only) */}
+          {isOrganizationOwner && !isArchived && (
+            <Button onClick={completeProject}>
+              Mark Project as Completed
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* RESOURCES */}
-      <div style={panelStyle}>
-        <ResourceSection workspaceId={workspaceId} />
-      </div>
-
-      {/* SUBMISSIONS */}
-      <div style={panelStyle}>
-        <SubmissionSection workspaceId={workspaceId} />
-      </div>
-
-      {/* MESSAGES */}
-      <div style={panelStyle}>
+      {/* ================= RIGHT COLUMN: CONVERSATION ================= */}
+      <div
+        style={{
+          marginTop: "4.65rem",
+          position: "sticky",
+          top: "6.5rem",
+          height: "calc(100vh - 8rem)",
+          overflow: "auto",
+          border: "1px solid #e5e7eb",
+          borderRadius: "14px",
+          padding: "1.5rem",
+          background: "white",
+        }}
+      >
         <MessageSection workspaceId={workspaceId} />
       </div>
-
-      {/* FINAL ACTION */}
-      {isOrganizationOwner && !isArchived && (
-        <div style={{ marginTop: "3rem", textAlign: "right" }}>
-          <Button onClick={completeProject}>
-            Mark Project as Completed
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

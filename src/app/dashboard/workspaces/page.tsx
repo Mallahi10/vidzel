@@ -4,9 +4,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/Button";
+import { useRouter } from "next/navigation";
 
 export default function WorkspacesListPage() {
   const { user } = useAuth();
+  const router = useRouter();
+
   const [activeWorkspaces, setActiveWorkspaces] = useState<any[]>([]);
   const [completedWorkspaces, setCompletedWorkspaces] = useState<any[]>([]);
 
@@ -27,9 +30,6 @@ export default function WorkspacesListPage() {
 
     let myWorkspaces: any[] = [];
 
-    // ===============================
-    // Determine which workspaces belong to user
-    // ===============================
     if (user.role === "organization") {
       myWorkspaces = allWorkspaces.filter(
         (w: any) => w.organizationEmail === user.email
@@ -44,9 +44,6 @@ export default function WorkspacesListPage() {
       );
     }
 
-    // ===============================
-    // Attach project title
-    // ===============================
     const enriched = myWorkspaces.map((w: any) => {
       const project = projects.find(
         (p: any) => String(p.id) === String(w.projectId)
@@ -55,20 +52,12 @@ export default function WorkspacesListPage() {
       return {
         ...w,
         projectTitle: project?.title || "Untitled Project",
-        status: w.status || "active", // 🔥 fallback safety
+        status: w.status || "active",
       };
     });
 
-    // ===============================
-    // STRICT STATUS SPLIT
-    // ===============================
-    setActiveWorkspaces(
-      enriched.filter((w: any) => w.status === "active")
-    );
-
-    setCompletedWorkspaces(
-      enriched.filter((w: any) => w.status === "completed")
-    );
+    setActiveWorkspaces(enriched.filter((w: any) => w.status === "active"));
+    setCompletedWorkspaces(enriched.filter((w: any) => w.status === "completed"));
   }, [user]);
 
   if (!user) {
@@ -79,6 +68,14 @@ export default function WorkspacesListPage() {
 
   return (
     <div style={{ padding: "3rem", maxWidth: "1000px" }}>
+      {/* ✅ FIXED BACK BUTTON — ALWAYS VISIBLE */}
+      <button
+        onClick={() => router.push("/dashboard")}
+        style={backButtonStyle}
+      >
+        ← Back to Dashboard
+      </button>
+
       <h1>My Workspaces</h1>
 
       {/* ================= ACTIVE PROJECTS ================= */}
@@ -139,3 +136,26 @@ export default function WorkspacesListPage() {
     </div>
   );
 }
+
+/* =========================
+   STYLES
+========================= */
+
+const backButtonStyle = {
+  position: "fixed" as const,   // ✅ KEY FIX
+  top: "5.5rem",                // below header
+  right: "2.5rem",
+  zIndex: 1000,                 // above everything
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  padding: "0.55rem 1.4rem",
+  borderRadius: "999px",
+  border: "2px solid #2563eb",
+  background: "white",
+  color: "#2563eb",
+  fontWeight: 600,
+  cursor: "pointer",
+  fontSize: "0.95rem",
+  boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+};

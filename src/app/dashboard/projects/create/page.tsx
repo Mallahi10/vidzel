@@ -1,58 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 
 export default function CreateProjectPage() {
-  const { user } = useAuth();
   const router = useRouter();
+  const { user } = useAuth();
 
-  /* 🔒 Access control */
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in first.</div>;
-  }
-  if (user.role !== "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Only organizations can create projects.
-      </div>
-    );
-  }
-
-  /* ================= STATE ================= */
+  /* ================= HOOKS (ALWAYS FIRST) ================= */
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tasks, setTasks] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [contributors, setContributors] = useState<string[]>([]);
-  const [roles, setRoles] = useState<string[]>([""]);
+  /* ================= ACCESS CONTROL ================= */
 
-  const [causes, setCauses] = useState<string[]>([]);
-  const [otherCause, setOtherCause] = useState("");
+  useEffect(() => {
+    if (!user) return;
 
-  const [formats, setFormats] = useState<string[]>([]);
-  const [otherFormat, setOtherFormat] = useState("");
+    if (user.role !== "organization") {
+      router.replace("/dashboard");
+      return;
+    }
 
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [otherLanguage, setOtherLanguage] = useState("");
+    setLoading(false);
+  }, [user, router]);
 
-  const [files, setFiles] = useState<string[]>([]);
-
-  const [outcomes, setOutcomes] = useState<string[]>([]);
-  const [otherOutcome, setOtherOutcome] = useState("");
+  if (!user || loading) {
+    return <div style={{ padding: "3rem" }}>Loading…</div>;
+  }
 
   /* ================= SUBMIT ================= */
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🔑 SINGLE SOURCE OF TRUTH FOR ID
     const id = "project_" + Date.now();
 
-    /* 1️⃣ SAVE PROJECT */
     const storedProjects = JSON.parse(
       localStorage.getItem("vidzel_projects") || "[]"
     );
@@ -63,30 +50,6 @@ export default function CreateProjectPage() {
       title,
       description,
       tasks,
-      contributors,
-      roles,
-
-      causes:
-        causes.includes("Other") && otherCause
-          ? [...causes.filter(c => c !== "Other"), otherCause]
-          : causes,
-
-      formats:
-        formats.includes("Other") && otherFormat
-          ? [...formats.filter(f => f !== "Other"), otherFormat]
-          : formats,
-
-      languages:
-        languages.includes("Other") && otherLanguage
-          ? [...languages.filter(l => l !== "Other"), otherLanguage]
-          : languages,
-
-      outcomes:
-        outcomes.includes("Other") && otherOutcome
-          ? [...outcomes.filter(o => o !== "Other"), otherOutcome]
-          : outcomes,
-
-      files,
       createdAt: new Date().toISOString(),
     };
 
@@ -95,13 +58,12 @@ export default function CreateProjectPage() {
       JSON.stringify([...storedProjects, project])
     );
 
-    /* 2️⃣ CREATE WORKSPACE (✅ SAME ID) */
     const storedWorkspaces = JSON.parse(
       localStorage.getItem("vidzel_workspaces") || "[]"
     );
 
     const workspace = {
-      id, // ✅ SAME AS PROJECT ID
+      id,
       projectId: id,
       projectTitle: title,
       organizationEmail: user.email,
@@ -114,81 +76,46 @@ export default function CreateProjectPage() {
       JSON.stringify([...storedWorkspaces, workspace])
     );
 
-    /* 3️⃣ REDIRECT TO MY WORKSPACES */
     router.push("/dashboard/workspaces");
-  };
-
-  /* ================= STYLES ================= */
-
-  const page = {
-    minHeight: "100vh",
-    background: "#f5f7fb",
-    padding: "3rem",
-    display: "flex",
-    justifyContent: "center",
-  };
-
-  const card = {
-    width: "100%",
-    maxWidth: "1100px",
-    background: "white",
-    borderRadius: "10px",
-    padding: "2.5rem",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
-  };
-
-  const input = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "6px",
-    border: "1px solid #d0d7e2",
-    marginBottom: "1rem",
-  };
-
-  const textarea = {
-    ...input,
-    minHeight: "120px",
-  };
-
-  const sectionTitle = {
-    fontSize: "1.1rem",
-    fontWeight: 600,
-    margin: "2rem 0 0.5rem",
   };
 
   /* ================= UI ================= */
 
   return (
-    <div style={page}>
-      <div style={card}>
+    <div style={{ padding: "3rem", display: "flex", justifyContent: "center" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "1100px",
+          background: "white",
+          borderRadius: "10px",
+          padding: "2.5rem",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+        }}
+      >
         <h1>Create Project</h1>
 
         <form onSubmit={handleSubmit}>
-          <div style={sectionTitle}>1. Project Title</div>
+          <label>Project Title</label>
           <input
             value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="Enter a clear, short project name"
+            onChange={(e) => setTitle(e.target.value)}
             style={input}
             required
           />
 
-          <div style={sectionTitle}>
-            2. Organization & Project Description
-          </div>
+          <label>Description</label>
           <textarea
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             style={textarea}
             required
           />
 
-          <div style={sectionTitle}>
-            3. Key Tasks & Responsibilities
-          </div>
+          <label>Key Tasks & Responsibilities</label>
           <textarea
             value={tasks}
-            onChange={e => setTasks(e.target.value)}
+            onChange={(e) => setTasks(e.target.value)}
             style={textarea}
             required
           />
@@ -201,3 +128,18 @@ export default function CreateProjectPage() {
     </div>
   );
 }
+
+/* ================= STYLES ================= */
+
+const input = {
+  width: "100%",
+  padding: "0.75rem",
+  borderRadius: "6px",
+  border: "1px solid #d0d7e2",
+  marginBottom: "1rem",
+};
+
+const textarea = {
+  ...input,
+  minHeight: "120px",
+};
