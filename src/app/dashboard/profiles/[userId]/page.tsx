@@ -16,6 +16,7 @@ type UserProfile = {
   education?: string;
   experience: string;
   resumeFileName?: string;
+  resumeUrl?: string; // ✅ ADDED
   updatedAt: string;
 };
 
@@ -34,7 +35,6 @@ export default function Page() {
   useEffect(() => {
     if (!user || user.role !== "organization") return;
 
-    // Load profile
     const storedProfiles = JSON.parse(
       localStorage.getItem("vidzel_profiles") || "[]"
     );
@@ -45,23 +45,21 @@ export default function Page() {
 
     setProfile(foundProfile || null);
 
-    // Check invite status
     const invitations = JSON.parse(
       localStorage.getItem("vidzel_invitations") || "[]"
     );
 
     const existingInvite = invitations.find(
-      (i: any) => i.invitedUserId === userId && i.invitedByOrgEmail === user.email
+      (i: any) =>
+        i.invitedUserId === userId &&
+        i.invitedByOrgEmail === user.email
     );
 
-    if (existingInvite) {
-      setInviteStatus(existingInvite.status);
-    } else {
-      setInviteStatus("none");
-    }
+    setInviteStatus(existingInvite ? existingInvite.status : "none");
   }, [user, userId]);
 
-  // 🔒 Guards
+  /* ================= GUARDS ================= */
+
   if (!user) {
     return <div style={{ padding: "3rem" }}>Please log in first.</div>;
   }
@@ -78,11 +76,16 @@ export default function Page() {
     return <div style={{ padding: "3rem" }}>Profile not found.</div>;
   }
 
-  // 📨 Invite logic
-  const inviteToProject = () => {
-    const projects = JSON.parse(localStorage.getItem("vidzel_projects") || "[]");
+  /* ================= INVITE ================= */
 
-    const myProjects = projects.filter((p: any) => p.createdBy === user.email);
+  const inviteToProject = () => {
+    const projects = JSON.parse(
+      localStorage.getItem("vidzel_projects") || "[]"
+    );
+
+    const myProjects = projects.filter(
+      (p: any) => p.createdBy === user.email
+    );
 
     if (myProjects.length === 0) {
       alert("You have no projects to invite to.");
@@ -101,7 +104,9 @@ export default function Page() {
     );
 
     const alreadyInvited = invitations.find(
-      (i: any) => i.projectId === projectId && i.invitedUserId === profile.userId
+      (i: any) =>
+        i.projectId === projectId &&
+        i.invitedUserId === profile.userId
     );
 
     if (alreadyInvited) {
@@ -121,7 +126,10 @@ export default function Page() {
       respondedAt: null,
     });
 
-    localStorage.setItem("vidzel_invitations", JSON.stringify(invitations));
+    localStorage.setItem(
+      "vidzel_invitations",
+      JSON.stringify(invitations)
+    );
 
     setInviteStatus("pending");
     alert("Invitation sent successfully.");
@@ -134,9 +142,11 @@ export default function Page() {
     return d.toLocaleString();
   };
 
+  /* ================= UI ================= */
+
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
-      {/* 🔙 BACK BUTTON */}
+      {/* 🔙 BACK */}
       <div style={{ marginBottom: "1.5rem" }}>
         <Button
           variant="secondary"
@@ -150,7 +160,6 @@ export default function Page() {
         {profile.fullName} ({profile.role})
       </h1>
 
-      {/* ✅ Sections with spacing */}
       <div style={section}>
         <div style={label}>Location</div>
         <div style={value}>{profile.location || "—"}</div>
@@ -185,10 +194,30 @@ export default function Page() {
         <div style={value}>{profile.experience || "—"}</div>
       </div>
 
-      {profile.resumeFileName && (
+      {/* ✅ RESUME — FIXED */}
+      {profile.resumeUrl ? (
         <div style={section}>
           <div style={label}>Resume</div>
-          <div style={value}>{profile.resumeFileName}</div>
+          <a
+            href={profile.resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#2563eb",
+              fontWeight: 600,
+              textDecoration: "underline",
+            }}
+          >
+            📄 View / Download Resume
+            {profile.resumeFileName
+              ? ` (${profile.resumeFileName})`
+              : ""}
+          </a>
+        </div>
+      ) : (
+        <div style={section}>
+          <div style={label}>Resume</div>
+          <div style={value}>—</div>
         </div>
       )}
 
@@ -196,21 +225,28 @@ export default function Page() {
         Last updated: {formatUpdatedAt(profile.updatedAt)}
       </p>
 
-      {/* Invite Section */}
       <hr style={{ margin: "2.5rem 0" }} />
 
-      {inviteStatus === "none" && <Button onClick={inviteToProject}>Invite to Project</Button>}
+      {inviteStatus === "none" && (
+        <Button onClick={inviteToProject}>Invite to Project</Button>
+      )}
 
       {inviteStatus === "pending" && (
-        <div style={pill("#fef3c7", "#92400e")}>⏳ Invitation Pending</div>
+        <div style={pill("#fef3c7", "#92400e")}>
+          ⏳ Invitation Pending
+        </div>
       )}
 
       {inviteStatus === "accepted" && (
-        <div style={pill("#dcfce7", "#166534")}>✅ Invitation Accepted</div>
+        <div style={pill("#dcfce7", "#166534")}>
+          ✅ Invitation Accepted
+        </div>
       )}
 
       {inviteStatus === "declined" && (
-        <div style={pill("#fee2e2", "#991b1b")}>❌ Invitation Declined</div>
+        <div style={pill("#fee2e2", "#991b1b")}>
+          ❌ Invitation Declined
+        </div>
       )}
     </div>
   );
@@ -230,7 +266,7 @@ const label = {
 const value = {
   color: "#0f172a",
   lineHeight: 1.7,
-  whiteSpace: "pre-wrap" as const, // ✅ keeps line breaks if user pasted multi-line text
+  whiteSpace: "pre-wrap" as const,
 };
 
 const pill = (bg: string, color: string) => ({
