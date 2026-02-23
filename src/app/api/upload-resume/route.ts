@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 
-export const runtime = "nodejs"; // ✅ REQUIRED (fixes undici error)
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +13,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // 🔥 IMPORTANT: dynamic import (fixes build)
+    const { put } = await import("@vercel/blob");
 
     const blob = await put(file.name, file, {
       access: "public",
