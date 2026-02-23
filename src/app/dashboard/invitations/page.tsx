@@ -123,8 +123,9 @@ function InvitationsPage() {
           JSON.stringify(members)
         );
 
+        // ✅ FIXED: NO crypto.randomUUID
         addNotification({
-          id: crypto.randomUUID(),
+          id: "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2),
           userId: newMember.userId,
           type: "invitation",
           title: "Project Invitation Accepted",
@@ -146,7 +147,6 @@ function InvitationsPage() {
 
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
-      {/* 🔙 BACK */}
       <div style={{ marginBottom: "1.5rem" }}>
         <button
           onClick={() => router.push("/dashboard")}
@@ -216,7 +216,7 @@ const backButtonStyle = {
   cursor: "pointer",
 };
 
-/* ================= EXPORT (CRITICAL FIX) ================= */
+/* ================= EXPORT ================= */
 
 export default dynamic(() => Promise.resolve(InvitationsPage), {
   ssr: false,
