@@ -1,22 +1,33 @@
-export const runtime = "nodejs";
-
-import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
+
+export const runtime = "nodejs"; // ✅ REQUIRED (fixes undici error)
 
 export async function POST(req: Request) {
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
 
-  if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
+    if (!file) {
+      return NextResponse.json(
+        { error: "No file uploaded" },
+        { status: 400 }
+      );
+    }
+
+    const blob = await put(file.name, file, {
+      access: "public",
+    });
+
+    return NextResponse.json({
+      url: blob.url,
+      name: file.name,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json(
+      { error: "Upload failed" },
+      { status: 500 }
+    );
   }
-
-  const blob = await put(file.name, file, {
-    access: "public",
-  });
-
-  return NextResponse.json({
-    url: blob.url,
-    fileName: file.name,
-  });
 }
