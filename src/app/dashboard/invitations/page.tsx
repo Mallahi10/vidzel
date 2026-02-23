@@ -123,7 +123,7 @@ function InvitationsPage() {
           JSON.stringify(members)
         );
 
-        // ✅ FIXED: NO crypto.randomUUID
+id: "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2),
         addNotification({
           id: "notif_" + Date.now() + "_" + Math.random().toString(36).slice(2),
           userId: newMember.userId,
