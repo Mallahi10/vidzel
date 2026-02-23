@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import { addNotification } from "@/lib/notifications";
+import dynamic from "next/dynamic";
 
-export default function InvitationsPage() {
+/* ================= COMPONENT ================= */
+
+function InvitationsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [invitations, setInvitations] = useState<any[]>([]);
@@ -35,6 +38,8 @@ export default function InvitationsPage() {
     );
   }
 
+  /* ================= UPDATE STATUS ================= */
+
   const updateStatus = (inviteId: string, status: "accepted" | "declined") => {
     const invites = JSON.parse(
       localStorage.getItem("vidzel_invitations") || "[]"
@@ -54,9 +59,8 @@ export default function InvitationsPage() {
       JSON.stringify(updatedInvites)
     );
 
-    // =========================
-    // ✅ ACCEPT INVITATION LOGIC
-    // =========================
+    /* ================= ACCEPT LOGIC ================= */
+
     if (status === "accepted") {
       const projects = JSON.parse(
         localStorage.getItem("vidzel_projects") || "[]"
@@ -66,12 +70,8 @@ export default function InvitationsPage() {
         (p: any) => String(p.id) === String(invite.projectId)
       );
 
-      if (!project) {
-        console.error("Project not found");
-        return;
-      }
+      if (!project) return;
 
-      // 1️⃣ Ensure ONE workspace per project
       const workspaces = JSON.parse(
         localStorage.getItem("vidzel_workspaces") || "[]"
       );
@@ -96,7 +96,6 @@ export default function InvitationsPage() {
         );
       }
 
-      // 2️⃣ Add member to workspace
       const members = JSON.parse(
         localStorage.getItem("vidzel_workspace_members") || "[]"
       );
@@ -124,9 +123,6 @@ export default function InvitationsPage() {
           JSON.stringify(members)
         );
 
-        // =========================
-        // 🔔 CREATE NOTIFICATION
-        // =========================
         addNotification({
           id: crypto.randomUUID(),
           userId: newMember.userId,
@@ -146,9 +142,11 @@ export default function InvitationsPage() {
     );
   };
 
+  /* ================= UI ================= */
+
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
-      {/* 🔙 BACK BUTTON */}
+      {/* 🔙 BACK */}
       <div style={{ marginBottom: "1.5rem" }}>
         <button
           onClick={() => router.push("/dashboard")}
@@ -217,3 +215,9 @@ const backButtonStyle = {
   fontWeight: 600,
   cursor: "pointer",
 };
+
+/* ================= EXPORT (CRITICAL FIX) ================= */
+
+export default dynamic(() => Promise.resolve(InvitationsPage), {
+  ssr: false,
+});

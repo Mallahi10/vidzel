@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/Button";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
-export default function WorkspacesListPage() {
+/* ================= COMPONENT ================= */
+
+function WorkspacesListPage() {
   const { user } = useAuth();
   const router = useRouter();
 
@@ -57,7 +60,9 @@ export default function WorkspacesListPage() {
     });
 
     setActiveWorkspaces(enriched.filter((w: any) => w.status === "active"));
-    setCompletedWorkspaces(enriched.filter((w: any) => w.status === "completed"));
+    setCompletedWorkspaces(
+      enriched.filter((w: any) => w.status === "completed")
+    );
   }, [user]);
 
   if (!user) {
@@ -68,7 +73,7 @@ export default function WorkspacesListPage() {
 
   return (
     <div style={{ padding: "3rem", maxWidth: "1000px" }}>
-      {/* ✅ FIXED BACK BUTTON — ALWAYS VISIBLE */}
+      {/* 🔙 BACK TO DASHBOARD */}
       <button
         onClick={() => router.push("/dashboard")}
         style={backButtonStyle}
@@ -106,7 +111,7 @@ export default function WorkspacesListPage() {
         </div>
       ))}
 
-      {/* ================= COMPLETED PROJECTS (NON-ORG ONLY) ================= */}
+      {/* ================= COMPLETED PROJECTS ================= */}
       {!isOrg && completedWorkspaces.length > 0 && (
         <>
           <h2 style={{ marginTop: "3rem" }}>Completed Projects</h2>
@@ -137,15 +142,13 @@ export default function WorkspacesListPage() {
   );
 }
 
-/* =========================
-   STYLES
-========================= */
+/* ================= STYLES ================= */
 
 const backButtonStyle = {
-  position: "fixed" as const,   // ✅ KEY FIX
-  top: "5.5rem",                // below header
+  position: "fixed" as const,
+  top: "5.5rem",
   right: "2.5rem",
-  zIndex: 1000,                 // above everything
+  zIndex: 1000,
   display: "inline-flex",
   alignItems: "center",
   gap: "0.5rem",
@@ -159,3 +162,9 @@ const backButtonStyle = {
   fontSize: "0.95rem",
   boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
 };
+
+/* ================= EXPORT (CRITICAL FIX) ================= */
+
+export default dynamic(() => Promise.resolve(WorkspacesListPage), {
+  ssr: false,
+});

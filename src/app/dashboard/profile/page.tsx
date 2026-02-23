@@ -4,6 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
+import dynamic from "next/dynamic";
+
+/* ================= TYPES ================= */
 
 type ProfileRole = "volunteer" | "student" | "mentor";
 
@@ -22,14 +25,14 @@ type UserProfile = {
   updatedAt: string;
 };
 
-export default function ProfilePage() {
+/* ================= COMPONENT ================= */
+
+function ProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // ✅ Robust role check (case-insensitive)
   const role = useMemo(() => {
-    const r = (user?.role ?? "").toString().toLowerCase().trim();
-    return r;
+    return (user?.role ?? "").toLowerCase().trim();
   }, [user]);
 
   const isOrg = role === "organization";
@@ -51,27 +54,25 @@ export default function ProfilePage() {
 
   const [isSaved, setIsSaved] = useState(false);
 
-  /* ======================
-     ROLE GUARD (REDIRECT)
-  ====================== */
+  /* ================= GUARDS ================= */
+
   useEffect(() => {
     if (!user) return;
-
-    if (isOrg) {
-      router.replace("/dashboard/organization");
-    }
+    if (isOrg) router.replace("/dashboard");
   }, [user, isOrg, router]);
 
-  /* ======================
-     LOAD OR INIT PROFILE
-  ====================== */
+  /* ================= LOAD PROFILE ================= */
+
   useEffect(() => {
-    if (!user) return;
-    if (isOrg) return;
+    if (!user || isOrg) return;
 
-    const stored = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
+    const stored = JSON.parse(
+      localStorage.getItem("vidzel_profiles") || "[]"
+    );
 
-    const existing = stored.find((p: UserProfile) => p.userId === user.id);
+    const existing = stored.find(
+      (p: UserProfile) => p.userId === user.id
+    );
 
     if (existing) {
       setProfile(existing);
@@ -80,61 +81,48 @@ export default function ProfilePage() {
         ...prev,
         userId: user.id,
         role: role as ProfileRole,
-        fullName: user.name,
+        fullName: user.name || "",
       }));
     }
   }, [user, isOrg, role]);
 
-  /* ======================
-     NOT LOGGED IN
-  ====================== */
   if (!user) {
     return <div style={{ padding: "3rem" }}>Please log in first.</div>;
   }
 
-  // ✅ Important: do NOT render this page for organizations
-  if (isOrg) {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Redirecting to organization dashboard…
-        <div style={{ marginTop: "1rem", fontSize: 12, opacity: 0.7 }}>
-          Debug: user.role = <b>{String(user.role)}</b>
-        </div>
-      </div>
-    );
-  }
+  /* ================= SAVE ================= */
 
-  /* ======================
-     SAVE PROFILE
-  ====================== */
   const handleSave = () => {
-    const stored = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
+    const stored = JSON.parse(
+      localStorage.getItem("vidzel_profiles") || "[]"
+    );
 
     const updatedProfile = {
       ...profile,
       updatedAt: new Date().toISOString(),
     };
 
-    const updated = stored.filter((p: UserProfile) => p.userId !== user.id);
+    const filtered = stored.filter(
+      (p: UserProfile) => p.userId !== user.id
+    );
 
     localStorage.setItem(
       "vidzel_profiles",
-      JSON.stringify([...updated, updatedProfile])
+      JSON.stringify([...filtered, updatedProfile])
     );
 
     setIsSaved(true);
   };
 
-  /* ======================
-     SUCCESS SCREEN
-  ====================== */
+  /* ================= SUCCESS ================= */
+
   if (isSaved) {
     return (
       <div style={{ padding: "3rem", maxWidth: "700px" }}>
         <h1>✅ Profile saved</h1>
 
         <p style={{ marginTop: "1rem" }}>
-          Your profile is ready. Organizations can now view it when you apply to projects.
+          Your profile is now visible to organizations.
         </p>
 
         <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
@@ -150,17 +138,12 @@ export default function ProfilePage() {
     );
   }
 
-  /* ======================
-     PROFILE FORM
-  ====================== */
+  /* ================= FORM ================= */
+
   return (
     <div style={{ padding: "3rem", maxWidth: "800px" }}>
-      {/* 🔙 BACK BUTTON */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <button
-          onClick={() => router.push("/dashboard")}
-          style={backButtonStyle}
-        >
+        <button onClick={() => router.push("/dashboard")} style={backButton}>
           ← Back to Dashboard
         </button>
       </div>
@@ -172,28 +155,36 @@ export default function ProfilePage() {
       <label>Full Name</label>
       <input
         value={profile.fullName}
-        onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+        onChange={(e) =>
+          setProfile({ ...profile, fullName: e.target.value })
+        }
         style={input}
       />
 
       <label>Location</label>
       <input
         value={profile.location}
-        onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+        onChange={(e) =>
+          setProfile({ ...profile, location: e.target.value })
+        }
         style={input}
       />
 
-      <label>Short Bio</label>
+      <label>Bio</label>
       <textarea
         value={profile.bio}
-        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+        onChange={(e) =>
+          setProfile({ ...profile, bio: e.target.value })
+        }
         style={textarea}
       />
 
       <label>Skills</label>
       <input
         value={profile.skills}
-        onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
+        onChange={(e) =>
+          setProfile({ ...profile, skills: e.target.value })
+        }
         style={input}
       />
 
@@ -241,17 +232,19 @@ export default function ProfilePage() {
             resumeFileName: e.target.files?.[0]?.name || "",
           })
         }
-        style={{ marginBottom: "1.5rem" }}
       />
 
-      {profile.resumeFileName && <p>Uploaded: {profile.resumeFileName}</p>}
+      {profile.resumeFileName && (
+        <p>Uploaded: {profile.resumeFileName}</p>
+      )}
 
       <Button onClick={handleSave}>Save Profile</Button>
     </div>
   );
 }
 
-/* styles */
+/* ================= STYLES ================= */
+
 const input = {
   width: "100%",
   padding: "0.75rem",
@@ -259,13 +252,11 @@ const input = {
 };
 
 const textarea = {
-  width: "100%",
-  padding: "0.75rem",
-  marginBottom: "1rem",
+  ...input,
   minHeight: "100px",
 };
 
-const backButtonStyle = {
+const backButton = {
   padding: "0.5rem 1.2rem",
   borderRadius: "999px",
   border: "2px solid #2563eb",
@@ -274,3 +265,9 @@ const backButtonStyle = {
   fontWeight: 600,
   cursor: "pointer",
 };
+
+/* ================= EXPORT (CRITICAL FIX) ================= */
+
+export default dynamic(() => Promise.resolve(ProfilePage), {
+  ssr: false,
+});
