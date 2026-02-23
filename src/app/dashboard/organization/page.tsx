@@ -7,27 +7,29 @@ export default function OrganizationDashboard() {
   const { user } = useAuth();
 
   if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in first.</div>;
+    return <div className="page">Please log in first.</div>;
   }
 
   if (user.role !== "organization") {
     return (
-      <div style={{ padding: "3rem" }}>
+      <div className="page">
         Only organizations can access this page.
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "1100px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
+    <div className="page">
+      {/* HEADER */}
+      <h1 className="page-title">
         Welcome back, {user.name}
       </h1>
 
-      <p style={{ color: "#475569", marginBottom: "2.5rem" }}>
+      <p className="page-subtitle">
         Manage your projects and connect with volunteers, students, and mentors.
       </p>
 
+      {/* DASHBOARD BOXES */}
       <div
         style={{
           display: "grid",
@@ -36,42 +38,28 @@ export default function OrganizationDashboard() {
         }}
       >
         {/* Manage Projects */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "16px",
-            boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
-          }}
-        >
-          <h2 style={{ marginBottom: "0.5rem" }}>Manage Projects</h2>
-          <p style={{ color: "#475569", marginBottom: "1.5rem" }}>
+        <div className="card">
+          <h2 className="card-title">Manage Projects</h2>
+          <p className="card-text">
             View, edit, and track projects created by your organization.
           </p>
 
           <Link href="/dashboard/projects">
-            <button style={buttonPrimary}>
+            <button className="btn-primary">
               View My Projects →
             </button>
           </Link>
         </div>
 
         {/* Browse Profiles */}
-        <div
-          style={{
-            background: "white",
-            padding: "2rem",
-            borderRadius: "16px",
-            boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
-          }}
-        >
-          <h2 style={{ marginBottom: "0.5rem" }}>Browse Profiles</h2>
-          <p style={{ color: "#475569", marginBottom: "1.5rem" }}>
+        <div className="card">
+          <h2 className="card-title">Browse Profiles</h2>
+          <p className="card-text">
             Find volunteers, students, and mentors and invite them to your projects.
           </p>
 
           <Link href="/dashboard/profiles">
-            <button style={buttonPrimary}>
+            <button className="btn-primary">
               Browse Profiles →
             </button>
           </Link>
@@ -80,13 +68,3 @@ export default function OrganizationDashboard() {
     </div>
   );
 }
-
-const buttonPrimary = {
-  padding: "0.7rem 1.4rem",
-  borderRadius: "999px",
-  border: "none",
-  background: "#2563eb",
-  color: "white",
-  fontWeight: 600,
-  cursor: "pointer",
-};

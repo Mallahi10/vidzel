@@ -1,23 +1,37 @@
 :root {
-  /* ============================= */
-  /* COLOR SYSTEM (VIDZEL) */
-  /* ============================= */
-  --primary-hue: 250;
-  --primary-sat: 65%;
+  /* =============================
+     VIDZEL BRAND COLOR SYSTEM
+  ============================= */
+
+  /* Brand hues */
+  --primary-hue: 220; /* Blue */
+  --primary-sat: 85%;
   --primary-light: 55%;
 
-  --secondary-hue: 190;
-  --secondary-sat: 70%;
+  --secondary-hue: 195; /* Cyan */
+  --secondary-sat: 85%;
   --secondary-light: 50%;
 
-  --bg-color: hsl(220, 20%, 98%);
-  --surface-color: #ffffff;
-  --text-main: hsl(220, 40%, 15%);
-  --text-muted: hsl(220, 20%, 45%);
-  --border-color: hsl(220, 20%, 90%);
-
+  /* Derived brand colors */
   --primary-color: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
   --secondary-color: hsl(var(--secondary-hue), var(--secondary-sat), var(--secondary-light));
+
+  /* Background system */
+  --bg-top: #f8fbff;
+  --bg-bottom: #eef5ff;
+
+  /* Surfaces */
+  --surface-color: rgba(255, 255, 255, 0.92);
+  --surface-glass: rgba(255, 255, 255, 0.88);
+
+  /* Text */
+  --text-main: hsl(222, 47%, 11%);
+  --text-muted: hsl(220, 15%, 45%);
+
+  /* Borders & shadows */
+  --border-color: hsl(220, 20%, 90%);
+  --shadow-soft: 0 10px 30px rgba(37, 99, 235, 0.08);
+  --shadow-hover: 0 18px 40px rgba(37, 99, 235, 0.14);
 
   /* Spacing */
   --space-xs: 0.5rem;
@@ -28,29 +42,43 @@
 
   /* Typography */
   --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ============================= */
-/* DARK MODE */
-/* ============================= */
+/* =============================
+   DARK MODE (AUTO)
+============================= */
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: hsl(222, 47%, 11%);
-    --surface-color: hsl(217, 33%, 17%);
+    --bg-top: hsl(222, 47%, 11%);
+    --bg-bottom: hsl(217, 33%, 14%);
+
+    --surface-color: rgba(30, 41, 59, 0.92);
+    --surface-glass: rgba(30, 41, 59, 0.88);
+
     --text-main: hsl(210, 40%, 98%);
     --text-muted: hsl(215, 20%, 65%);
+
     --border-color: hsl(217, 33%, 25%);
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.55);
   }
 }
 
-/* ============================= */
-/* RESET & BASE */
-/* ============================= */
+/* =============================
+   RESET & BASE
+============================= */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
@@ -58,48 +86,31 @@ body {
   color: var(--text-main);
   line-height: 1.6;
   font-size: 16px;
-  min-height: 100vh;
 
   /* 🌍 GLOBAL VIDZEL BACKGROUND */
   background:
     radial-gradient(
-      circle at 20% 25%,
-      rgba(37, 99, 235, 0.12),
+      circle at 18% 22%,
+      hsla(var(--primary-hue), 90%, 60%, 0.14),
       transparent 45%
     ),
     radial-gradient(
-      circle at 80% 15%,
-      rgba(6, 182, 212, 0.12),
+      circle at 82% 18%,
+      hsla(var(--secondary-hue), 90%, 55%, 0.14),
       transparent 50%
     ),
     linear-gradient(
       to bottom,
-      #f8fbff,
-      #eef5ff
+      var(--bg-top),
+      var(--bg-bottom)
     );
+
+  background-attachment: fixed;
 }
 
-/* Dark mode background override */
-@media (prefers-color-scheme: dark) {
-  body {
-    background:
-      radial-gradient(
-        circle at 20% 25%,
-        rgba(37, 99, 235, 0.18),
-        transparent 45%
-      ),
-      radial-gradient(
-        circle at 80% 15%,
-        rgba(6, 182, 212, 0.18),
-        transparent 50%
-      ),
-      linear-gradient(
-        to bottom,
-        hsl(222, 47%, 11%),
-        hsl(217, 33%, 14%)
-      );
-  }
-}
+/* =============================
+   TYPOGRAPHY
+============================= */
 
 h1,
 h2,
@@ -114,9 +125,10 @@ a {
   text-decoration: none;
 }
 
-/* ============================= */
-/* LAYOUT */
-/* ============================= */
+/* =============================
+   LAYOUT HELPERS
+============================= */
+
 .page {
   max-width: 1200px;
   margin: 0 auto;
@@ -134,16 +146,41 @@ a {
   margin-bottom: var(--space-lg);
 }
 
-/* ============================= */
-/* CARDS (PROJECTS, DETAILS) */
-/* ============================= */
+/* =============================
+   GLOBAL CARDS / BOXES (UPGRADED)
+============================= */
+
 .card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+
+  border-radius: 18px;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+
+  /* 🔵 Soft blue glass gradient */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(37, 99, 235, 0.08),
+      rgba(255, 255, 255, 0.96)
+    );
+
+  border: 1px solid rgba(37, 99, 235, 0.18);
+
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(8px);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-hover);
 }
 
 .card-title {
@@ -156,21 +193,25 @@ a {
   margin-bottom: var(--space-md);
 }
 
-/* ============================= */
-/* BUTTONS */
-/* ============================= */
+/* =============================
+   BUTTONS
+============================= */
+
 .button-group {
   display: flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
 }
 
-/* Primary action */
 .btn-primary {
-  background: var(--primary-color);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   border: none;
-  padding: 0.6rem 1.4rem;
+  padding: 0.65rem 1.5rem;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -178,15 +219,14 @@ a {
 }
 
 .btn-primary:hover {
-  background: hsl(var(--primary-hue), var(--primary-sat), 48%);
+  filter: brightness(0.95);
 }
 
-/* Secondary action */
 .btn-secondary {
-  background: white;
+  background: var(--surface-glass);
   color: var(--primary-color);
   border: 1px solid var(--primary-color);
-  padding: 0.6rem 1.4rem;
+  padding: 0.65rem 1.5rem;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -194,10 +234,9 @@ a {
 }
 
 .btn-secondary:hover {
-  background: hsl(var(--primary-hue), 100%, 97%);
+  background: hsla(var(--primary-hue), 100%, 96%, 0.7);
 }
 
-/* Ghost button */
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--border-color);
@@ -208,16 +247,43 @@ a {
 }
 
 .btn-ghost:hover {
-  background: hsl(220, 20%, 96%);
+  background: hsla(var(--primary-hue), 20%, 96%, 0.6);
 }
 
-/* ============================= */
-/* EMPTY STATES */
-/* ============================= */
+/* =============================
+   EMPTY STATES
+============================= */
+
 .empty-state {
   text-align: center;
   padding: var(--space-xl);
   border: 1px dashed var(--border-color);
-  border-radius: 16px;
+  border-radius: 18px;
   color: var(--text-muted);
+  background: var(--surface-glass);
+  backdrop-filter: blur(8px);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      hsla(var(--primary-hue), 90%, 60%, 0.14),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 82% 18%,
+      hsla(var(--secondary-hue), 90%, 55%, 0.14),
+      transparent 50%
+    ),
+    linear-gradient(
+      to bottom,
+      var(--bg-top),
+      var(--bg-bottom)
+    );
 }

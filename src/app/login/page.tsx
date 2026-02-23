@@ -19,87 +19,66 @@ export default function LoginPage() {
       alert("Invalid email or password");
       return;
     }
-    // ⛔ DO NOT redirect here
-    // We wait for user to be set
+    // ⛔ wait for auth state
   };
 
-  // ✅ Redirect AFTER auth state is ready
   useEffect(() => {
     if (!user) return;
-
-    if (user.role === "organization") {
-      // ✅ go to ORGANIZATION dashboard router
-      router.push("/dashboard");
-    } else {
-      // ✅ members go to dashboard router too
-      router.push("/dashboard");
-    }
+    router.push("/dashboard");
   }, [user, router]);
 
   return (
-    <main style={container}>
-      <div style={card}>
-        <h1 style={{ marginBottom: "1rem" }}>Log in</h1>
+    /* FULL PAGE CENTER WRAPPER */
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.25rem",
+      }}
+    >
+      {/* GLASS CARD (slightly bigger) */}
+      <div
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: "480px",     // ⬆ was 420px
+          padding: "2.75rem",    // ⬆ more breathing room
+        }}
+      >
+        <h1 className="card-title">Log in</h1>
 
-        <input
-          type="email"
-          placeholder="Email"
-          style={input}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <input
-          type="password"
-          placeholder="Password"
-          style={input}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        <Button onClick={handleLogin} type="button">
-          Log in
-        </Button>
+          <Button onClick={handleLogin} type="button">
+            Log in
+          </Button>
+        </div>
 
-        <p style={{ marginTop: "1.5rem", textAlign: "center" }}>
+        <p
+          className="card-text"
+          style={{ marginTop: "1.75rem", textAlign: "center" }}
+        >
           Don’t have an account?{" "}
-          <Link href="/signup" style={{ color: "#2563eb" }}>
+          <Link href="/signup" style={{ color: "var(--primary-color)" }}>
             Create one
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }
-
-/* ======================
-   STYLES
-====================== */
-
-const container = {
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background:
-    "radial-gradient(circle at top, rgba(37,99,235,0.18), transparent 60%)",
-};
-
-const card = {
-  width: "100%",
-  maxWidth: "420px",
-  padding: "2.5rem",
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65))",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
-  borderRadius: "18px",
-  border: "1px solid rgba(255,255,255,0.5)",
-  boxShadow: "0 25px 50px rgba(15, 23, 42, 0.2)",
-};
-
-const input = {
-  width: "100%",
-  padding: "0.75rem",
-  marginBottom: "1rem",
-};

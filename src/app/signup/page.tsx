@@ -21,7 +21,7 @@ function SignupContent() {
   const router = useRouter();
   const { signup } = useAuth();
 
-  // ✅ Normalize role from URL (always lowercase)
+  // Normalize role from URL
   const roleFromUrl = searchParams
     .get("role")
     ?.toLowerCase() as Role | undefined;
@@ -44,7 +44,7 @@ function SignupContent() {
       return;
     }
 
-    // ✅ Organization never goes to profile creation
+    // Redirect by role
     if (role === "organization") {
       router.push("/dashboard/projects");
     } else {
@@ -60,66 +60,101 @@ function SignupContent() {
   ];
 
   return (
-    <main style={container}>
-      <div style={card}>
-        <h1 style={{ marginBottom: "0.75rem" }}>Create account</h1>
+    /* FULL PAGE CENTER WRAPPER */
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.25rem",
+      }}
+    >
+      {/* GLASS CARD (same size as Login) */}
+      <div
+        className="card"
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+          padding: "2.75rem",
+        }}
+      >
+        <h1 className="card-title">Create account</h1>
 
-        <div style={roleBadge}>
+        <p className="card-text">
           Creating an account as <strong>{role}</strong>
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <input
+            type="text"
+            placeholder="Full name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <div>
+            <p
+              style={{
+                marginBottom: "0.5rem",
+                fontSize: "0.9rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              Select your role:
+            </p>
+
+            {roles.map(({ value, label }) => (
+              <label
+                key={value}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.9rem",
+                }}
+              >
+                <input
+                  type="radio"
+                  value={value}
+                  checked={role === value}
+                  onChange={() => setRole(value)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+
+          <Button onClick={handleSignup} type="button">
+            Create account
+          </Button>
         </div>
 
-        <input
-          type="text"
-          placeholder="Full name"
-          style={input}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          style={input}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          style={input}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <div style={{ marginBottom: "1.25rem" }}>
-          <p>Select your role:</p>
-          {roles.map(({ value, label }) => (
-            <label key={value} style={{ display: "block" }}>
-              <input
-                type="radio"
-                value={value}
-                checked={role === value}
-                onChange={() => setRole(value)}
-                style={{ marginRight: "0.4rem" }}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-
-        <Button onClick={handleSignup} type="button">
-          Create account
-        </Button>
-
-        <p style={{ marginTop: "1.5rem", textAlign: "center" }}>
+        <p
+          className="card-text"
+          style={{ marginTop: "1.75rem", textAlign: "center" }}
+        >
           Already have an account?{" "}
-          <Link href="/login" style={{ color: "#2563eb" }}>
+          <Link href="/login" style={{ color: "var(--primary-color)" }}>
             Log in
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -134,45 +169,3 @@ export default function SignupPage() {
     </Suspense>
   );
 }
-
-/* ======================
-   STYLES
-====================== */
-
-const container = {
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  background:
-    "radial-gradient(circle at top, rgba(37,99,235,0.18), transparent 60%)",
-};
-
-const card = {
-  width: "100%",
-  maxWidth: "420px",
-  padding: "2.5rem",
-  background:
-    "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65))",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
-  borderRadius: "18px",
-  border: "1px solid rgba(255,255,255,0.5)",
-  boxShadow: "0 25px 50px rgba(15, 23, 42, 0.2)",
-};
-
-const roleBadge = {
-  marginBottom: "1.5rem",
-  padding: "0.6rem 0.75rem",
-  background: "rgba(37,99,235,0.1)",
-  color: "#1f3a5f",
-  borderRadius: "8px",
-  fontSize: "0.9rem",
-  textAlign: "center" as const,
-};
-
-const input = {
-  width: "100%",
-  padding: "0.75rem",
-  marginBottom: "1rem",
-};
