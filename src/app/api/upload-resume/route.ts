@@ -1,18 +1,21 @@
 export const runtime = "nodejs";
 
 import { put } from "@vercel/blob";
+import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
-  const form = await request.formData();
-  const file = form.get("file") as File | null;
+export async function POST(req: Request) {
+  const formData = await req.formData();
+  const file = formData.get("file") as File;
 
   if (!file) {
-    return Response.json({ error: "No file uploaded" }, { status: 400 });
+    return NextResponse.json({ error: "No file" }, { status: 400 });
   }
 
-  const blob = await put(file.name, file, { access: "public" });
+  const blob = await put(file.name, file, {
+    access: "public",
+  });
 
-  return Response.json({
+  return NextResponse.json({
     url: blob.url,
     fileName: file.name,
   });
