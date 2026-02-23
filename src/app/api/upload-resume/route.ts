@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { put } from "@vercel/blob";
 
 export async function POST(request: Request) {
