@@ -21,6 +21,8 @@ type UserProfile = {
   causes: string;
   experience: string;
   education?: string;
+  // ✅ Keep field for backwards compatibility with already-saved data,
+  // but we will NOT allow uploads anymore.
   resumeFileName?: string;
   updatedAt: string;
 };
@@ -66,13 +68,9 @@ function ProfilePage() {
   useEffect(() => {
     if (!user || isOrg) return;
 
-    const stored = JSON.parse(
-      localStorage.getItem("vidzel_profiles") || "[]"
-    );
+    const stored = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
 
-    const existing = stored.find(
-      (p: UserProfile) => p.userId === user.id
-    );
+    const existing = stored.find((p: UserProfile) => p.userId === user.id);
 
     if (existing) {
       setProfile(existing);
@@ -93,18 +91,16 @@ function ProfilePage() {
   /* ================= SAVE ================= */
 
   const handleSave = () => {
-    const stored = JSON.parse(
-      localStorage.getItem("vidzel_profiles") || "[]"
-    );
+    const stored = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
 
-    const updatedProfile = {
+    // ✅ Resume upload is disabled now.
+    // If some old value exists, we keep it; we just don’t allow adding a new file anymore.
+    const updatedProfile: UserProfile = {
       ...profile,
       updatedAt: new Date().toISOString(),
     };
 
-    const filtered = stored.filter(
-      (p: UserProfile) => p.userId !== user.id
-    );
+    const filtered = stored.filter((p: UserProfile) => p.userId !== user.id);
 
     localStorage.setItem(
       "vidzel_profiles",
@@ -155,36 +151,28 @@ function ProfilePage() {
       <label>Full Name</label>
       <input
         value={profile.fullName}
-        onChange={(e) =>
-          setProfile({ ...profile, fullName: e.target.value })
-        }
+        onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
         style={input}
       />
 
       <label>Location</label>
       <input
         value={profile.location}
-        onChange={(e) =>
-          setProfile({ ...profile, location: e.target.value })
-        }
+        onChange={(e) => setProfile({ ...profile, location: e.target.value })}
         style={input}
       />
 
       <label>Bio</label>
       <textarea
         value={profile.bio}
-        onChange={(e) =>
-          setProfile({ ...profile, bio: e.target.value })
-        }
+        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
         style={textarea}
       />
 
       <label>Skills</label>
       <input
         value={profile.skills}
-        onChange={(e) =>
-          setProfile({ ...profile, skills: e.target.value })
-        }
+        onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
         style={input}
       />
 
@@ -223,20 +211,18 @@ function ProfilePage() {
         style={textarea}
       />
 
+      {/* ✅ RESUME UPLOAD REMOVED (NO MORE FILE INPUT) */}
       <label>Resume</label>
-      <input
-        type="file"
-        onChange={(e) =>
-          setProfile({
-            ...profile,
-            resumeFileName: e.target.files?.[0]?.name || "",
-          })
-        }
-      />
+      <p style={{ color: "#64748b", marginBottom: "1.5rem" }}>
+        Resume upload is currently disabled.
+      </p>
 
-      {profile.resumeFileName && (
-        <p>Uploaded: {profile.resumeFileName}</p>
-      )}
+      {/* Optional: if you previously saved a resume filename, still show it */}
+      {profile.resumeFileName ? (
+        <p style={{ marginTop: "-0.75rem", marginBottom: "1.5rem" }}>
+          Previously saved: <strong>{profile.resumeFileName}</strong>
+        </p>
+      ) : null}
 
       <Button onClick={handleSave}>Save Profile</Button>
     </div>
