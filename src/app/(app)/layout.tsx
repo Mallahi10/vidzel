@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 
-import Header from "../components/Header/Header";
-import { Providers } from "./providers";
+import Header from "@/components/Header/Header";
+import { Providers } from "../providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-heading" });
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Virtual Impact & Development Zone for Engaged Leaders of Tomorrow.",
 };
 
-export default function RootLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;

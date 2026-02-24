@@ -2,36 +2,26 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import styles from "../app/page.module.css";
+import styles from "./RoleSelection.module.css";
 import { Shield, GraduationCap, Heart, Users } from "lucide-react";
 import { Sora } from "next/font/google";
 
-/* ================= TYPES ================= */
-
 type UserRole = "organization" | "student" | "volunteer" | "mentor";
-
-/* ================= FONT ================= */
 
 const sora = Sora({
   subsets: ["latin"],
   weight: ["400", "600"],
 });
 
-/* ================= COMPONENT ================= */
-
 export default function RoleSelection() {
   const router = useRouter();
 
   const handleSelect = (role: UserRole) => {
+    // ✅ FIX: go to LOGIN first (not signup)
     router.push(`/login?role=${role}`);
   };
 
-  const roles: {
-    id: UserRole;
-    label: string;
-    icon: React.ElementType;
-    desc: string;
-  }[] = [
+  const roles = [
     {
       id: "organization",
       label: "Organization",
@@ -56,17 +46,17 @@ export default function RoleSelection() {
       icon: Users,
       desc: "Share expertise & guide teams.",
     },
-  ];
+  ] as const;
 
   return (
     <div className={styles.rolesGrid}>
       {roles.map((item) => (
-        <div
+        <button
           key={item.id}
+          type="button"
           className={`${styles.roleCard} glass-card`}
           onClick={() => handleSelect(item.id)}
         >
-          {/* Icon + Title */}
           <div className={styles.roleHeader}>
             <item.icon size={28} className={styles.roleIcon} />
 
@@ -81,7 +71,6 @@ export default function RoleSelection() {
             </h3>
           </div>
 
-          {/* Description */}
           <p
             className={styles.roleDesc}
             style={{
@@ -91,7 +80,7 @@ export default function RoleSelection() {
           >
             {item.desc}
           </p>
-        </div>
+        </button>
       ))}
     </div>
   );

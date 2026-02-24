@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 /* ================= TYPES ================= */
 
@@ -8,39 +9,17 @@ type Role = "organization" | "student" | "volunteer" | "mentor";
 
 type User = {
   id: string;
-  name: string;
   email: string;
-  password: string;
   role: Role;
 };
 
 type AuthContextType = {
   user: User | null;
-  signup: (
-    name: string,
-    email: string,
-    password: string,
-    role: Role
-  ) => boolean;
-  login: (email: string, password: string) => User | null;
-  logout: () => void;
+  loading: boolean;
+  signup: (email: string, password: string, role: Role) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 };
-
-/* ================= HELPERS ================= */
-
-function normalizeRole(role: unknown): Role {
-  if (typeof role !== "string") return "volunteer";
-  const r = role.trim().toLowerCase();
-  if (
-    r === "organization" ||
-    r === "student" ||
-    r === "volunteer" ||
-    r === "mentor"
-  ) {
-    return r as Role;
-  }
-  return "volunteer";
-}
 
 /* ================= CONTEXT ================= */
 
@@ -56,121 +35,116 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  /* ========== RESTORE SESSION (SINGLE SOURCE) ========== */
+  /* ===== RESTORE SESSION ON LOAD ===== */
   useEffect(() => {
-    const stored = localStorage.getItem("vidzel_user");
-    if (!stored) return;
+    const restoreSession = async () => {
+      const { data } = await supabase.auth.getSession();
 
-    const parsed = JSON.parse(stored);
-    const restored: User = {
-      ...parsed,
-      role: normalizeRole(parsed.role),
+      if (data.session?.user) {
+        const role =
+          (data.session.user.user_metadata?.role as Role) || "volunteer";
+
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email!,
+          role,
+        });
+      }
+
+      setLoading(false);
     };
 
-    setUser(restored);
-    localStorage.setItem("vidzel_user", JSON.stringify(restored));
+    restoreSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setUser(null);
+        return;
+      }
+
+      const role =
+        (session.user.user_metadata?.role as Role) || "volunteer";
+
+      setUser({
+        id: session.user.id,
+        email: session.user.email!,
+        role,
+      });
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
-
-  /* ========== STORAGE HELPERS ========== */
-
-  const getAccounts = (): User[] =>
-    JSON.parse(localStorage.getItem("vidzel_accounts") || "[]");
-
-  const saveAccounts = (accounts: User[]) =>
-    localStorage.setItem("vidzel_accounts", JSON.stringify(accounts));
-
-  const getProfiles = () =>
-    JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
-
-  const saveProfiles = (profiles: any[]) =>
-    localStorage.setItem("vidzel_profiles", JSON.stringify(profiles));
 
   /* ================= SIGNUP ================= */
 
-  const signup = (
-    name: string,
+  const signup = async (
     email: string,
     password: string,
     role: Role
-  ) => {
-    const accounts = getAccounts();
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedRole = normalizeRole(role);
+  ): Promise<boolean> => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role },
+      },
+    });
 
-    if (accounts.some((u) => u.email === normalizedEmail)) {
+    if (error || !data.user) {
+      alert(error?.message || "Signup failed");
       return false;
     }
 
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      email: normalizedEmail,
-      password: password.trim(),
-      role: normalizedRole,
-    };
-
-    saveAccounts([...accounts, newUser]);
-
-    // ✅ create profile ONLY for non-organization
-    if (normalizedRole !== "organization") {
-      const profiles = getProfiles();
-      profiles.push({
-        userId: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        bio: "",
-        location: "",
-        skills: [],
-        createdAt: new Date().toISOString(),
-      });
-      saveProfiles(profiles);
-    }
-
-    localStorage.setItem("vidzel_user", JSON.stringify(newUser));
-    setUser(newUser);
+    setUser({
+      id: data.user.id,
+      email: data.user.email!,
+      role,
+    });
 
     return true;
   };
 
   /* ================= LOGIN ================= */
 
-  const login = (email: string, password: string): User | null => {
-    const accounts = getAccounts();
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPassword = password.trim();
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    const found = [...accounts]
-      .reverse()
-      .find(
-        (u) =>
-          u.email === normalizedEmail &&
-          u.password === normalizedPassword
-      );
+    if (error || !data.user) {
+      alert("Invalid email or password");
+      return false;
+    }
 
-    if (!found) return null;
+    const role =
+      (data.user.user_metadata?.role as Role) || "volunteer";
 
-    const normalizedUser: User = {
-      ...found,
-      role: normalizeRole(found.role),
-    };
+    setUser({
+      id: data.user.id,
+      email: data.user.email!,
+      role,
+    });
 
-    localStorage.setItem("vidzel_user", JSON.stringify(normalizedUser));
-    setUser(normalizedUser);
-
-    return normalizedUser;
+    return true;
   };
 
   /* ================= LOGOUT ================= */
 
-  const logout = () => {
-    localStorage.removeItem("vidzel_user");
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, signup, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, signup, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

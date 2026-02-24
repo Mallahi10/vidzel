@@ -126,7 +126,8 @@ export default function SubmissionSection({
           id: crypto.randomUUID(),
           workspaceId,
           userId: user.id,
-          userName: user.name,
+          // ✅ FIX: auth user has NO name
+          userName: user.email,
           userRole: user.role,
           versions: [newVersion],
         },
@@ -176,7 +177,8 @@ export default function SubmissionSection({
                       comment,
                       status,
                       reviewedAt: new Date().toISOString(),
-                      reviewedBy: user?.name || "Organization",
+                      // ✅ FIX: reviewer snapshot
+                      reviewedBy: user?.email || "Organization",
                     },
                   }
                 : v

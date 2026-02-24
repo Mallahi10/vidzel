@@ -1,37 +1,42 @@
 :root {
   /* =============================
-     VIDZEL BRAND COLOR SYSTEM
+     VIDZEL BRAND SYSTEM (UPGRADED)
   ============================= */
 
-  /* Brand hues */
-  --primary-hue: 220; /* Blue */
-  --primary-sat: 85%;
-  --primary-light: 55%;
+  /* Brand base hues */
+  --primary-hue: 217; /* Deep brand blue */
+  --primary-sat: 91%;
+  --primary-light: 60%;
 
-  --secondary-hue: 195; /* Cyan */
-  --secondary-sat: 85%;
-  --secondary-light: 50%;
+  --secondary-hue: 195; /* Human cyan */
+  --secondary-sat: 90%;
+  --secondary-light: 55%;
 
-  /* Derived brand colors */
+  /* Brand colors */
   --primary-color: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
   --secondary-color: hsl(var(--secondary-hue), var(--secondary-sat), var(--secondary-light));
 
+  --brand-indigo: #1e3a8a;
+  --brand-blue: #2563eb;
+  --brand-cyan: #38bdf8;
+  --brand-teal: #5eead4;
+
   /* Background system */
-  --bg-top: #f8fbff;
-  --bg-bottom: #eef5ff;
+  --bg-top: #f1f7fe;
+  --bg-bottom: #e6f0fb;
 
   /* Surfaces */
   --surface-color: rgba(255, 255, 255, 0.92);
   --surface-glass: rgba(255, 255, 255, 0.88);
 
   /* Text */
-  --text-main: hsl(222, 47%, 11%);
-  --text-muted: hsl(220, 15%, 45%);
+  --text-main: #0f172a;
+  --text-muted: #475569;
 
   /* Borders & shadows */
-  --border-color: hsl(220, 20%, 90%);
-  --shadow-soft: 0 10px 30px rgba(37, 99, 235, 0.08);
-  --shadow-hover: 0 18px 40px rgba(37, 99, 235, 0.14);
+  --border-color: rgba(37, 99, 235, 0.18);
+  --shadow-soft: 0 12px 28px rgba(37, 99, 235, 0.10);
+  --shadow-hover: 0 20px 45px rgba(37, 99, 235, 0.22);
 
   /* Spacing */
   --space-xs: 0.5rem;
@@ -46,23 +51,23 @@
 }
 
 /* =============================
-   DARK MODE (AUTO)
+   DARK MODE (IMPROVED)
 ============================= */
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-top: hsl(222, 47%, 11%);
-    --bg-bottom: hsl(217, 33%, 14%);
+    --bg-top: #0f172a;
+    --bg-bottom: #111827;
 
     --surface-color: rgba(30, 41, 59, 0.92);
-    --surface-glass: rgba(30, 41, 59, 0.88);
+    --surface-glass: rgba(30, 41, 59, 0.85);
 
-    --text-main: hsl(210, 40%, 98%);
-    --text-muted: hsl(215, 20%, 65%);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
 
-    --border-color: hsl(217, 33%, 25%);
-    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.55);
+    --border-color: rgba(56, 189, 248, 0.25);
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -87,16 +92,15 @@ body {
   line-height: 1.6;
   font-size: 16px;
 
-  /* 🌍 GLOBAL VIDZEL BACKGROUND */
   background:
     radial-gradient(
       circle at 18% 22%,
-      hsla(var(--primary-hue), 90%, 60%, 0.14),
+      rgba(56, 189, 248, 0.15),
       transparent 45%
     ),
     radial-gradient(
       circle at 82% 18%,
-      hsla(var(--secondary-hue), 90%, 55%, 0.14),
+      rgba(94, 234, 212, 0.15),
       transparent 50%
     ),
     linear-gradient(
@@ -116,13 +120,19 @@ h1,
 h2,
 h3 {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: var(--space-sm);
+  color: var(--text-main);
 }
 
 a {
-  color: inherit;
+  color: var(--brand-blue);
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--brand-indigo);
 }
 
 /* =============================
@@ -147,18 +157,17 @@ a {
 }
 
 /* =============================
-   GLOBAL CARDS / BOXES (UPGRADED)
+   GLOBAL CARDS
 ============================= */
 
 .card {
   position: relative;
   overflow: hidden;
 
-  border-radius: 18px;
+  border-radius: 20px;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
 
-  /* 🔵 Soft blue glass gradient */
   background:
     linear-gradient(
       180deg,
@@ -166,8 +175,7 @@ a {
       rgba(255, 255, 255, 0.96)
     );
 
-  border: 1px solid rgba(37, 99, 235, 0.18);
-
+  border: 1px solid var(--border-color);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(8px);
 
@@ -178,8 +186,8 @@ a {
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(37, 99, 235, 0.35);
+  transform: translateY(-5px);
+  border-color: var(--brand-blue);
   box-shadow: var(--shadow-hover);
 }
 
@@ -194,7 +202,7 @@ a {
 }
 
 /* =============================
-   BUTTONS
+   BUTTONS (IMPACT STYLE)
 ============================= */
 
 .button-group {
@@ -205,36 +213,40 @@ a {
 
 .btn-primary {
   background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--secondary-color)
+    90deg,
+    var(--brand-indigo),
+    var(--brand-blue),
+    var(--brand-cyan)
   );
   color: white;
   border: none;
   padding: 0.65rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-  filter: brightness(0.95);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-secondary {
   background: var(--surface-glass);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  color: var(--brand-blue);
+  border: 1px solid var(--brand-blue);
   padding: 0.65rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 .btn-secondary:hover {
-  background: hsla(var(--primary-hue), 100%, 96%, 0.7);
+  background: rgba(37, 99, 235, 0.08);
 }
 
 .btn-ghost {
@@ -242,12 +254,12 @@ a {
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 0.6rem 1.2rem;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
 }
 
 .btn-ghost:hover {
-  background: hsla(var(--primary-hue), 20%, 96%, 0.6);
+  background: rgba(37, 99, 235, 0.06);
 }
 
 /* =============================
@@ -258,11 +270,13 @@ a {
   text-align: center;
   padding: var(--space-xl);
   border: 1px dashed var(--border-color);
-  border-radius: 18px;
+  border-radius: 20px;
   color: var(--text-muted);
   background: var(--surface-glass);
   backdrop-filter: blur(8px);
 }
+
+/* Background depth layer */
 
 body::before {
   content: "";
@@ -273,17 +287,12 @@ body::before {
   background:
     radial-gradient(
       circle at 18% 22%,
-      hsla(var(--primary-hue), 90%, 60%, 0.14),
+      rgba(56, 189, 248, 0.12),
       transparent 45%
     ),
     radial-gradient(
       circle at 82% 18%,
-      hsla(var(--secondary-hue), 90%, 55%, 0.14),
+      rgba(94, 234, 212, 0.12),
       transparent 50%
-    ),
-    linear-gradient(
-      to bottom,
-      var(--bg-top),
-      var(--bg-bottom)
     );
 }

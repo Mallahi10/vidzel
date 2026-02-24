@@ -97,7 +97,7 @@ export default function ExploreProjectsPage() {
       projectTitle: project.title,
 
       applicantId: user.id,
-      applicantName: user.name || "Unnamed Applicant",
+      applicantName: user.email || "Unnamed Applicant",
       applicantEmail: user.email || "",
       applicantRole: user.role || "participant",
 

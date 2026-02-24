@@ -66,7 +66,7 @@ export default function CertificatePage() {
     return <div style={{ padding: "3rem" }}>Please log in.</div>;
   }
 
-  // ✅ Find THIS user's certificate for THIS project (Automatic certificate source of truth)
+  // ✅ Find THIS user's certificate for THIS project
   const myCert = useMemo(() => {
     return certificates.find(
       (c) =>
@@ -75,7 +75,7 @@ export default function CertificatePage() {
     );
   }, [certificates, projectId, user.id]);
 
-  // ✅ If project isn't completed OR certificate isn't issued → not available
+  // ❌ Not available yet
   if (!project || project.status !== "completed" || !myCert) {
     return (
       <div style={{ padding: "3rem" }}>
@@ -139,7 +139,7 @@ export default function CertificatePage() {
             marginBottom: "1rem",
           }}
         >
-          {myCert.userName || user.name}
+          {myCert.userName || user.email}
         </div>
 
         <p style={{ fontSize: "1.1rem", marginBottom: "1.5rem" }}>

@@ -53,7 +53,8 @@ export default function MessageSection({
     const newMessage: Message = {
       id: crypto.randomUUID(),
       workspaceId,
-      authorName: user.name,
+      // ✅ FIX: auth user has NO name
+      authorName: user.email,
       authorRole: user.role,
       content,
       createdAt: new Date().toISOString(),

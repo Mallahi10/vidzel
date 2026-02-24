@@ -21,8 +21,7 @@ type UserProfile = {
   causes: string;
   experience: string;
   education?: string;
-  // ✅ Keep field for backwards compatibility with already-saved data,
-  // but we will NOT allow uploads anymore.
+  // Backwards compatibility only
   resumeFileName?: string;
   updatedAt: string;
 };
@@ -79,7 +78,8 @@ function ProfilePage() {
         ...prev,
         userId: user.id,
         role: role as ProfileRole,
-        fullName: user.name || "",
+        // ✅ FIX: auth user has NO name
+        fullName: user.email || "",
       }));
     }
   }, [user, isOrg, role]);
@@ -93,8 +93,6 @@ function ProfilePage() {
   const handleSave = () => {
     const stored = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
 
-    // ✅ Resume upload is disabled now.
-    // If some old value exists, we keep it; we just don’t allow adding a new file anymore.
     const updatedProfile: UserProfile = {
       ...profile,
       updatedAt: new Date().toISOString(),
@@ -211,13 +209,11 @@ function ProfilePage() {
         style={textarea}
       />
 
-      {/* ✅ RESUME UPLOAD REMOVED (NO MORE FILE INPUT) */}
       <label>Resume</label>
       <p style={{ color: "#64748b", marginBottom: "1.5rem" }}>
         Resume upload is currently disabled.
       </p>
 
-      {/* Optional: if you previously saved a resume filename, still show it */}
       {profile.resumeFileName ? (
         <p style={{ marginTop: "-0.75rem", marginBottom: "1.5rem" }}>
           Previously saved: <strong>{profile.resumeFileName}</strong>
@@ -252,7 +248,7 @@ const backButton = {
   cursor: "pointer",
 };
 
-/* ================= EXPORT (CRITICAL FIX) ================= */
+/* ================= EXPORT ================= */
 
 export default dynamic(() => Promise.resolve(ProfilePage), {
   ssr: false,

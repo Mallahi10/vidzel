@@ -22,7 +22,7 @@ export default function OrganizationDashboard() {
     <div className="page">
       {/* HEADER */}
       <h1 className="page-title">
-        Welcome back, {user.name}
+        Welcome back, {user.email}
       </h1>
 
       <p className="page-subtitle">

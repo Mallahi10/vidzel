@@ -13,7 +13,6 @@ const sora = Sora({
 export default function Home() {
   return (
     <main className={styles.main}>
-
       {/* HERO */}
       <div className={styles.hero}>
         <h1 className={styles.title}>
@@ -27,7 +26,6 @@ export default function Home() {
           Different roles. One shared mission.
         </h2>
 
-        {/* ✅ SORA APPLIED ONLY HERE */}
         <p
           className={styles.journeySubtitle}
           style={{ fontFamily: sora.style.fontFamily }}
@@ -36,32 +34,18 @@ export default function Home() {
           around shared impact goals.
         </p>
 
-        {/* IMPACT NETWORK */}
-        <div className={styles.impactNetwork}>
+        {/* ROLES */}
+        <div className={styles.rolesArea}>
+          <RoleSelection />
+        </div>
 
-          {/* Roles */}
-          <div className={styles.rolesArea}>
-            <RoleSelection />
+        {/* SHARED IMPACT */}
+        <div className={styles.impactArea}>
+          <div className={styles.impactBadge}>
+            Shared Impact
           </div>
-
-          {/* Arrows */}
-          <div className={styles.arrowsArea}>
-            <span className={styles.arrow}></span>
-            <span className={styles.arrow}></span>
-            <span className={styles.arrow}></span>
-            <span className={styles.arrow}></span>
-          </div>
-
-          {/* Shared Impact */}
-          <div className={styles.impactArea}>
-            <div className={styles.impactBadge}>
-              Shared Impact
-            </div>
-          </div>
-
         </div>
       </section>
-
     </main>
   );
 }

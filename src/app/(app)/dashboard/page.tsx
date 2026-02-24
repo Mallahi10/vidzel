@@ -8,6 +8,8 @@ import Button from "@/components/Button";
 
 import styles from "./dashboard.module.css";
 
+/* ================= TYPES ================= */
+
 type Role = "organization" | "volunteer" | "student" | "mentor";
 
 function normalizeRole(role: unknown): Role | "unknown" {
@@ -19,41 +21,35 @@ function normalizeRole(role: unknown): Role | "unknown" {
   return "unknown";
 }
 
+/* ================= DASHBOARD ================= */
+
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [hasProfile, setHasProfile] = useState(false);
 
   const role = useMemo(() => normalizeRole(user?.role), [user?.role]);
   const isOrg = role === "organization";
+
   const roleLabel =
     role === "unknown"
       ? "Dashboard"
       : `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`;
 
-  // Redirect if not logged in
+  /* ✅ IMPORTANT: Only redirect AFTER loading is done */
   useEffect(() => {
-    if (!user) {
-      router.push("/signup");
-      return;
-    }
-  }, [user, router]);
+    if (loading) return;         // <-- prevents redirect loop
+    if (!user) router.replace("/login");
+  }, [user, loading, router]);
 
-  // Check profile existence only for non-organizations
+  /* TEMP profile state */
   useEffect(() => {
     if (!user) return;
+    setHasProfile(false);
+  }, [user]);
 
-    // Prevent stale state if you previously logged in as a member
-    if (isOrg) {
-      setHasProfile(false);
-      return;
-    }
-
-    const profiles = JSON.parse(localStorage.getItem("vidzel_profiles") || "[]");
-    const found = profiles.some((p: any) => p?.userId === user.id);
-    setHasProfile(found);
-  }, [user, isOrg]);
-
+  /* While restoring session, render nothing (or a loader) */
+  if (loading) return null;
   if (!user) return null;
 
   return (
@@ -61,7 +57,7 @@ export default function Dashboard() {
       {/* ===== HEADER ===== */}
       <header className={styles.header} style={{ position: "relative" }}>
         <div>
-          <h1 className={styles.pageTitle}>Welcome back, {user.name}</h1>
+          <h1 className={styles.pageTitle}>Welcome back</h1>
 
           <p className={styles.pageSubtitle}>
             Manage your activity and track your work in one place.
@@ -130,7 +126,7 @@ export default function Dashboard() {
         </section>
       )}
 
-      {/* ================= VOLUNTEER / STUDENT / MENTOR ================= */}
+      {/* ================= MEMBER VIEW ================= */}
       {!isOrg && (
         <>
           <section className={styles.section}>
@@ -144,7 +140,6 @@ export default function Dashboard() {
             </div>
 
             <div className={styles.cardGrid}>
-              {/* My Profile */}
               <div className={styles.card}>
                 <div className={styles.cardTitle}>My Profile</div>
 
@@ -171,7 +166,6 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* My Invitations */}
               <div className={styles.card}>
                 <div className={styles.cardTitle}>My Invitations</div>
                 <div className={styles.cardMeta}>
@@ -183,7 +177,6 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              {/* My Workspaces */}
               <div className={styles.card}>
                 <div className={styles.cardTitle}>My Workspaces</div>
                 <div className={styles.cardMeta}>
@@ -195,7 +188,6 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              {/* Completed Projects */}
               <div className={styles.card}>
                 <div className={styles.cardTitle}>Completed Projects</div>
                 <div className={styles.cardMeta}>
