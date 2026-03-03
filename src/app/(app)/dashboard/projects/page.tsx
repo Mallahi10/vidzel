@@ -22,13 +22,8 @@ export default function Page() {
     return <div style={{ padding: "3rem" }}>Please log in first.</div>;
   }
 
-  if (user.role !== "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Only organizations can view this page.
-      </div>
-    );
-  }
+  const role = user.role?.toLowerCase();
+  const isOrg = role === "organization";
 
   const myProjects = projects.filter(
     (p) => p.createdBy === user.email
@@ -84,35 +79,31 @@ export default function Page() {
       >
         <div>
           <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
-            Organization Dashboard
+            {isOrg ? "Organization Dashboard" : "Browse Projects"}
           </h1>
           <p style={{ color: "#475569", maxWidth: "520px" }}>
-            Build and manage impact projects with students, volunteers, and mentors.
+            {isOrg
+              ? "Build and manage impact projects."
+              : "Explore open projects and get involved."}
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          {/* ✅ FIXED */}
-          <Button variant="secondary" onClick={() => router.back()}>
-            ← Back
-          </Button>
-
+        {isOrg && (
           <Link href="/dashboard/projects/create">
             <Button>+ Create Project</Button>
           </Link>
-        </div>
+        )}
       </div>
 
       {/* ===== PROJECT LIST ===== */}
-      <h2 style={{ marginBottom: "1.5rem" }}>Your Projects</h2>
 
-      {myProjects.length === 0 && (
+      {projects.length === 0 && (
         <p style={{ color: "#64748b" }}>
-          You haven’t created any projects yet.
+          No projects available yet.
         </p>
       )}
 
-      {myProjects.map((project) => {
+      {(isOrg ? myProjects : projects).map((project) => {
         const isCompleted = project.status === "completed";
 
         return (
@@ -128,23 +119,8 @@ export default function Page() {
               opacity: isCompleted ? 0.85 : 1,
             }}
           >
-            <div style={{ marginBottom: "0.75rem" }}>
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  background: isCompleted ? "#e5e7eb" : "#dcfce7",
-                  color: isCompleted ? "#334155" : "#166534",
-                }}
-              >
-                {isCompleted ? "Completed" : "Active"}
-              </span>
-            </div>
-
             <h3 style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-              {project.title || project.projectTitle || "Untitled Project"}
+              {project.title || "Untitled Project"}
             </h3>
 
             <div style={{ marginBottom: "1rem", color: "#475569" }}>
@@ -153,40 +129,60 @@ export default function Page() {
             </div>
 
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <Link href={`/dashboard/projects/${project.id}/applicants`}>
-                <Button variant="secondary">👤➕ Applicants</Button>
-              </Link>
 
-              <Link href={`/dashboard/projects/create?edit=${project.id}`}>
-                <Button variant="secondary">✏️ Edit</Button>
-              </Link>
+              {/* ORGANIZATION ACTIONS */}
+              {isOrg && (
+                <>
+                  <Link href={`/dashboard/projects/${project.id}/applicants`}>
+                    <Button variant="secondary">
+                      👤 Applicants
+                    </Button>
+                  </Link>
 
-              {/* ✅ FIXED */}
-              <Link href={`/dashboard/workspaces/${project.id}`}>
-                <Button variant="secondary">📂 Open Workspace</Button>
-              </Link>
+                  <Link href={`/dashboard/projects/create?edit=${project.id}`}>
+                    <Button variant="secondary">✏️ Edit</Button>
+                  </Link>
 
-              {!isCompleted && (
-                <Button
-                  variant="secondary"
-                  onClick={() => handleComplete(project.id)}
-                >
-                  ✅ Mark Completed
-                </Button>
+                  <Link href={`/dashboard/workspaces/${project.id}`}>
+                    <Button variant="secondary">
+                      📂 Workspace
+                    </Button>
+                  </Link>
+
+                  {!isCompleted && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleComplete(project.id)}
+                    >
+                      ✅ Complete
+                    </Button>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(project.id)}
+                    style={{
+                      background: "transparent",
+                      color: "#dc2626",
+                      border: "none",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    🗑 Delete
+                  </button>
+                </>
               )}
 
-              <button
-                onClick={() => handleDelete(project.id)}
-                style={{
-                  background: "transparent",
-                  color: "#dc2626",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                🗑 Delete
-              </button>
+              {/* NON-ORG ACTIONS */}
+              {!isOrg && (
+                <>
+                  <Link href={`/dashboard/projects/${project.id}`}>
+                    <Button variant="secondary">View Details</Button>
+                  </Link>
+
+                  <Button>Apply</Button>
+                </>
+              )}
             </div>
           </div>
         );
