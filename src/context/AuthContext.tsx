@@ -32,22 +32,20 @@ type AuthContextType = {
   ) => Promise<boolean>;
   login: (
     email: string,
-    password: string
-  ) => Promise<boolean>;
+    password: string,
+    expectedRole?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 };
 
 /* ================= CONTEXT ================= */
 
-const AuthContext =
-  createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx)
-    throw new Error(
-      "useAuth must be used within AuthProvider"
-    );
+    throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };
 
@@ -58,10 +56,8 @@ export const AuthProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [user, setUser] =
-    useState<User | null>(null);
-  const [loading, setLoading] =
-    useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   /* ================= AUTH LISTENER ONLY ================= */
 
@@ -73,8 +69,7 @@ export const AuthProvider = ({
 
       if (session?.user) {
         const role =
-          (session.user.user_metadata?.role as Role) ||
-          "volunteer";
+          (session.user.user_metadata?.role as Role) || "volunteer";
 
         setUser({
           id: session.user.id,
@@ -92,23 +87,26 @@ export const AuthProvider = ({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          const role =
-            (session.user.user_metadata?.role as Role) ||
-            "volunteer";
-
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            role,
-          });
-        } else {
-          setUser(null);
-        }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Gestion explicite de la déconnexion pour éviter les conflits d'état
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        return;
       }
-    );
+
+      if (session?.user) {
+        const role =
+          (session.user.user_metadata?.role as Role) || "volunteer";
+
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          role,
+        });
+      } else {
+        setUser(null);
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -122,14 +120,13 @@ export const AuthProvider = ({
     password: string,
     role: Role
   ): Promise<boolean> => {
-    const { error } =
-      await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { role },
-        },
-      });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role },
+      },
+    });
 
     if (error) {
       alert(error.message);
@@ -143,28 +140,49 @@ export const AuthProvider = ({
 
   const login = async (
     email: string,
-    password: string
-  ): Promise<boolean> => {
-    const { error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    password: string,
+    expectedRole?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    // 1. Authentification avec Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      alert("Invalid email or password");
-      return false;
+      return { success: false, error: "Invalid email or password" };
     }
 
-    return true;
-  };
+    // 2. Vérification stricte du rôle si un rôle est attendu
+    if (expectedRole && data.user) {
+      const userRole = data.user.user_metadata?.role;
 
+      if (userRole !== expectedRole) {
+        // Le rôle ne correspond pas, on annule la connexion immédiatement
+        await supabase.auth.signOut();
+        setUser(null); // On vide l'état React pour éviter les conflits
+        return { 
+          success: false, 
+          error: `Access denied. Please log in through the ${userRole} portal.` 
+        };
+      }
+    }
+
+    return { success: true };
+  };
   /* ================= LOGOUT ================= */
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    // DO NOT manually setUser here.
-    // Auth listener will handle it.
+    // 1. On vide l'état React de manière synchrone en premier
+    setUser(null);
+    
+    // 2. On déclenche la déconnexion Supabase
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error("Erreur de déconnexion:", error.message);
+      alert(error.message);
+    }
   };
 
   return (
