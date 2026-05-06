@@ -12,7 +12,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   
-  // 👈 1. Zdna had l'état bach nblookiw la redirection automatique
   const [isLoggingIn, setIsLoggingIn] = useState(false); 
 
   const { login, user, loading } = useAuth();
@@ -23,15 +22,15 @@ function LoginForm() {
 
   const handleLogin = async () => {
     setErrorMsg(""); 
-    setIsLoggingIn(true); // 👈 Kanblookiw useEffect
+    setIsLoggingIn(true); 
     
     const result = await login(email, password, expectedRole); 
     
     if (!result.success) {
       setErrorMsg(result.error || "Invalid email or password"); 
-      setIsLoggingIn(false); // 👈 Kan-déblookiw ila kayna erreur
+      setIsLoggingIn(false); // 
     } else {
-      // 👈 2. Kan-redirigiw MANUELLEMENT hna ghir ila kan kolchi s7i7
+    
       router.replace("/dashboard");
     }
   };
@@ -40,7 +39,6 @@ function LoginForm() {
   useEffect(() => {
     if (loading) return;
     
-    // 👈 3. Ila 7na f wste l'opération de login, mader walo (khlih hta tswb l'vérification)
     if (isLoggingIn) return; 
 
     // Cette condition s'exécute uniquement si l'utilisateur accède à la page /login 
@@ -109,7 +107,7 @@ function LoginForm() {
 
         <Button
           type="submit"
-          disabled={isLoggingIn} // 👈 N7ebso le bouton mli tkoun katchargi
+          disabled={isLoggingIn} 
           style={{
             width: "100%",
             marginTop: "0.9rem",
@@ -142,7 +140,6 @@ function LoginForm() {
   );
 }
 
-// Composant principal li kay-enveloppé le formulaire f Suspense
 export default function LoginPage() {
   return (
     <div
@@ -181,7 +178,6 @@ export default function LoginPage() {
           backdropFilter: "blur(14px)",
         }}
       >
-        {/* L'erreur dyal Next.js "useSearchParams" katsle7 b had Suspense */}
         <Suspense fallback={<div style={{ textAlign: "center" }}>Loading...</div>}>
           <LoginForm />
         </Suspense>
