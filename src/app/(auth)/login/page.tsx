@@ -1,33 +1,149 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 
-export default function LoginPage() {
+// On sépare le formulaire pour utiliser useSearchParams avec Suspense
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  
+  // 👈 1. Zdna had l'état bach nblookiw la redirection automatique
+  const [isLoggingIn, setIsLoggingIn] = useState(false); 
 
   const { login, user, loading } = useAuth();
   const router = useRouter();
 
+  const searchParams = useSearchParams();
+  const expectedRole = searchParams.get("role") || undefined;
+
   const handleLogin = async () => {
-    const success = await login(email, password);
-    if (!success) {
-      alert("Invalid email or password");
+    setErrorMsg(""); 
+    setIsLoggingIn(true); // 👈 Kanblookiw useEffect
+    
+    const result = await login(email, password, expectedRole); 
+    
+    if (!result.success) {
+      setErrorMsg(result.error || "Invalid email or password"); 
+      setIsLoggingIn(false); // 👈 Kan-déblookiw ila kayna erreur
+    } else {
+      // 👈 2. Kan-redirigiw MANUELLEMENT hna ghir ila kan kolchi s7i7
+      router.replace("/dashboard");
     }
   };
 
-  /* ✅ FIXED REDIRECT */
+  /* ✅ FIXED REDIRECT WITH isLoggingIn LOCK */
   useEffect(() => {
     if (loading) return;
-    if (!user) return;
+    
+    // 👈 3. Ila 7na f wste l'opération de login, mader walo (khlih hta tswb l'vérification)
+    if (isLoggingIn) return; 
 
-    router.replace("/dashboard");
-  }, [user, loading, router]);
+    // Cette condition s'exécute uniquement si l'utilisateur accède à la page /login 
+    // alors qu'il est DÉJÀ connecté (ex: rafraîchissement de page)
+    if (user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, isLoggingIn, router]);
 
+  return (
+    <>
+      <h1
+        style={{
+          fontSize: "1.75rem",
+          fontWeight: 800,
+          background: "linear-gradient(90deg, #1e3a8a, #2563eb, #38bdf8)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          marginBottom: "0.5rem",
+        }}
+      >
+        Welcome back
+      </h1>
+
+      <p
+        style={{
+          color: "#334155",
+          fontSize: "0.95rem",
+          marginBottom: "2.2rem",
+          lineHeight: 1.65,
+        }}
+      >
+        {expectedRole 
+          ? `Log in as ${expectedRole} to continue.` 
+          : "Log in to continue collaborating on Vidzel."}
+      </p>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin();
+        }}
+      >
+        {errorMsg && (
+          <div style={{ color: "#ef4444", marginBottom: "1rem", textAlign: "center", fontWeight: "bold" }}>
+            {errorMsg}
+          </div>
+        )}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={inputStyle}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+          required
+        />
+
+        <Button
+          type="submit"
+          disabled={isLoggingIn} // 👈 N7ebso le bouton mli tkoun katchargi
+          style={{
+            width: "100%",
+            marginTop: "0.9rem",
+            borderRadius: "9999px",
+            background: "linear-gradient(90deg, #1e3a8a, #2563eb, #38bdf8)",
+            boxShadow: "0 18px 40px rgba(37,99,235,0.45)",
+            opacity: isLoggingIn ? 0.7 : 1, // Feedback visuel
+            cursor: isLoggingIn ? "wait" : "pointer"
+          }}
+        >
+          {isLoggingIn ? "Logging in..." : "Log In"}
+        </Button>
+      </form>
+
+      <Link
+        href="/signup"
+        style={{
+          display: "block",
+          textAlign: "center",
+          marginTop: "1.8rem",
+          fontSize: "0.9rem",
+          color: "#2563eb",
+          fontWeight: 600,
+          textDecoration: "none",
+        }}
+      >
+        New here? Create an account
+      </Link>
+    </>
+  );
+}
+
+// Composant principal li kay-enveloppé le formulaire f Suspense
+export default function LoginPage() {
   return (
     <div
       style={{
@@ -65,82 +181,10 @@ export default function LoginPage() {
           backdropFilter: "blur(14px)",
         }}
       >
-        <h1
-          style={{
-            fontSize: "1.75rem",
-            fontWeight: 800,
-            background:
-              "linear-gradient(90deg, #1e3a8a, #2563eb, #38bdf8)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            marginBottom: "0.5rem",
-          }}
-        >
-          Welcome back
-        </h1>
-
-        <p
-          style={{
-            color: "#334155",
-            fontSize: "0.95rem",
-            marginBottom: "2.2rem",
-            lineHeight: 1.65,
-          }}
-        >
-          Log in to continue collaborating on Vidzel.
-        </p>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
-          }}
-        >
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
-          />
-
-          <Button
-            type="submit"
-            style={{
-              width: "100%",
-              marginTop: "0.9rem",
-              borderRadius: "9999px",
-              background:
-                "linear-gradient(90deg, #1e3a8a, #2563eb, #38bdf8)",
-              boxShadow: "0 18px 40px rgba(37,99,235,0.45)",
-            }}
-          >
-            Log In
-          </Button>
-        </form>
-
-        <Link
-          href="/signup"
-          style={{
-            display: "block",
-            textAlign: "center",
-            marginTop: "1.8rem",
-            fontSize: "0.9rem",
-            color: "#2563eb",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          New here? Create an account
-        </Link>
+        {/* L'erreur dyal Next.js "useSearchParams" katsle7 b had Suspense */}
+        <Suspense fallback={<div style={{ textAlign: "center" }}>Loading...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
