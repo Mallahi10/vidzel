@@ -12,23 +12,34 @@ export default function NotificationsPage() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // MODIFIÉ [Notifications Supabase] : getUserNotifications est maintenant async
   useEffect(() => {
     if (!user) return;
-    setNotifications(getUserNotifications(user.id));
-  }, [user]);
+
+    const fetchNotifications = async () => {
+      const data = await getUserNotifications(user.id);
+      setNotifications(data);
+    };
+
+    fetchNotifications();
+  }, [user?.id]);
 
   if (!user) {
     return <div style={{ padding: '3rem' }}>Please log in.</div>;
   }
 
-  const handleOpen = (n: Notification) => {
-    if (!n.isRead) {
-      markNotificationRead(n.id);
-      setNotifications(getUserNotifications(user.id));
+  // MODIFIÉ [Notifications Supabase] : async + champs is_read/workspace_id + redirect invitations
+  const handleOpen = async (n: Notification) => {
+    if (!n.is_read) {
+      await markNotificationRead(n.id);
+      const data = await getUserNotifications(user.id);
+      setNotifications(data);
     }
 
-    if (n.workspaceId) {
-      window.location.href = `/workspace/${n.workspaceId}`;
+    if (n.type === "invitation") {
+      window.location.href = "/dashboard/invitations";
+    } else if (n.workspace_id) {
+      window.location.href = `/dashboard/workspaces/${n.workspace_id}`;
     }
   };
 
@@ -52,12 +63,12 @@ export default function NotificationsPage() {
             border: '1px solid #e5e7eb',
             borderRadius: '14px',
             cursor: 'pointer',
-            background: n.isRead ? 'white' : '#eff6ff',
+            background: n.is_read ? 'white' : '#eff6ff',
           }}
         >
           <div
             style={{
-              fontWeight: n.isRead ? 500 : 600,
+              fontWeight: n.is_read ? 500 : 600,
               marginBottom: '0.25rem',
             }}
           >
@@ -80,7 +91,8 @@ export default function NotificationsPage() {
               color: '#94a3b8',
             }}
           >
-            {new Date(n.createdAt).toLocaleString()}
+            {/* MODIFIÉ [Notifications Supabase] : createdAt → created_at */}
+            {new Date(n.created_at).toLocaleString()}
           </div>
         </div>
       ))}

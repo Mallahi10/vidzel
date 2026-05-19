@@ -3,17 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
+// AJOUTÉ [Étape 2] : client Supabase pour remplacer localStorage
+import { supabase } from '@/lib/supabaseClient';
 
 /* =========================
    TYPES
 ========================= */
+// MODIFIÉ [Étape 2] : champs renommés pour correspondre aux colonnes Supabase
 type Task = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   title: string;
-  description: string;
-  createdBy: string;
-  createdAt: string;
+  description: string | null;
+  created_by: string;
+  created_at: string;
   completed: boolean;
 };
 
@@ -34,54 +37,73 @@ export default function TaskSection({
   /* =========================
      LOAD TASKS
   ========================= */
+  // MODIFIÉ [Étape 2] : lecture depuis Supabase (remplace localStorage)
   useEffect(() => {
-    const stored = JSON.parse(
-      localStorage.getItem('vidzel_tasks') || '[]'
-    );
+    const fetchTasks = async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: true });
 
-    const workspaceTasks = stored.filter(
-      (task: Task) => task.workspaceId === workspaceId
-    );
+      if (error) {
+        console.error('[TaskSection] fetch error:', error.message);
+        return;
+      }
 
-    setTasks(workspaceTasks);
+      setTasks(data || []);
+    };
+
+    fetchTasks();
   }, [workspaceId]);
 
   /* =========================
      CREATE TASK (ORG ONLY)
   ========================= */
-  const createTask = () => {
+  // MODIFIÉ [Étape 2] : INSERT dans Supabase (remplace localStorage)
+  // created_by utilise user.id (UUID) et non user.email — requis par la FK profiles
+  const createTask = async () => {
     if (!user || user.role !== 'organization') return;
     if (!title.trim()) return;
 
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      workspaceId,
-      title,
-      description,
-      createdBy: user.email,
-      createdAt: new Date().toISOString(),
-      completed: false,
-    };
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        workspace_id: workspaceId,
+        title: title.trim(),
+        description: description.trim() || null,
+        created_by: user.id,
+        completed: false,
+      })
+      .select()
+      .single();
 
-    const allTasks = JSON.parse(
-      localStorage.getItem('vidzel_tasks') || '[]'
-    );
+    if (error) {
+      console.error('[TaskSection] insert error:', error.message);
+      return;
+    }
 
-    const updatedTasks = [...allTasks, newTask];
-
-    localStorage.setItem(
-      'vidzel_tasks',
-      JSON.stringify(updatedTasks)
-    );
-
-    setTasks(
-      updatedTasks.filter(
-        (task: Task) => task.workspaceId === workspaceId
-      )
-    );
-
+    setTasks((prev) => [...prev, data]);
     setTitle('');
     setDescription('');
+  };
+
+  // AJOUTÉ [Task completion] : UPDATE completed dans Supabase
+  // Accessible par l'org et les membres (RLS "Org and members can update tasks")
+  const toggleTask = async (task: Task) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ completed: !task.completed })
+      .eq('id', task.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[TaskSection] toggle error:', error.message);
+      return;
+    }
+
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? data : t)));
   };
 
   /* =========================
@@ -128,16 +150,49 @@ export default function TaskSection({
         <p>No tasks yet.</p>
       )}
 
+      {/* MODIFIÉ [Task completion] : affichage statut + bouton toggle */}
       {tasks.map((task) => (
         <div
           key={task.id}
           style={{
             padding: '0.75rem 0',
             borderBottom: '1px solid #eee',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '1rem',
           }}
         >
-          <strong>{task.title}</strong>
-          {task.description && <p>{task.description}</p>}
+          <div>
+            <strong style={{
+              textDecoration: task.completed ? 'line-through' : 'none',
+              color: task.completed ? '#94a3b8' : 'inherit',
+            }}>
+              {task.title}
+            </strong>
+            {task.description && (
+              <p style={{ margin: '0.25rem 0 0', color: task.completed ? '#94a3b8' : 'inherit' }}>
+                {task.description}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => toggleTask(task)}
+            style={{
+              flexShrink: 0,
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 600,
+              background: task.completed ? '#f1f5f9' : '#dcfce7',
+              color: task.completed ? '#64748b' : '#166534',
+            }}
+          >
+            {task.completed ? '↩ Undo' : '✅ Done'}
+          </button>
         </div>
       ))}
     </section>

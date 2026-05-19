@@ -5,93 +5,84 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Button from "@/components/Button";
 
-import TaskSection from "@/components/workspace/TaskSection";
-import ResourceSection from "@/components/workspace/ResourceSection";
+import TaskSection       from "@/components/workspace/TaskSection";
+import ResourceSection   from "@/components/workspace/ResourceSection";
 import SubmissionSection from "@/components/workspace/SubmissionSection";
-import MessageSection from "@/components/workspace/MessageSection";
+import MessageSection    from "@/components/workspace/MessageSection";
 
-/* ========================
-   TYPES
-======================== */
-type Workspace = {
-  id: string;
-  projectId: string;
-  projectTitle: string;
-  organizationEmail: string;
-  status: "draft" | "active" | "completed";
-  createdAt: string;
-};
+import {
+  getWorkspaceById,
+  getMyMembership,
+  updateWorkspace,
+  type Workspace,
+  type WorkspaceMember,
+} from "@/lib/workspaceService";
 
-type WorkspaceMember = {
-  id: string;
-  workspaceId: string;
-  userId: string;
-  name: string;
-  role: "organization" | "volunteer" | "student" | "mentor";
-};
-
-/* ========================
+/* ============================================================
    COMPONENT
-======================== */
+============================================================ */
 export default function WorkspacePage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const params = useParams();
+  const { user }  = useAuth();
+  const router    = useRouter();
+  const params    = useParams();
 
   const workspaceId = useMemo(() => {
     const raw = (params as any)?.workspaceId;
     return Array.isArray(raw) ? raw[0] : raw;
   }, [params]);
 
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [workspace,  setWorkspace]  = useState<Workspace | null>(null);
+  const [membership, setMembership] = useState<WorkspaceMember | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
 
-  /* ========================
-     LOAD / CREATE WORKSPACE
-  ======================== */
+  /* ============================================================
+     LOAD WORKSPACE + CHECK ACCESS
+  ============================================================ */
   useEffect(() => {
-    if (!workspaceId || !user || typeof window === "undefined") return;
+    if (!workspaceId || !user) return;
 
-    const storedWorkspaces: Workspace[] = JSON.parse(
-      localStorage.getItem("vidzel_workspaces") || "[]"
-    );
+    async function load() {
+      setLoading(true);
 
-    let found = storedWorkspaces.find(
-      (w) => String(w.id) === String(workspaceId)
-    );
+      // Fetch workspace from Supabase.
+      // getWorkspaceById returns null if RLS blocks access.
+      const ws = await getWorkspaceById(workspaceId);
 
-    if (!found && user.role === "organization") {
-      found = {
-        id: workspaceId,
-        projectId: workspaceId,
-        projectTitle: "Untitled Project",
-        organizationEmail: user.email!,
-        status: "active",
-        createdAt: new Date().toISOString(),
-      };
+      if (!ws) {
+        // Could be not found OR RLS blocked it.
+        // Either way the user has no business here.
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
 
-      localStorage.setItem(
-        "vidzel_workspaces",
-        JSON.stringify([...storedWorkspaces, found])
-      );
+      setWorkspace(ws);
+
+      // For org: owner check via organization_id.
+      // For others: look up their workspace_members row.
+      if (user!.role !== "organization") {
+        const myMembership = await getMyMembership(workspaceId, user!.id);
+
+        if (!myMembership) {
+          // User is not a member → deny access
+          setAccessDenied(true);
+          setLoading(false);
+          return;
+        }
+
+        setMembership(myMembership);
+      }
+
+      setLoading(false);
     }
 
-    setWorkspace(found || null);
+    load();
+  }, [workspaceId, user?.id]);
 
-    const storedMembers: WorkspaceMember[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_members") || "[]"
-    );
-
-    setMembers(
-      storedMembers.filter(
-        (m) => String(m.workspaceId) === String(workspaceId)
-      )
-    );
-  }, [workspaceId, user]);
-
-  /* ========================
+  /* ============================================================
      GUARDS
-  ======================== */
+  ============================================================ */
   if (!user) {
     return <div style={{ padding: "3rem" }}>Please log in.</div>;
   }
@@ -100,18 +91,27 @@ export default function WorkspacePage() {
     return <div style={{ padding: "3rem" }}>Invalid workspace.</div>;
   }
 
-  if (!workspace) {
+  if (loading) {
     return <div style={{ padding: "3rem" }}>Loading workspace…</div>;
   }
 
+  if (accessDenied || !workspace) {
+    return (
+      <div style={{ padding: "3rem", color: "#b91c1c" }}>
+        You do not have access to this workspace.
+      </div>
+    );
+  }
+
+  // True if the logged-in user is the org that owns this workspace
   const isOrganizationOwner =
     user.role === "organization" &&
-    workspace.organizationEmail.toLowerCase() === user.email?.toLowerCase();
+    workspace.organization_id === user.id;
 
-  const isWorkspaceMember = members.some(
-    (m) => String(m.userId) === String(user.id)
-  );
+  // True if the user is an active member (non-org path)
+  const isWorkspaceMember = membership !== null;
 
+  // Redundant safety check — should already be caught above
   if (!isOrganizationOwner && !isWorkspaceMember) {
     return (
       <div style={{ padding: "3rem", color: "#b91c1c" }}>
@@ -122,24 +122,30 @@ export default function WorkspacePage() {
 
   const isArchived = workspace.status === "completed";
 
-  /* ========================
-     COMPLETE PROJECT
-  ======================== */
-  const completeProject = () => {
+  // The member's internal role — admin/member/reviewer.
+  // Org owner is always treated as admin.
+  const internalRole = isOrganizationOwner
+    ? "admin"
+    : membership?.internal_role ?? "member";
+
+  /* ============================================================
+     COMPLETE PROJECT — update status in Supabase
+  ============================================================ */
+  const completeProject = async () => {
     if (!isOrganizationOwner || isArchived) return;
 
-    const all: Workspace[] = JSON.parse(
-      localStorage.getItem("vidzel_workspaces") || "[]"
-    );
+    const updated = await updateWorkspace(workspace.id, {
+      status: "completed",
+    });
 
-    const updated = all.map((w) =>
-      w.id === workspace.id ? { ...w, status: "completed" } : w
-    );
-
-    localStorage.setItem("vidzel_workspaces", JSON.stringify(updated));
-    setWorkspace({ ...workspace, status: "completed" });
+    if (updated) {
+      setWorkspace(updated);
+    }
   };
 
+  /* ============================================================
+     UI
+  ============================================================ */
   const panelStyle: CSSProperties = {
     border: "1px solid #e5e7eb",
     borderRadius: "14px",
@@ -148,9 +154,6 @@ export default function WorkspacePage() {
     marginBottom: "2rem",
   };
 
-  /* ========================
-     UI
-  ======================== */
   return (
     <div
       style={{
@@ -163,11 +166,29 @@ export default function WorkspacePage() {
         alignItems: "start",
       }}
     >
-      {/* ================= LEFT COLUMN ================= */}
+      {/* ── LEFT COLUMN ── */}
       <div>
-        <h1 style={{ marginBottom: "1.5rem" }}>
-          {workspace.projectTitle}
-        </h1>
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h1>{workspace.title}</h1>
+
+          {/* Role badge for non-org members */}
+          {!isOrganizationOwner && (
+            <span
+              style={{
+                fontSize: "12px",
+                padding: "2px 10px",
+                borderRadius: "20px",
+                background: internalRole === "admin" ? "#EDE9FE" : "#E0F2FE",
+                color: internalRole === "admin" ? "#5B21B6" : "#0369A1",
+                fontWeight: 500,
+                marginTop: "4px",
+                display: "inline-block",
+              }}
+            >
+              Your role: {internalRole}
+            </span>
+          )}
+        </div>
 
         {isArchived && (
           <div style={{ marginBottom: "1rem", color: "#b45309" }}>
@@ -187,7 +208,7 @@ export default function WorkspacePage() {
           <SubmissionSection workspaceId={workspaceId} />
         </div>
 
-        {/* ✅ BOTTOM ACTION BAR */}
+        {/* BOTTOM ACTION BAR */}
         <div
           style={{
             marginTop: "3rem",
@@ -196,15 +217,11 @@ export default function WorkspacePage() {
             alignItems: "center",
           }}
         >
-          {/* Back to Dashboard */}
-          <Button
-            variant="secondary"
-            onClick={() => router.push("/dashboard")}
-          >
+          <Button variant="secondary" onClick={() => router.push("/dashboard")}>
             ← Back to Dashboard
           </Button>
 
-          {/* Mark Complete (org only) */}
+          {/* Only org owner can mark as completed */}
           {isOrganizationOwner && !isArchived && (
             <Button onClick={completeProject}>
               Mark Project as Completed
@@ -213,7 +230,7 @@ export default function WorkspacePage() {
         </div>
       </div>
 
-      {/* ================= RIGHT COLUMN: CONVERSATION ================= */}
+      {/* ── RIGHT COLUMN: CHAT ── */}
       <div
         style={{
           marginTop: "4.65rem",

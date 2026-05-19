@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
+import { createWorkspace } from "@/lib/workspaceService";
 
-export default function CreateProjectPage() {
+
+
+
+// MODIFIÉ [Build fix] : export default déplacé vers le wrapper Suspense en bas du fichier
+function CreateProjectPage() {
   const router = useRouter();
   const { user } = useAuth();
+
+
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
   /* ================= STATE ================= */
 
@@ -28,6 +38,180 @@ export default function CreateProjectPage() {
   const [communication, setCommunication] = useState("");
   const [communicationOther, setCommunicationOther] = useState("");
   const [loading, setLoading] = useState(true);
+  const [visibility, setVisibility] = useState<"open" | "private">("open");
+
+
+
+ useEffect(() => {
+    if (editId && user) {
+      const fetchProject = async () => {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", editId)
+          .single();
+
+        if (data && !error) {
+          setTitle(data.title || "");
+          setDescription(data.description || "");
+          setTasks(data.tasks || "");
+          setRoles(data.roles || []);
+          setParticipantsNeeded(data.participants_needed || "");
+          setProblem(data.problem || "");
+          setOutcomes(data.outcomes || "");
+          setEvidence(data.evidence || "");
+          setVisibility(data.visibility || "open");
+
+          // Liste des options standards pour vérifier si c'est "Other"
+          const stdCats = ["Education", "Environment", "Health & Wellness", "Technology", "Community Development", "Social Impact", "Arts & Culture", "Economic Empowerment"];
+          const stdLocs = ["Remote", "On-site", "Hybrid"];
+          const stdMeasures = ["Attendance Numbers", "Surveys & Feedback", "Performance Metrics", "Reports & Documentation", "Community Impact Indicators"];
+          const stdComm = ["In-Platform Messaging", "Zoom", "Email", "Slack", "WhatsApp"];
+
+          // Gestion Category
+          if (data.category && !stdCats.includes(data.category)) {
+            setCategory("Other");
+            setCategoryOther(data.category);
+          } else {
+            setCategory(data.category || "");
+          }
+
+          // Gestion Location
+          if (data.location && !stdLocs.includes(data.location)) {
+            setLocation("Other");
+            setLocationOther(data.location);
+          } else {
+            setLocation(data.location || "");
+          }
+
+          // Gestion Success Measure
+          if (data.success_measure && !stdMeasures.includes(data.success_measure)) {
+            setSuccessMeasure("Other");
+            setSuccessOther(data.success_measure);
+          } else {
+            setSuccessMeasure(data.success_measure || "");
+          }
+
+          // Gestion Communication
+          if (data.communication && !stdComm.includes(data.communication)) {
+            setCommunication("Other");
+            setCommunicationOther(data.communication);
+          } else {
+            setCommunication(data.communication || "");
+          }
+        }
+      };
+      fetchProject();
+    }
+  }, [editId, user?.id]);
+
+
+
+  
+
+
+/* ================= SAVE PROJECT TO SUPABASE ================= */
+const handleSaveProject = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+ 
+    if (!title.trim() || !description.trim()) {
+      alert("Please fill in at least the Title and Description.");
+      return;
+    }
+ 
+    if (!user?.id) {
+      alert("You must be logged in.");
+      return;
+    }
+ 
+    const projectData = {
+      title: title.trim(),
+      description: description.trim(),
+      organization_id: user.id,
+      organization_email: user.email,
+      status: "open",
+      visibility,
+      category: category === "Other" ? categoryOther : category,
+      location: location === "Other" ? locationOther : location,
+      tasks,
+      roles,
+      participants_needed: participantsNeeded,
+      problem,
+      outcomes,
+      success_measure:
+        successMeasure === "Other" ? successOther : successMeasure,
+      evidence,
+      communication:
+        communication === "Other" ? communicationOther : communication,
+    };
+ 
+    try {
+      if (editId) {
+        /* ── UPDATE MODE ── */
+ 
+        // .select() at the end makes Supabase return the updated rows.
+        // If RLS blocks the update silently, data will be empty — we
+        // catch that and throw a real error instead of a false "success".
+        const { data, error } = await supabase
+          .from("projects")
+          .update(projectData)
+          .eq("id", editId)
+          .select(); // ← critical: detects silent RLS failures
+ 
+        if (error) throw error;
+ 
+        // If 0 rows were returned, the update was blocked (RLS)
+        if (!data || data.length === 0) {
+          throw new Error(
+            "Update blocked — check RLS UPDATE policy on the projects table in Supabase."
+          );
+        }
+ 
+        alert("Project updated successfully! ✅");
+      
+      router.push("/dashboard/projects");
+    } else {
+  /* ── STEP 1: insert the project ── */
+  const { data: newProject, error: projectError } = await supabase
+    .from("projects")
+    .insert([projectData])
+    .select()
+    .single();
+
+  if (projectError) throw projectError;
+
+  if (!newProject) {
+    throw new Error(
+      "Insert blocked — check RLS INSERT policy on the projects table."
+    );
+  }
+
+  /* ── STEP 2: auto-create the workspace for this project ── */
+   try {
+    await createWorkspace({
+      project_id: newProject.id,
+      organization_id: user!.id,
+      title: newProject.title,
+      description: newProject.description ?? undefined,
+      type: visibility,
+      status: "active",
+    });
+  } catch (workspaceErr) {
+    console.warn("[handleSaveProject] Workspace creation failed (non-blocking):", workspaceErr);
+  }
+
+  alert("Project created successfully! 🚀");
+  router.push("/dashboard/projects"); // ✅ redirect ajouté ici
+    }
+  }
+    
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[handleSaveProject] Supabase error:", message);
+      alert("Error saving project: " + message);
+    }
+  };
+           
 
   /* ================= ACCESS ================= */
 
@@ -54,7 +238,7 @@ export default function CreateProjectPage() {
 
   /* ================= SUBMIT ================= */
 
-  const handleSubmit = (e: React.FormEvent) => {
+ /* const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const id = "project_" + Date.now();
@@ -91,19 +275,29 @@ export default function CreateProjectPage() {
     );
 
     router.push("/dashboard/workspaces");
-  };
+  };*/
 
   /* ================= UI ================= */
 
   return (
     <div style={pageWrapper}>
       <div style={card}>
-        <h1 style={titleStyle}>Create Project</h1>
+        <h1 style={titleStyle}>{editId ? "Edit Project" : "Create Project"}</h1>
+          <form onSubmit={handleSaveProject}>          <Section title="Basic Information">
 
-        <form onSubmit={handleSubmit}>
-
-          {/* BASIC INFO */}
-          <Section title="Basic Information">
+            <Label>Project Type</Label>
+            <select
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value as "open" | "private")}
+              style={input}
+            >
+              <option value="open">🌐 Open / Public</option>
+              <option value="private">🔒 Private / Internal</option>
+            </select>
+            <Helper>
+              Open projects are visible and joinable by students, volunteers, and mentors.
+              Private projects are hidden from the platform and only accessible by invited team members.
+            </Helper>
 
             <Label>Project Title</Label>
             <input
@@ -328,13 +522,13 @@ export default function CreateProjectPage() {
             <Button
               variant="outline"
               type="button"
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/dashboard/projects")}
             >
-              ← Back to Dashboard
+              ← Back
             </Button>
 
             <Button type="submit">
-              Save Project
+              {editId ? "Update Project" : "Save Project"}
             </Button>
           </div>
 
@@ -430,3 +624,12 @@ const buttonRow = {
   justifyContent: "space-between",
   alignItems: "center",
 };
+
+// AJOUTÉ [Build fix] : Suspense requis par Next.js 14 pour useSearchParams() en production
+export default function Page() {
+  return (
+    <Suspense fallback={<div style={{ padding: "3rem" }}>Loading…</div>}>
+      <CreateProjectPage />
+    </Suspense>
+  );
+}

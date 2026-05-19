@@ -1,65 +1,83 @@
+// MODIFIÉ [Notifications Supabase] : toutes les fonctions migrées de localStorage vers Supabase
+import { supabase } from "@/lib/supabaseClient";
+
+/* ============================================================
+   TYPE — correspond exactement aux colonnes de la table Supabase
+============================================================ */
 export type Notification = {
   id: string;
-  userId: string; // receiver (always compare as string)
-  type: "invitation";
+  user_id: string;
+  type: string;
   title: string;
   message: string;
-  workspaceId?: string;
-  projectId?: string;
-  isRead: boolean;
-  createdAt: string;
+  workspace_id: string | null;
+  is_read: boolean;
+  created_at: string;
 };
 
-const STORAGE_KEY = "vidzel_notifications";
 
-/* =========================
-   GET ALL NOTIFICATIONS
-========================= */
-export function getNotifications(): Notification[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch {
+/* ============================================================
+   GET USER NOTIFICATIONS
+   Retourne toutes les notifications de l'utilisateur connecté,
+   triées par date décroissante (plus récente en premier).
+============================================================ */
+export async function getUserNotifications(
+  userId: string
+): Promise<Notification[]> {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getUserNotifications]", error.message);
     return [];
   }
+
+  return data as Notification[];
 }
 
-/* =========================
-   GET NOTIFICATIONS FOR USER
-   ✅ FIX: normalize ID types
-========================= */
-export function getUserNotifications(userId: string): Notification[] {
-  return getNotifications()
-    .filter(
-      (n) => String(n.userId) === String(userId)
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() -
-        new Date(a.createdAt).getTime()
-    );
-}
 
-/* =========================
+/* ============================================================
    ADD NOTIFICATION
-========================= */
-export function addNotification(notification: Notification) {
-  const all = getNotifications();
+   INSERT une notification dans Supabase.
+   Utilisé par invitationService après l'envoi d'une invitation.
+   Retourne true si succès, false si erreur.
+============================================================ */
+export async function addNotification(
+  notification: Omit<Notification, "id" | "created_at">
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("notifications")
+    .insert(notification);
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify([notification, ...all])
-  );
+  if (error) {
+    console.error("[addNotification]", error.message);
+    return false;
+  }
+
+  return true;
 }
 
-/* =========================
-   MARK AS READ
-========================= */
-export function markNotificationRead(notificationId: string) {
-  const updated = getNotifications().map((n) =>
-    String(n.id) === String(notificationId)
-      ? { ...n, isRead: true }
-      : n
-  );
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+/* ============================================================
+   MARK AS READ
+   UPDATE is_read = true pour une notification donnée.
+   Retourne true si succès, false si erreur.
+============================================================ */
+export async function markNotificationRead(
+  notificationId: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId);
+
+  if (error) {
+    console.error("[markNotificationRead]", error.message);
+    return false;
+  }
+
+  return true;
 }

@@ -4,14 +4,17 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import Link from "next/link";
+// AJOUTÉ [Étape 4] : client Supabase pour remplacer localStorage
+import { supabase } from "@/lib/supabaseClient";
 
+// MODIFIÉ [Étape 4] : type mis à jour pour correspondre aux colonnes Supabase
 type Project = {
   id: string;
   title: string;
   description: string;
-  organizationName?: string;
-  createdBy: string;
-  status?: "draft" | "active" | "completed";
+  organization_email: string;
+  status: string;
+  visibility: string;
 };
 
 type Application = {
@@ -29,23 +32,26 @@ type Application = {
 };
 
 export default function ExploreProjectsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
-    const storedProjects: Project[] = JSON.parse(
-      localStorage.getItem("vidzel_projects") || "[]"
-    );
+    // MODIFIÉ [Étape 4] : lecture depuis Supabase (remplace localStorage)
+    // La RLS filtre automatiquement les projets privés pour les non-membres
+    const fetchProjects = async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, title, description, organization_email, status, visibility")
+        .neq("status", "completed")
+        .order("created_at", { ascending: false });
 
-    // ✅ Only show non-completed projects
-    const visibleProjects = storedProjects.filter(
-      (p) => p.status !== "completed"
-    );
+      if (!error) setProjects(data || []);
+    };
 
-    setProjects(visibleProjects);
+    fetchProjects();
 
     const apps: Application[] = JSON.parse(
       localStorage.getItem("vidzel_applications") || "[]"
@@ -61,7 +67,12 @@ export default function ExploreProjectsPage() {
       .map((a) => a.projectId);
 
     setAppliedIds(myApplied);
-  }, [user]);
+  // FIX : [user?.id] au lieu de [user] — évite les appels multiples quand React re-crée l'objet user
+  }, [user?.id]);
+
+  if (loading) {
+    return <div style={{ padding: "3rem" }}>Loading...</div>;
+  }
 
   if (!user) {
     return <div style={{ padding: "3rem" }}>Please log in.</div>;
@@ -138,9 +149,9 @@ export default function ExploreProjectsPage() {
             {project.title}
           </h3>
 
+          {/* MODIFIÉ [Étape 4] : organization_email remplace organizationName/createdBy */}
           <p style={{ marginTop: "0.25rem", color: "#475569" }}>
-            Organization:{" "}
-            {project.organizationName || project.createdBy}
+            Organization: {project.organization_email}
           </p>
 
           <div

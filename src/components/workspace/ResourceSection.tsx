@@ -3,18 +3,21 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
+// AJOUTÉ [Étape 2] : client Supabase pour remplacer localStorage
+import { supabase } from "@/lib/supabaseClient";
 
 /* ========================
    TYPES
 ======================== */
+// MODIFIÉ [Étape 2] : champs renommés pour correspondre aux colonnes Supabase
 type Resource = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   title: string;
   type: "file" | "link" | "video" | "note";
-  value: string; // URL or text
-  uploadedBy: string;
-  createdAt: string;
+  value: string;
+  uploaded_by: string;
+  created_at: string;
 };
 
 export default function ResourceSection({
@@ -34,49 +37,55 @@ export default function ResourceSection({
   /* ========================
      LOAD RESOURCES
   ======================== */
+  // MODIFIÉ [Étape 2] : lecture depuis Supabase (remplace localStorage)
   useEffect(() => {
     if (!workspaceId) return;
 
-    const stored: Resource[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_resources") || "[]"
-    );
+    const fetchResources = async () => {
+      const { data, error } = await supabase
+        .from("resources")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: true });
 
-    setResources(
-      stored.filter((r) => String(r.workspaceId) === String(workspaceId))
-    );
+      if (error) {
+        console.error("[ResourceSection] fetch error:", error.message);
+        return;
+      }
+
+      setResources(data || []);
+    };
+
+    fetchResources();
   }, [workspaceId]);
 
   /* ========================
      ADD RESOURCE (ORG ONLY)
   ======================== */
-  const addResource = () => {
+  // MODIFIÉ [Étape 2] : INSERT dans Supabase (remplace localStorage)
+  // uploaded_by utilise user.id (UUID) et non user.email — requis par la FK profiles
+  const addResource = async () => {
     if (!isOrganization) return;
     if (!title.trim() || !value.trim()) return;
 
-    const newResource: Resource = {
-      id: crypto.randomUUID(),
-      workspaceId,
-      title,
-      type,
-      value,
-      uploadedBy: user.email,
-      createdAt: new Date().toISOString(),
-    };
+    const { data, error } = await supabase
+      .from("resources")
+      .insert({
+        workspace_id: workspaceId,
+        title: title.trim(),
+        type,
+        value: value.trim(),
+        uploaded_by: user!.id,
+      })
+      .select()
+      .single();
 
-    const all: Resource[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_resources") || "[]"
-    );
+    if (error) {
+      console.error("[ResourceSection] insert error:", error.message);
+      return;
+    }
 
-    const updated = [...all, newResource];
-    localStorage.setItem(
-      "vidzel_workspace_resources",
-      JSON.stringify(updated)
-    );
-
-    setResources(
-      updated.filter((r) => String(r.workspaceId) === String(workspaceId))
-    );
-
+    setResources((prev) => [...prev, data]);
     setTitle("");
     setValue("");
   };

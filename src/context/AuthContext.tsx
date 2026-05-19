@@ -103,9 +103,10 @@ export const AuthProvider = ({
           email: session.user.email!,
           role,
         });
-      } else {
-        setUser(null);
       }
+      // FIX : pas de else { setUser(null) } ici.
+      // setUser(null) est géré uniquement par SIGNED_OUT (ci-dessus).
+      // L'event INITIAL_SESSION sans session ne doit pas effacer un user déjà défini.
     });
 
     return () => {
