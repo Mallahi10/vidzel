@@ -6,13 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 
-// On sépare le formulaire pour utiliser useSearchParams avec Suspense
 function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  
-  const [isLoggingIn, setIsLoggingIn] = useState(false); 
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [errorMsg, setErrorMsg]       = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const { login, user, loading } = useAuth();
   const router = useRouter();
@@ -21,31 +19,23 @@ function LoginForm() {
   const expectedRole = searchParams.get("role") || undefined;
 
   const handleLogin = async () => {
-    setErrorMsg(""); 
-    setIsLoggingIn(true); 
-    
-    const result = await login(email, password, expectedRole); 
-    
+    setErrorMsg("");
+    setIsLoggingIn(true);
+
+    const result = await login(email, password, expectedRole);
+
     if (!result.success) {
-      setErrorMsg(result.error || "Invalid email or password"); 
-      setIsLoggingIn(false); // 
+      setErrorMsg(result.error || "Invalid email or password");
+      setIsLoggingIn(false);
     } else {
-    
       router.replace("/dashboard");
     }
   };
 
-  /* ✅ FIXED REDIRECT WITH isLoggingIn LOCK */
   useEffect(() => {
     if (loading) return;
-    
-    if (isLoggingIn) return; 
-
-    // Cette condition s'exécute uniquement si l'utilisateur accède à la page /login 
-    // alors qu'il est DÉJÀ connecté (ex: rafraîchissement de page)
-    if (user) {
-      router.replace("/dashboard");
-    }
+    if (isLoggingIn) return;
+    if (user) router.replace("/dashboard");
   }, [user, loading, isLoggingIn, router]);
 
   return (
@@ -71,22 +61,19 @@ function LoginForm() {
           lineHeight: 1.65,
         }}
       >
-        {expectedRole 
-          ? `Log in as ${expectedRole} to continue.` 
+        {expectedRole
+          ? `Log in as ${expectedRole} to continue.`
           : "Log in to continue collaborating on Vidzel."}
       </p>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleLogin();
-        }}
-      >
+      <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+
         {errorMsg && (
           <div style={{ color: "#ef4444", marginBottom: "1rem", textAlign: "center", fontWeight: "bold" }}>
             {errorMsg}
           </div>
         )}
+
         <input
           type="email"
           placeholder="Email"
@@ -105,17 +92,24 @@ function LoginForm() {
           required
         />
 
+        {/* AJOUTÉ : lien Forgot Password */}
+        <div style={{ textAlign: "right", marginTop: "-0.6rem", marginBottom: "1rem" }}>
+          <Link href="/forgot-password" style={{ fontSize: "0.82rem", color: "#2563eb", fontWeight: 500, textDecoration: "none" }}>
+            Forgot password?
+          </Link>
+        </div>
+
         <Button
           type="submit"
-          disabled={isLoggingIn} 
+          disabled={isLoggingIn}
           style={{
             width: "100%",
-            marginTop: "0.9rem",
+            marginTop: "0.5rem",
             borderRadius: "9999px",
             background: "linear-gradient(90deg, #1e3a8a, #2563eb, #38bdf8)",
             boxShadow: "0 18px 40px rgba(37,99,235,0.45)",
-            opacity: isLoggingIn ? 0.7 : 1, // Feedback visuel
-            cursor: isLoggingIn ? "wait" : "pointer"
+            opacity: isLoggingIn ? 0.7 : 1,
+            cursor: isLoggingIn ? "wait" : "pointer",
           }}
         >
           {isLoggingIn ? "Logging in..." : "Log In"}
@@ -161,20 +155,11 @@ export default function LoginPage() {
         style={{
           width: "100%",
           maxWidth: "480px",
-          background: `
-            linear-gradient(
-              180deg,
-              rgba(255, 255, 255, 0.18) 0%,
-              rgba(255, 255, 255, 0.92) 85%
-            )
-          `,
+          background: `linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.92) 85%)`,
           borderRadius: "30px",
           padding: "2.9rem",
           border: "1px solid rgba(255,255,255,0.35)",
-          boxShadow: `
-            0 30px 70px rgba(15, 23, 42, 0.55),
-            inset 0 1px 0 rgba(255,255,255,0.6)
-          `,
+          boxShadow: `0 30px 70px rgba(15, 23, 42, 0.55), inset 0 1px 0 rgba(255,255,255,0.6)`,
           backdropFilter: "blur(14px)",
         }}
       >
@@ -194,8 +179,7 @@ const inputStyle: React.CSSProperties = {
   border: "1px solid rgba(37, 99, 235, 0.35)",
   fontSize: "0.95rem",
   color: "#0f172a",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92))",
+  background: "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92))",
   outline: "none",
   boxShadow: "inset 0 1px 2px rgba(15,23,42,0.08)",
 };

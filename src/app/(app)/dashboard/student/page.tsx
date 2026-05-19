@@ -5,8 +5,10 @@ import Link from "next/link";
 import styles from "./student.module.css";
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
+  // FIX : attendre la fin de l'initialisation avant d'afficher "Please log in."
+  if (loading) return null;
   if (!user) return <div className={styles.wrapper}>Please log in.</div>;
   if (user.role !== "student")
     return <div className={styles.wrapper}>Access denied.</div>;
@@ -68,6 +70,8 @@ export default function StudentDashboard() {
           <Quick text="Browse Projects" link="/dashboard/explore" />
           <Quick text="View Applications" link="/dashboard/my-applications" />
           <Quick text="My Workspaces" link="/dashboard/workspaces" />
+          {/* AJOUTÉ [Étape 3] : lien vers la page des invitations reçues */}
+          <Quick text="My Invitations" link="/dashboard/invitations" />
           <Quick text="Certificates" link="/dashboard/certificates" />
         </div>
 

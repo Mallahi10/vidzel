@@ -2,59 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+// AJOUTÉ [Étape 2] : client Supabase pour remplacer localStorage
+import { supabase } from "@/lib/supabaseClient";
 
 /* ========================
    TYPES
+   MODIFIÉ [Étape 2] : type flat correspondant à la table Supabase submissions.
+   Le versioning (versions[]) a été supprimé — chaque submit = une nouvelle ligne.
 ======================== */
-type SubmissionVersion = {
-  id: string;
-  title: string;
-  description?: string;
-  link: string;
-  createdAt: string;
-  feedback?: {
-    comment: string;
-    status: "reviewed" | "approved" | "needs_changes";
-    reviewedAt: string;
-    reviewedBy: string;
-  };
-};
-
 type Submission = {
   id: string;
-  workspaceId: string;
-  userId: string;
-  userName: string;
-  userRole: string;
-  versions: SubmissionVersion[];
+  workspace_id: string;
+  submitted_by: string;
+  title: string;
+  description: string | null;
+  link: string;
+  feedback: string | null;
+  feedback_status: "pending" | "reviewed" | "approved" | "needs_changes";
+  reviewed_by: string | null;
+  created_at: string;
+  profiles: { email: string; role: string } | null;
 };
-
-/* ========================
-   NORMALIZE LEGACY DATA
-======================== */
-function normalizeSubmission(s: any): Submission {
-  if (Array.isArray(s.versions)) {
-    return s;
-  }
-
-  return {
-    id: s.id,
-    workspaceId: s.workspaceId,
-    userId: s.userId,
-    userName: s.userName,
-    userRole: s.userRole,
-    versions: [
-      {
-        id: crypto.randomUUID(),
-        title: s.title || "Initial submission",
-        description: s.description,
-        link: s.link,
-        createdAt: s.createdAt || new Date().toISOString(),
-        feedback: s.feedback,
-      },
-    ],
-  };
-}
 
 export default function SubmissionSection({
   workspaceId,
@@ -71,80 +39,59 @@ export default function SubmissionSection({
 
   /* ========================
      LOAD SUBMISSIONS
+     MODIFIÉ [Étape 2] : lecture depuis Supabase avec join profiles (remplace localStorage)
   ======================== */
   useEffect(() => {
     if (!workspaceId) return;
 
-    const stored: any[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_submissions") || "[]"
-    );
+    const fetchSubmissions = async () => {
+      const { data, error } = await supabase
+        .from("submissions")
+        // MODIFIÉ : profiles!submitted_by pour lever l'ambiguïté (2 FK vers profiles)
+        .select("*, profiles!submitted_by(email, role)")
+        .eq("workspace_id", workspaceId)
+        .order("created_at", { ascending: true });
 
-    setSubmissions(
-      stored
-        .filter((s) => String(s.workspaceId) === String(workspaceId))
-        .map(normalizeSubmission)
-    );
+      if (error) {
+        console.error("[SubmissionSection] fetch error:", error.message);
+        return;
+      }
+
+      setSubmissions(data || []);
+    };
+
+    fetchSubmissions();
   }, [workspaceId]);
 
   /* ========================
-     SUBMIT / RESUBMIT
+     SUBMIT WORK
+     MODIFIÉ [Étape 2] : INSERT dans Supabase (remplace localStorage)
+     submitted_by utilise user.id (UUID) — requis par la FK profiles
   ======================== */
-  const submitWork = () => {
+  const submitWork = async () => {
     if (!user || isOrganization) return;
     if (!title.trim() || !link.trim()) return;
 
-    const stored: Submission[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_submissions") || "[]"
-    ).map(normalizeSubmission);
+    const { data, error } = await supabase
+      .from("submissions")
+      .insert({
+        workspace_id: workspaceId,
+        submitted_by: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        link: link.trim(),
+        feedback_status: "pending",
+      })
+      // MODIFIÉ : profiles!submitted_by pour lever l'ambiguïté (2 FK vers profiles)
+        .select("*, profiles!submitted_by(email, role)")
+      .single();
 
-    const existing = stored.find(
-      (s) =>
-        String(s.workspaceId) === String(workspaceId) &&
-        String(s.userId) === String(user.id)
-    );
-
-    const newVersion: SubmissionVersion = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      link,
-      createdAt: new Date().toISOString(),
-    };
-
-    let updated: Submission[];
-
-    if (existing) {
-      updated = stored.map((s) =>
-        s.id === existing.id
-          ? { ...s, versions: [...s.versions, newVersion] }
-          : s
-      );
-    } else {
-      updated = [
-        ...stored,
-        {
-          id: crypto.randomUUID(),
-          workspaceId,
-          userId: user.id,
-          // ✅ FIX: auth user has NO name
-          userName: user.email,
-          userRole: user.role,
-          versions: [newVersion],
-        },
-      ];
+    if (error) {
+      console.error("[SubmissionSection] insert error:", error.message);
+      return;
     }
 
-    localStorage.setItem(
-      "vidzel_workspace_submissions",
-      JSON.stringify(updated)
-    );
-
-    setSubmissions(
-      updated
-        .filter((s) => String(s.workspaceId) === String(workspaceId))
-        .map(normalizeSubmission)
-    );
-
+    setSubmissions((prev) => [...prev, data]);
     setTitle("");
     setDescription("");
     setLink("");
@@ -152,64 +99,51 @@ export default function SubmissionSection({
 
   /* ========================
      SAVE FEEDBACK (ORG ONLY)
+     MODIFIÉ [Étape 2] : UPDATE dans Supabase (remplace localStorage)
   ======================== */
-  const saveFeedback = (
+  const saveFeedback = async (
     submissionId: string,
-    versionId: string,
     comment: string,
-    status: NonNullable<SubmissionVersion["feedback"]>["status"]
+    status: Submission["feedback_status"]
   ) => {
     if (!isOrganization || !comment.trim()) return;
 
-    const stored: Submission[] = JSON.parse(
-      localStorage.getItem("vidzel_workspace_submissions") || "[]"
-    ).map(normalizeSubmission);
+    const { data, error } = await supabase
+      .from("submissions")
+      .update({
+        feedback: comment,
+        feedback_status: status,
+        reviewed_by: user!.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", submissionId)
+      // MODIFIÉ : profiles!submitted_by pour lever l'ambiguïté (2 FK vers profiles)
+        .select("*, profiles!submitted_by(email, role)")
+      .single();
 
-    const updated = stored.map((s) =>
-      s.id === submissionId
-        ? {
-            ...s,
-            versions: s.versions.map((v) =>
-              v.id === versionId
-                ? {
-                    ...v,
-                    feedback: {
-                      comment,
-                      status,
-                      reviewedAt: new Date().toISOString(),
-                      // ✅ FIX: reviewer snapshot
-                      reviewedBy: user?.email || "Organization",
-                    },
-                  }
-                : v
-            ),
-          }
-        : s
-    );
+    if (error) {
+      console.error("[SubmissionSection] feedback error:", error.message);
+      return;
+    }
 
-    localStorage.setItem(
-      "vidzel_workspace_submissions",
-      JSON.stringify(updated)
-    );
-
-    setSubmissions(
-      updated
-        .filter((s) => String(s.workspaceId) === String(workspaceId))
-        .map(normalizeSubmission)
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === submissionId ? data : s))
     );
   };
 
   /* ========================
      VISIBILITY
+     Org voit toutes les submissions. Membre voit uniquement les siennes.
   ======================== */
   const visibleSubmissions = isOrganization
     ? submissions
-    : submissions.filter((s) => s.userId === user?.id);
+    : submissions.filter((s) => s.submitted_by === user?.id);
 
   return (
     <section>
       <h2 style={{ marginBottom: "1rem" }}>Submissions</h2>
 
+      {/* MEMBER SUBMIT FORM */}
       {!isOrganization && (
         <div style={{ marginBottom: "1.5rem" }}>
           <input
@@ -235,64 +169,63 @@ export default function SubmissionSection({
             style={{ width: "100%", marginBottom: "0.5rem" }}
           />
 
-          <button onClick={submitWork}>Submit / Resubmit</button>
+          <button onClick={submitWork}>Submit Work</button>
         </div>
       )}
 
+      {/* SUBMISSION LIST */}
       {visibleSubmissions.length === 0 ? (
         <p style={{ color: "#64748b" }}>No submissions yet.</p>
       ) : (
         visibleSubmissions.map((s) => (
-          <div key={s.id} style={{ marginBottom: "1.5rem" }}>
+          <div
+            key={s.id}
+            style={{
+              padding: "0.75rem",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              marginBottom: "0.75rem",
+            }}
+          >
+            {/* Auteur — email + rôle depuis profiles (join Supabase) */}
             <h4>
-              {s.userName} ({s.userRole})
+              {s.profiles?.email ?? s.submitted_by} ({s.profiles?.role ?? ""})
             </h4>
 
-            {s.versions.map((v, index) => (
+            <p style={{ fontWeight: 600 }}>{s.title}</p>
+            {s.description && <p>{s.description}</p>}
+
+            <a href={s.link} target="_blank" rel="noopener noreferrer">
+              Open submission
+            </a>
+
+            <div style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "#64748b" }}>
+              {new Date(s.created_at).toLocaleString()}
+            </div>
+
+            {/* Feedback existant */}
+            {s.feedback && (
               <div
-                key={v.id}
                 style={{
-                  padding: "0.75rem",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "10px",
-                  marginBottom: "0.75rem",
+                  marginTop: "0.5rem",
+                  background: "#f8fafc",
+                  padding: "0.5rem",
+                  borderRadius: "8px",
                 }}
               >
-                <strong>Version {index + 1}</strong>
-                <div style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                  {new Date(v.createdAt).toLocaleString()}
-                </div>
-
-                <p>{v.title}</p>
-                {v.description && <p>{v.description}</p>}
-
-                <a href={v.link} target="_blank" rel="noopener noreferrer">
-                  Open submission
-                </a>
-
-                {v.feedback && (
-                  <div
-                    style={{
-                      marginTop: "0.5rem",
-                      background: "#f8fafc",
-                      padding: "0.5rem",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    <strong>Feedback ({v.feedback.status})</strong>
-                    <p>{v.feedback.comment}</p>
-                  </div>
-                )}
-
-                {isOrganization && (
-                  <OrgFeedbackForm
-                    onSave={(comment, status) =>
-                      saveFeedback(s.id, v.id, comment, status)
-                    }
-                  />
-                )}
+                <strong>Feedback ({s.feedback_status})</strong>
+                <p>{s.feedback}</p>
               </div>
-            ))}
+            )}
+
+            {/* Formulaire feedback org */}
+            {isOrganization && (
+              <OrgFeedbackForm
+                onSave={(comment, status) =>
+                  saveFeedback(s.id, comment, status)
+                }
+              />
+            )}
           </div>
         ))
       )}
@@ -301,7 +234,7 @@ export default function SubmissionSection({
 }
 
 /* ========================
-   ORG FEEDBACK FORM
+   ORG FEEDBACK FORM — visuel inchangé
 ======================== */
 function OrgFeedbackForm({
   onSave,
@@ -328,10 +261,7 @@ function OrgFeedbackForm({
         value={status}
         onChange={(e) =>
           setStatus(
-            e.target.value as
-              | "reviewed"
-              | "approved"
-              | "needs_changes"
+            e.target.value as "reviewed" | "approved" | "needs_changes"
           )
         }
       >
