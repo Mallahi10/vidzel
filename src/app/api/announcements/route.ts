@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const runtime = "nodejs";
 
@@ -142,6 +141,7 @@ export async function POST(req: NextRequest) {
 
     // ── Step 5: Optional email — call Resend directly
     if (send_email && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("email")
