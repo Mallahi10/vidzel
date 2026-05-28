@@ -1,124 +1,196 @@
+/* ================================
+   VIDZEL DESIGN SYSTEM
+   NEW MODERN UI UPDATE — Clean blue scale palette
+   Palette: #F0F3FA → #D5DEEF → #B1C9EF → #8AAEE0 → #638ECB → #395886
+================================ */
+
 :root {
-  /* =============================
-     VIDZEL BRAND SYSTEM (UPGRADED)
-  ============================= */
+  /* ── Core brand spectrum ── */
+  --brand-lightest: #F0F3FA;   /* Lightest blue-gray — page backgrounds */
+  --brand-soft:     #D5DEEF;   /* Soft blue — borders, dividers */
+  --brand-medium:   #B1C9EF;   /* Medium blue — subtle accents */
+  --brand-blue:     #8AAEE0;   /* Blue — secondary interactive */
+  --brand-primary:  #638ECB;   /* Main blue — CTA, primary */
+  --brand-deep:     #395886;   /* Deep blue — dark headers, emphasis */
+  --brand-navy:     #1e3a5f;   /* Darkest navy — body text */
 
-  /* Brand base hues */
-  --primary-hue: 217; /* Deep brand blue */
-  --primary-sat: 91%;
-  --primary-light: 60%;
+  /* ── Legacy aliases (keeps existing var() calls working) ── */
+  --brand-indigo:   #395886;
+  --brand-cyan:     #8AAEE0;
+  --brand-teal:     #B1C9EF;
+  --brand-lavender: #F0F3FA;
+  --brand-pink:     #D5DEEF;
+  --brand-violet:   #8AAEE0;
 
-  --secondary-hue: 195; /* Human cyan */
-  --secondary-sat: 90%;
-  --secondary-light: 55%;
+  /* ── Semantic tokens ── */
+  --primary-color:   #638ECB;
+  --secondary-color: #8AAEE0;
 
-  /* Brand colors */
-  --primary-color: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
-  --secondary-color: hsl(var(--secondary-hue), var(--secondary-sat), var(--secondary-light));
+  /* ── Gradient presets ── */
+  --gradient-primary: linear-gradient(135deg, #395886, #638ECB);
+  --gradient-accent:  linear-gradient(135deg, #638ECB, #8AAEE0);
+  --gradient-dark:    linear-gradient(135deg, #1e3a5f, #395886);
+  --gradient-soft:    linear-gradient(135deg, rgba(138,174,224,0.10), rgba(99,142,203,0.07));
+  --gradient-card:    linear-gradient(160deg, rgba(99,142,203,0.05) 0%, rgba(255,255,255,0.99) 55%);
+  --gradient-icon:    linear-gradient(135deg, rgba(99,142,203,0.12), rgba(138,174,224,0.10));
+  --gradient-hero:    linear-gradient(135deg, rgba(99,142,203,0.08), rgba(138,174,224,0.05));
 
-  --brand-indigo: #1e3a8a;
-  --brand-blue: #2563eb;
-  --brand-cyan: #38bdf8;
-  --brand-teal: #5eead4;
+  /* ── Backgrounds ── */
+  --bg-top:    #F5F8FD;
+  --bg-bottom: #E8EFF9;
 
-  /* Background system */
-  --bg-top: #f1f7fe;
-  --bg-bottom: #e6f0fb;
-
-  /* Surfaces */
-  --surface-color: rgba(255, 255, 255, 0.92);
+  /* ── Surfaces ── */
+  --surface-color: rgba(255, 255, 255, 0.96);
   --surface-glass: rgba(255, 255, 255, 0.88);
 
-  /* Text */
-  --text-main: #0f172a;
-  --text-muted: #475569;
+  /* ── Text ── */
+  --text-main:  #0f172a;
+  --text-muted: #5B7FA6;
 
-  /* Borders & shadows */
-  --border-color: rgba(37, 99, 235, 0.18);
-  --shadow-soft: 0 12px 28px rgba(37, 99, 235, 0.10);
-  --shadow-hover: 0 20px 45px rgba(37, 99, 235, 0.22);
+  /* ── Borders ── */
+  --border-color: rgba(99, 142, 203, 0.16);
+  --border-soft:  rgba(99, 142, 203, 0.10);
 
-  /* Spacing */
+  /* ── Shadows ── */
+  --shadow-xs:    0 1px 4px rgba(57, 88, 134, 0.08);
+  --shadow-soft:  0 4px 20px rgba(57, 88, 134, 0.12);
+  --shadow-hover: 0 12px 40px rgba(99, 142, 203, 0.24);
+  --shadow-card:  0 2px 12px rgba(57, 88, 134, 0.09);
+  --shadow-glow:  0 0 0 3px rgba(99, 142, 203, 0.16);
+
+  /* ── Spacing ── */
   --space-xs: 0.5rem;
   --space-sm: 1rem;
   --space-md: 1.5rem;
   --space-lg: 2.5rem;
   --space-xl: 4rem;
 
-  /* Typography */
+  /* ── Typography ── */
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── Animation timing ── */
+  --t-fast:   0.15s ease;
+  --t-base:   0.20s ease;
+  --t-slow:   0.35s ease;
 }
 
-/* =============================
-   DARK MODE (IMPROVED)
-============================= */
-
+/* ================================
+   DARK MODE
+================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-top: #0f172a;
-    --bg-bottom: #111827;
+    --bg-top:    #0a1628;
+    --bg-bottom: #0d1f38;
 
-    --surface-color: rgba(30, 41, 59, 0.92);
-    --surface-glass: rgba(30, 41, 59, 0.85);
+    --surface-color: rgba(13, 31, 56, 0.92);
+    --surface-glass: rgba(13, 31, 56, 0.85);
 
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --text-main:  #C8DEFF;
+    --text-muted: #8AAEE0;
 
-    --border-color: rgba(56, 189, 248, 0.25);
-    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.45);
-    --shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.6);
+    --border-color: rgba(138, 174, 224, 0.22);
+    --shadow-soft:  0 10px 30px rgba(0, 0, 0, 0.50);
+    --shadow-hover: 0 18px 45px rgba(0, 20, 60, 0.65);
   }
 }
 
-/* =============================
+/* ================================
+   KEYFRAME ANIMATIONS
+================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 142, 203, 0.22); }
+  50%       { box-shadow: 0 0 0 8px rgba(99, 142, 203, 0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Animation utility classes ── */
+.animate-fade-in    { animation: fadeIn 0.30s ease forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.40s ease forwards; }
+.animate-slide-up   { animation: slideUp 0.40s ease forwards; }
+.animate-slide-left { animation: slideInLeft 0.35s ease forwards; }
+.animate-scale-in   { animation: scaleIn 0.30s ease forwards; }
+
+.stagger-1 { opacity: 0; animation: fadeInUp 0.40s ease 0.06s forwards; }
+.stagger-2 { opacity: 0; animation: fadeInUp 0.40s ease 0.12s forwards; }
+.stagger-3 { opacity: 0; animation: fadeInUp 0.40s ease 0.18s forwards; }
+.stagger-4 { opacity: 0; animation: fadeInUp 0.40s ease 0.24s forwards; }
+
+/* ── Skeleton loader ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(99,142,203,0.05) 25%,
+    rgba(138,174,224,0.09) 50%,
+    rgba(99,142,203,0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 8px;
+}
+
+/* ================================
    RESET & BASE
-============================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html,
-body {
-  min-height: 100%;
-}
+================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
 
 body {
   font-family: var(--font-body);
   color: var(--text-main);
   line-height: 1.6;
   font-size: 16px;
-
-  background:
-    radial-gradient(
-      circle at 18% 22%,
-      rgba(56, 189, 248, 0.15),
-      transparent 45%
-    ),
-    radial-gradient(
-      circle at 82% 18%,
-      rgba(94, 234, 212, 0.15),
-      transparent 50%
-    ),
-    linear-gradient(
-      to bottom,
-      var(--bg-top),
-      var(--bg-bottom)
-    );
-
-  background-attachment: fixed;
+  background: #ffffff;
 }
 
-/* =============================
+/* ================================
    TYPOGRAPHY
-============================= */
-
-h1,
-h2,
-h3 {
+================================ */
+h1, h2, h3 {
   font-family: var(--font-heading);
   font-weight: 700;
   margin-bottom: var(--space-sm);
@@ -126,98 +198,58 @@ h3 {
 }
 
 a {
-  color: var(--brand-blue);
+  color: var(--brand-primary);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--t-base);
 }
+a:hover { color: var(--brand-deep); }
 
-a:hover {
-  color: var(--brand-indigo);
-}
-
-/* =============================
+/* ================================
    LAYOUT HELPERS
-============================= */
-
+================================ */
 .page {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-lg) var(--space-md);
 }
 
-.page-title {
-  font-size: 2rem;
-  margin-bottom: var(--space-md);
-}
+.page-title    { font-size: 2rem; margin-bottom: var(--space-md); }
+.page-subtitle { color: var(--text-muted); max-width: 800px; margin-bottom: var(--space-lg); }
 
-.page-subtitle {
-  color: var(--text-muted);
-  max-width: 800px;
-  margin-bottom: var(--space-lg);
-}
-
-/* =============================
+/* ================================
    GLOBAL CARDS
-============================= */
-
+================================ */
 .card {
   position: relative;
   overflow: hidden;
-
   border-radius: 20px;
   padding: var(--space-md);
   margin-bottom: var(--space-md);
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(37, 99, 235, 0.08),
-      rgba(255, 255, 255, 0.96)
-    );
-
+  background: var(--gradient-card);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(8px);
 
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  border-color: var(--brand-blue);
+  transform: translateY(-4px);
+  border-color: var(--brand-primary);
   box-shadow: var(--shadow-hover);
 }
 
-.card-title {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
+.card-title { font-size: 1.25rem; margin-bottom: 0.5rem; }
+.card-text  { color: var(--text-muted); margin-bottom: var(--space-md); }
 
-.card-text {
-  color: var(--text-muted);
-  margin-bottom: var(--space-md);
-}
-
-/* =============================
-   BUTTONS (IMPACT STYLE)
-============================= */
-
-.button-group {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
+/* ================================
+   BUTTONS
+================================ */
+.button-group { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
 
 .btn-primary {
-  background: linear-gradient(
-    90deg,
-    var(--brand-indigo),
-    var(--brand-blue),
-    var(--brand-cyan)
-  );
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 0.65rem 1.5rem;
@@ -226,28 +258,21 @@ a:hover {
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-soft);
-  transition: all 0.2s ease;
+  transition: all var(--t-base);
 }
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
 
 .btn-secondary {
   background: var(--surface-glass);
-  color: var(--brand-blue);
-  border: 1px solid var(--brand-blue);
+  color: var(--brand-primary);
+  border: 1.5px solid var(--brand-primary);
   padding: 0.65rem 1.5rem;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
 }
-
-.btn-secondary:hover {
-  background: rgba(37, 99, 235, 0.08);
-}
+.btn-secondary:hover { background: rgba(99, 142, 203, 0.08); }
 
 .btn-ghost {
   background: transparent;
@@ -257,15 +282,11 @@ a:hover {
   border-radius: 12px;
   cursor: pointer;
 }
+.btn-ghost:hover { background: rgba(99, 142, 203, 0.05); }
 
-.btn-ghost:hover {
-  background: rgba(37, 99, 235, 0.06);
-}
-
-/* =============================
+/* ================================
    EMPTY STATES
-============================= */
-
+================================ */
 .empty-state {
   text-align: center;
   padding: var(--space-xl);
@@ -276,23 +297,20 @@ a:hover {
   backdrop-filter: blur(8px);
 }
 
-/* Background depth layer */
+/* ================================
+   KEYFRAME — hero animations (used by page heroes)
+================================ */
+@keyframes heroShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
+@keyframes heroPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%       { transform: scale(1.12); opacity: 0.5; }
+}
 
-  background:
-    radial-gradient(
-      circle at 18% 22%,
-      rgba(56, 189, 248, 0.12),
-      transparent 45%
-    ),
-    radial-gradient(
-      circle at 82% 18%,
-      rgba(94, 234, 212, 0.12),
-      transparent 50%
-    );
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

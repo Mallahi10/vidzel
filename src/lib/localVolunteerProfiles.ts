@@ -1,56 +1,52 @@
+import { supabase } from "@/lib/supabaseClient";
+
 export type VolunteerProfile = {
   full_name: string;
   location: string;
   headline: string;
   photo_url: string;
   languages: string;
-
   skills: string[];
   interests: string[];
   collaboration_type: string;
-
   experience: string;
   education: string;
   availability_hours: string;
   available_days: string[];
-
   motivation: string;
-
   updated_at: string;
 };
 
-const KEY_PREFIX = "vidzel:profiles:volunteer:";
+export async function loadVolunteerProfile(userId: string): Promise<VolunteerProfile | null> {
+  const { data } = await supabase
+    .from("volunteer_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-export function getVolunteerProfileKey(userIdOrEmail: string) {
-  return `${KEY_PREFIX}${userIdOrEmail}`;
-}
+  if (data) return data as VolunteerProfile;
 
-export function loadVolunteerProfile(
-  userIdOrEmail: string
-): VolunteerProfile | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = localStorage.getItem(
-      getVolunteerProfileKey(userIdOrEmail)
-    );
-
-    if (!raw) return null;
-
-    return JSON.parse(raw);
-  } catch {
-    return null;
+  // One-time migration: if Supabase is empty, check localStorage for old data
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem(`vidzel:profiles:volunteer:${userId}`);
+    if (raw) {
+      try {
+        const old = JSON.parse(raw) as VolunteerProfile;
+        await saveVolunteerProfile(userId, old);
+        localStorage.removeItem(`vidzel:profiles:volunteer:${userId}`);
+        return old;
+      } catch {}
+    }
   }
+
+  return null;
 }
 
-export function saveVolunteerProfile(
-  userIdOrEmail: string,
-  profile: VolunteerProfile
-) {
-  if (typeof window === "undefined") return;
-
-  localStorage.setItem(
-    getVolunteerProfileKey(userIdOrEmail),
-    JSON.stringify(profile)
-  );
+export async function saveVolunteerProfile(userId: string, profile: VolunteerProfile): Promise<void> {
+  await supabase
+    .from("volunteer_profiles")
+    .upsert(
+      { ...profile, user_id: userId, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
 }

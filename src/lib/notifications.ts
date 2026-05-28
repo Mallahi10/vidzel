@@ -11,6 +11,8 @@ export type Notification = {
   title: string;
   message: string;
   workspace_id: string | null;
+  // NEW ANNOUNCEMENT SYSTEM — project_id for announcement → project redirect
+  project_id:   string | null;
   is_read: boolean;
   created_at: string;
 };

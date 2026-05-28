@@ -5,257 +5,218 @@ import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
+import styles from "./profileDetail.module.css";
+import { ArrowLeft, MapPin, Clock, CheckCircle, XCircle, User } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import { sendInvitation } from "@/lib/invitationService";
 
-/* ================= TYPES ================= */
-
-type UserProfile = {
-  userId: string;
-  role: "volunteer" | "student" | "mentor";
-  fullName: string;
-  location: string;
-  bio: string;
-  skills: string;
-  availability?: string;
-  education?: string;
+type ProfileData = {
+  userId:    string;
+  email:     string;
+  role:      string;
+  fullName:  string;
+  location:  string;
+  headline:  string;
+  skills:    string[];
   experience: string;
-  resumeFileName?: string;
-  resumeUrl?: string;
-  updatedAt: string;
+  education:  string;
+  motivation: string;
+  about:      string;
+  languages:  string;
 };
-
-/* ================= PAGE ================= */
 
 function Page() {
   const { user } = useAuth();
-  const router = useRouter();
+  const router   = useRouter();
+  const params   = useParams();
+  const targetUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId as string;
 
-  const params = useParams();
-  const userId = Array.isArray(params.userId)
-    ? params.userId[0]
-    : params.userId;
-
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [inviteStatus, setInviteStatus] = useState<
-    "none" | "pending" | "accepted" | "declined"
-  >("none");
-
-  /* ================= LOAD DATA ================= */
+  const [profile,      setProfile]      = useState<ProfileData | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<"none" | "pending" | "accepted" | "declined">("none");
+  const [loading,      setLoading]      = useState(true);
+  const [inviting,     setInviting]     = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== "organization") return;
+    if (!user || user.role !== "organization" || !targetUserId) return;
 
-    const storedProfiles: UserProfile[] = JSON.parse(
-      localStorage.getItem("vidzel_profiles") || "[]"
-    );
+    (async () => {
+      // 1. Get basic profile (email + role)
+      const { data: baseProfile } = await supabase
+        .from("profiles")
+        .select("id, email, role")
+        .eq("id", targetUserId)
+        .maybeSingle();
 
-    const foundProfile = storedProfiles.find(
-      (p) => String(p.userId) === String(userId)
-    );
+      if (!baseProfile) { setLoading(false); return; }
 
-    setProfile(foundProfile || null);
+      const role = baseProfile.role as string;
 
-    const invitations = JSON.parse(
-      localStorage.getItem("vidzel_invitations") || "[]"
-    );
+      // 2. Get role-specific profile data
+      let extra: any = {};
+      if (role === "mentor") {
+        const { data } = await supabase.from("mentor_profiles").select("full_name, location, headline, expertise, about, languages").eq("user_id", targetUserId).maybeSingle();
+        if (data) extra = { fullName: data.full_name, location: data.location, headline: data.headline, skills: data.expertise || [], about: data.about, languages: data.languages };
+      } else if (role === "volunteer") {
+        const { data } = await supabase.from("volunteer_profiles").select("full_name, location, headline, skills, experience, education, motivation").eq("user_id", targetUserId).maybeSingle();
+        if (data) extra = { fullName: data.full_name, location: data.location, headline: data.headline, skills: data.skills || [], experience: data.experience, education: data.education, motivation: data.motivation };
+      } else if (role === "student") {
+        const { data } = await supabase.from("student_profiles").select("full_name, location, headline, skills, experience, goals").eq("user_id", targetUserId).maybeSingle();
+        if (data) extra = { fullName: data.full_name, location: data.location, headline: data.headline, skills: data.skills || [], experience: data.experience, goals: data.goals };
+      }
 
-    const existingInvite = invitations.find(
-      (i: any) =>
-        String(i.invitedUserId) === String(userId) &&
-        i.invitedByOrgEmail === user.email
-    );
+      setProfile({
+        userId:     baseProfile.id,
+        email:      baseProfile.email,
+        role,
+        fullName:   extra.fullName   || "",
+        location:   extra.location   || "",
+        headline:   extra.headline   || "",
+        skills:     extra.skills     || [],
+        experience: extra.experience || "",
+        education:  extra.education  || "",
+        motivation: extra.motivation || extra.goals || "",
+        about:      extra.about      || "",
+        languages:  extra.languages  || "",
+      });
 
-    setInviteStatus(existingInvite ? existingInvite.status : "none");
-  }, [user, userId]);
+      // 3. Check existing invitation status from this org to this user
+      const { data: invite } = await supabase
+        .from("invitations")
+        .select("status")
+        .eq("invited_user_id", targetUserId)
+        .eq("invited_by", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-  /* ================= GUARDS ================= */
+      if (invite) setInviteStatus(invite.status as any);
 
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in first.</div>;
-  }
+      setLoading(false);
+    })();
+  }, [user?.id, targetUserId]);
 
-  if (user.role !== "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Only organizations can view profiles.
-      </div>
-    );
-  }
+  if (!user)                    return <div className={styles.page}>Please log in first.</div>;
+  if (user.role !== "organization") return <div className={styles.page}>Only organizations can view profiles.</div>;
+  if (loading)                  return <div className={styles.page}>Loading…</div>;
+  if (!profile)                 return <div className={styles.page}>Profile not found.</div>;
 
-  if (!profile) {
-    return <div style={{ padding: "3rem" }}>Profile not found.</div>;
-  }
+  /* Invite action — uses Supabase projects + sendInvitation */
+  const inviteToProject = async () => {
+    setInviting(true);
 
-  /* ================= INVITE ================= */
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("id, title, workspaces(id)")
+      .eq("organization_id", user.id)
+      .neq("status", "completed");
 
-  const inviteToProject = () => {
-    const projects = JSON.parse(
-      localStorage.getItem("vidzel_projects") || "[]"
-    );
-
-    const myProjects = projects.filter(
-      (p: any) => p.createdBy === user.email
-    );
-
-    if (myProjects.length === 0) {
-      alert("You have no projects to invite to.");
+    if (!projects || projects.length === 0) {
+      alert("You have no active projects to invite to.");
+      setInviting(false);
       return;
     }
 
-    const projectId = prompt(
-      "Select a project by ID:\n" +
-        myProjects.map((p: any) => `${p.id} – ${p.title}`).join("\n")
-    );
+    const list = projects.map((p: any, i: number) => `${i + 1}. ${p.title}`).join("\n");
+    const choice = prompt(`Select a project (enter number):\n${list}`);
+    if (!choice) { setInviting(false); return; }
 
-    if (!projectId) return;
-
-    const invitations = JSON.parse(
-      localStorage.getItem("vidzel_invitations") || "[]"
-    );
-
-    const alreadyInvited = invitations.find(
-      (i: any) =>
-        i.projectId === projectId &&
-        i.invitedUserId === profile.userId
-    );
-
-    if (alreadyInvited) {
-      alert("This user is already invited to this project.");
+    const idx = parseInt(choice, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= projects.length) {
+      alert("Invalid selection.");
+      setInviting(false);
       return;
     }
 
-    invitations.push({
-      id: "inv_" + Date.now(),
-      projectId,
-      invitedUserId: profile.userId,
-      invitedUserName: profile.fullName,
-      invitedUserRole: profile.role,
-      invitedByOrgEmail: user.email,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      respondedAt: null,
-    });
+    const selected = projects[idx] as any;
+    const workspaceId = selected.workspaces?.[0]?.id;
 
-    localStorage.setItem("vidzel_invitations", JSON.stringify(invitations));
+    if (!workspaceId) {
+      alert("No workspace found for this project.");
+      setInviting(false);
+      return;
+    }
 
-    setInviteStatus("pending");
-    alert("Invitation sent successfully.");
+    const result = await sendInvitation(workspaceId, profile.email, "member", user.id);
+
+    if (result) {
+      setInviteStatus("pending");
+      alert("Invitation sent successfully.");
+    } else {
+      alert("This user is already invited to this workspace.");
+    }
+
+    setInviting(false);
   };
-
-  const formatUpdatedAt = (iso: string) => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleString();
-  };
-
-  /* ================= UI ================= */
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "800px" }}>
-      {/* 🔙 BACK */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/dashboard/profiles")}
-        >
-          ← Back to Profiles
+    <div className={styles.page}>
+      <div className={styles.backRow}>
+        <Button variant="secondary" onClick={() => router.push("/dashboard/profiles")}>
+          <ArrowLeft size={15} /> Back to Profiles
         </Button>
       </div>
 
-      <h1 style={{ marginBottom: "1.75rem" }}>
-        {profile.fullName} ({profile.role})
-      </h1>
-
-      <Section label="Location" value={profile.location} />
-      <Section label="Bio" value={profile.bio} />
-      <Section label="Skills" value={profile.skills} />
-      {profile.education && (
-        <Section label="Education" value={profile.education} />
-      )}
-      {profile.availability && (
-        <Section label="Availability" value={profile.availability} />
-      )}
-      <Section label="Experience" value={profile.experience} />
-
-      {/* RESUME */}
-      <div style={section}>
-        <div style={label}>Resume</div>
-        {profile.resumeUrl ? (
-          <a
-            href={profile.resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#2563eb", fontWeight: 600 }}
-          >
-            📄 View / Download
-            {profile.resumeFileName
-              ? ` (${profile.resumeFileName})`
-              : ""}
-          </a>
-        ) : (
-          <div style={value}>—</div>
-        )}
+      <div className={styles.profileHeader}>
+        <h1 className={styles.profileName}>{profile.fullName || profile.email}</h1>
+        <span className={styles.roleBadge}>
+          <User size={12} /> {profile.role}
+        </span>
       </div>
 
-      <p style={{ marginTop: "2rem", fontSize: "0.9rem", color: "#666" }}>
-        Last updated: {formatUpdatedAt(profile.updatedAt)}
-      </p>
+      {profile.headline && <InfoCard label="Headline" value={profile.headline} />}
+      {profile.location && <InfoCard label="Location" value={profile.location} icon={<MapPin size={13} />} />}
+      {profile.email    && <InfoCard label="Email" value={profile.email} />}
+      {profile.about    && <InfoCard label="About" value={profile.about} />}
 
-      <hr style={{ margin: "2.5rem 0" }} />
+      {profile.skills.length > 0 && (
+        <div className={styles.infoCard}>
+          <p className={styles.infoLabel}>Skills / Expertise</p>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+            {profile.skills.map((s) => (
+              <span key={s} style={{ padding: "3px 10px", borderRadius: 999, background: "rgba(99,142,203,0.10)", color: "#395886", fontSize: 12, fontWeight: 600 }}>{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {profile.experience && <InfoCard label="Experience" value={profile.experience} />}
+      {profile.education  && <InfoCard label="Education"  value={profile.education} />}
+      {profile.motivation && <InfoCard label="Motivation / Goals" value={profile.motivation} />}
+      {profile.languages  && <InfoCard label="Languages"  value={profile.languages} />}
+
+      <hr className={styles.divider} />
 
       {inviteStatus === "none" && (
-        <Button onClick={inviteToProject}>Invite to Project</Button>
+        <Button onClick={inviteToProject} disabled={inviting}>
+          {inviting ? "Sending…" : "Invite to Project"}
+        </Button>
       )}
-
       {inviteStatus === "pending" && (
-        <div style={pill("#fef3c7", "#92400e")}>⏳ Invitation Pending</div>
+        <div className={`${styles.inviteStatusBadge} ${styles.statusPending}`}>
+          <Clock size={15} /> Invitation Pending
+        </div>
       )}
-
       {inviteStatus === "accepted" && (
-        <div style={pill("#dcfce7", "#166534")}>✅ Invitation Accepted</div>
+        <div className={`${styles.inviteStatusBadge} ${styles.statusAccepted}`}>
+          <CheckCircle size={15} /> Invitation Accepted
+        </div>
       )}
-
       {inviteStatus === "declined" && (
-        <div style={pill("#fee2e2", "#991b1b")}>❌ Invitation Declined</div>
+        <div className={`${styles.inviteStatusBadge} ${styles.statusDeclined}`}>
+          <XCircle size={15} /> Invitation Declined
+        </div>
       )}
     </div>
   );
 }
 
-/* ================= HELPERS ================= */
-
-function Section({ label: l, value: v }: { label: string; value?: string }) {
+function InfoCard({ label, value, icon }: { label: string; value?: string; icon?: React.ReactNode }) {
   return (
-    <div style={section}>
-      <div style={label}>{l}</div>
-      <div style={value}>{v || "—"}</div>
+    <div className={styles.infoCard}>
+      <p className={styles.infoLabel}>{label}</p>
+      <p className={styles.infoValue}>{value || "—"}</p>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
-
-const section = { marginBottom: "1.25rem" };
-
-const label = { fontWeight: 700, marginBottom: "0.25rem" };
-
-const value = {
-  color: "#0f172a",
-  lineHeight: 1.7,
-  whiteSpace: "pre-wrap" as const,
-};
-
-const pill = (bg: string, color: string) => ({
-  padding: "0.75rem 1.25rem",
-  borderRadius: "999px",
-  background: bg,
-  color,
-  fontWeight: 600,
-  display: "inline-block",
-});
-
-/* ================= EXPORT (CRITICAL) ================= */
-
-export default dynamic(() => Promise.resolve(Page), {
-  ssr: false,
-});
+export default dynamic(() => Promise.resolve(Page), { ssr: false });

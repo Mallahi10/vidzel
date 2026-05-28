@@ -1,142 +1,129 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/Button";
+import { supabase } from "@/lib/supabaseClient";
+import { Award, CheckCircle } from "lucide-react";
 
-type ProjectStatus = "draft" | "active" | "completed";
-
-type Project = {
-  id: string;
-  title?: string;
-  createdAt?: string;
-  createdBy?: string;
-  causes?: string[];
-  status: ProjectStatus;
-  completedAt?: string;
-};
-
-type Workspace = {
-  id: string;
-  projectId: string;
-  organizationEmail: string;
+type CompletedProject = {
+  workspace_id: string;
+  project_id: string;
+  project_title: string;
+  completed_at: string | null;
 };
 
 export default function CompletedProjectsPage() {
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const { user, loading } = useAuth();
+  const [projects, setProjects] = useState<CompletedProject[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    // ✅ Normalize projects (FIX #1)
-    const rawProjects = JSON.parse(
-      localStorage.getItem("vidzel_projects") || "[]"
-    );
+    if (!user) return;
+    supabase
+      .from("workspace_members")
+      .select("workspace_id, workspaces(id, project_id, status, updated_at, projects(id, title))")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .then(({ data }) => {
+        const list: CompletedProject[] = (data || []).map((m: any) => ({
+          workspace_id:  m.workspace_id,
+          project_id:    m.workspaces?.projects?.id    || m.workspaces?.project_id || "",
+          project_title: m.workspaces?.projects?.title || "Untitled Project",
+          completed_at:  m.workspaces?.updated_at     || null,
+        }));
+        setProjects(list);
+        setLoadingData(false);
+      });
+  }, [user?.id]);
 
-    const normalizedProjects: Project[] = rawProjects.map((p: any) => ({
-      ...p,
-      status: p.status ?? "active", // 👈 DEFAULT STATUS
-    }));
-
-    setProjects(normalizedProjects);
-
-    const storedWorkspaces: Workspace[] = JSON.parse(
-      localStorage.getItem("vidzel_workspaces") || "[]"
-    );
-    setWorkspaces(storedWorkspaces);
-  }, []);
-
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in.</div>;
-  }
-
-  // ✅ Get projectIds from workspaces where user is a member
-  const myWorkspaceProjectIds = useMemo(() => {
-    const members = JSON.parse(
-      localStorage.getItem("vidzel_workspace_members") || "[]"
-    );
-
-    const myWorkspaceIds = members
-      .filter((m: any) => m.userId === user.id)
-      .map((m: any) => m.workspaceId);
-
-    return workspaces
-      .filter((w) => myWorkspaceIds.includes(w.id))
-      .map((w) => String(w.projectId)); // 👈 normalize to string
-  }, [workspaces, user.id]);
-
-  // ✅ Only completed projects (FIX #2)
-  const completedProjects = useMemo(() => {
-    return projects.filter(
-      (p) =>
-        myWorkspaceProjectIds.includes(String(p.id)) &&
-        p.status === "completed"
-    );
-  }, [projects, myWorkspaceProjectIds]);
+  if (loading) return null;
+  if (!user) return <div style={{ padding: "3rem" }}>Please log in.</div>;
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "960px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>Completed Projects</h1>
+    <div style={{ padding: "28px 32px", maxWidth: 1000, margin: "0 auto" }}>
 
+      {/* HERO */}
+      <div style={{
+        background: "radial-gradient(circle,rgba(255,255,255,0.09) 1px,transparent 1px),linear-gradient(135deg,#047857 0%,#059669 50%,#34D399 100%)",
+        backgroundSize: "22px 22px,100% 100%",
+        borderRadius: 24, padding: "32px 36px", marginBottom: 28,
+        boxShadow: "0 8px 32px rgba(5,150,105,0.28)",
+        position: "relative", overflow: "hidden",
+        display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16,
+      }}>
+        <div style={{ position: "absolute", top: -50, right: -50, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.07)", pointerEvents: "none" }} />
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "white", margin: "0 0 6px" }}>Completed Projects</h1>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.82)", margin: "0 0 12px", lineHeight: 1.5 }}>
+            Projects you have successfully completed on Vidzel.
+          </p>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            background: "rgba(255,255,255,0.18)", color: "white",
+            padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700,
+            border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(4px)",
+          }}>
+            <CheckCircle size={12} /> {projects.length} Completed
+          </span>
+        </div>
         <Link href="/dashboard">
           <Button variant="secondary">← Back</Button>
         </Link>
       </div>
 
-      <p style={{ color: "#64748b", marginTop: "0.5rem" }}>
-        Projects you’ve completed on Vidzel.
-      </p>
-
-      {completedProjects.length === 0 && (
-        <div style={{ marginTop: "2rem", color: "#64748b" }}>
-          You don’t have any completed projects yet.
+      {/* LOADING */}
+      {loadingData && (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8", fontSize: 14 }}>
+          Loading…
         </div>
       )}
 
-      {completedProjects.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            marginTop: "1rem",
-            border: "1px solid #e5e7eb",
-            borderRadius: "12px",
-            padding: "1.25rem",
-            background: "white",
-          }}
-        >
-          <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-            {p.title || "Untitled Project"}
-          </div>
-
-          <div style={{ marginTop: "0.5rem", color: "#475569" }}>
-            <strong>Causes:</strong> {p.causes?.join(", ") || "—"}
-          </div>
-
-          <div style={{ marginTop: "0.5rem", color: "#475569" }}>
-            <strong>Completed:</strong>{" "}
-            {p.completedAt
-              ? new Date(p.completedAt).toLocaleString()
-              : "—"}
-          </div>
-
-          <div style={{ marginTop: "1rem" }}>
-            <Link href={`/dashboard/certificates/${p.id}`}>
-  <Button>
-    View Certificate →
-  </Button>
-</Link>
-
-          </div>
+      {/* EMPTY */}
+      {!loadingData && projects.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 20px", background: "linear-gradient(160deg,#F0F3FA 0%,white 50%)", borderRadius: 22, border: "1.5px solid rgba(99,142,203,0.14)", boxShadow: "0 4px 18px rgba(99,142,203,0.08)" }}>
+          <p style={{ fontSize: 16, color: "#64748b", margin: 0 }}>You don&apos;t have any completed projects yet.</p>
         </div>
-      ))}
+      )}
+
+      {/* LIST */}
+      {!loadingData && projects.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {projects.map((p) => (
+            <div key={p.workspace_id} style={{
+              background: "linear-gradient(160deg,#F0F3FA 0%,white 50%)",
+              borderRadius: 18, padding: "20px 24px",
+              boxShadow: "0 4px 14px rgba(99,142,203,0.08)",
+              border: "1.5px solid rgba(99,142,203,0.12)",
+              borderTop: "3px solid #059669",
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
+            }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>{p.project_title}</h3>
+                {p.completed_at && (
+                  <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+                    Completed: {new Date(p.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href={`/dashboard/workspaces/${p.workspace_id}`}>
+                  <Button variant="secondary">View Workspace →</Button>
+                </Link>
+                {p.project_id && (
+                  <Link href={`/dashboard/certificates/${p.project_id}`}>
+                    <Button>
+                      <Award size={14} />
+                      Certificate →
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ export function calculateStudentProfileScore(p: Partial<StudentProfile>) {
     !!p.year_of_study,
     !!p.languages,
     (p.skills?.length || 0) > 0,
-    (p.interests?.length || 0) > 0,
+    (p.impact_areas?.length || 0) > 0,
     (p.available_days?.length || 0) > 0 && !!p.hours_per_week,
   ];
 

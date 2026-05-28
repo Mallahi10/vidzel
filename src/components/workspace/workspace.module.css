@@ -1,0 +1,858 @@
+﻿/* ================================
+   WORKSPACE COMPONENTS — FULL REDESIGN
+   NEW MODERN UI UPDATE — Linear/Slack/Notion inspired
+   Uses new palette: #1e3a5f / #395886 / #638ECB / #8AAEE0
+================================ */
+
+/* ── Shared section wrapper ── */
+/* OLD STYLE BACKUP: .section { padding-top: 4px; } */
+.section { padding-top: 2px; }
+
+/* OLD STYLE BACKUP: simple h2 with sectionTitleIcon */
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main, #1e3a5f);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.sectionTitleIcon {
+  color: #638ECB;
+  flex-shrink: 0;
+}
+
+.sectionTitleIconGreen  { color: #10B981; flex-shrink: 0; }
+.sectionTitleIconAmber  { color: #F59E0B; flex-shrink: 0; }
+.sectionTitleIconMsg    { color: #8AAEE0; flex-shrink: 0; }
+
+/* ── Badge for counts ── */
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #638ECB, #8AAEE0);
+  color: white;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  min-width: 22px;
+  margin-left: 2px;
+  box-shadow: 0 2px 6px rgba(99, 142, 203, 0.25);
+}
+
+.countBadgeGreen { background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25); }
+.countBadgeAmber { background: linear-gradient(135deg, #D97706, #F59E0B); box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); }
+
+/* ================================
+   FORMS — Premium inputs
+================================ */
+/* OLD STYLE BACKUP: .form { background: rgba(37,99,235,0.03); border: 1.5px solid rgba(37,99,235,0.10) } */
+.form {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  background: linear-gradient(160deg, rgba(99, 142, 203, 0.04), rgba(138, 174, 224, 0.02));
+  border: 1.5px solid rgba(99, 142, 203, 0.10);
+  border-radius: 16px;
+  animation: fadeInDown 0.25s ease forwards;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.formField { margin-bottom: 10px; }
+
+/* OLD STYLE BACKUP: border rgba(37,99,235,0.15), focus rgba(37,99,235,0.10) */
+.formInput,
+.formTextarea,
+.formSelect {
+  width: 100%;
+  border: 1.5px solid rgba(99, 142, 203, 0.14);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-main, #1e3a5f);
+  background: white;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.formInput:hover,
+.formTextarea:hover,
+.formSelect:hover { border-color: rgba(99, 142, 203, 0.28); }
+
+.formInput:focus,
+.formTextarea:focus,
+.formSelect:focus {
+  border-color: #638ECB;
+  box-shadow: 0 0 0 3px rgba(99, 142, 203, 0.10);
+}
+
+.formTextarea { resize: vertical; min-height: 76px; line-height: 1.55; }
+.formSelect   { cursor: pointer; }
+
+/* ── Custom file input ── */
+/* NEW MODERN UI UPDATE — replaces the ugly native "Choose File | No file chosen" */
+.fileInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px dashed rgba(99, 142, 203, 0.22);
+  border-radius: 12px;
+  background: rgba(99, 142, 203, 0.02);
+  transition: border-color 0.18s ease, background 0.18s ease;
+  cursor: pointer;
+}
+
+.fileInputWrapper:hover {
+  border-color: rgba(138, 174, 224, 0.40);
+  background: rgba(138, 174, 224, 0.04);
+}
+
+.fileInputHidden {
+  display: none;
+}
+
+.fileInputBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #395886, #638ECB);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.18s ease, transform 0.15s ease;
+  box-shadow: 0 3px 10px rgba(99, 142, 203, 0.24);
+}
+
+.fileInputBtn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.fileName {
+  font-size: 13px;
+  color: var(--text-muted, #5B5B8A);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  font-style: italic;
+}
+
+.fileNameSelected {
+  color: var(--text-main, #1e3a5f);
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* ── Resource type pill tabs ── */
+/* NEW MODERN UI UPDATE — replaces the bare <select> for resource type */
+.typeTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.typeTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(99, 142, 203, 0.14);
+  background: white;
+  color: var(--text-muted, #5B5B8A);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.typeTab:hover {
+  border-color: rgba(138, 174, 224, 0.40);
+  color: #8AAEE0;
+  background: rgba(138, 174, 224, 0.06);
+}
+
+.typeTabActive {
+  background: linear-gradient(135deg, #395886, #638ECB);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(99, 142, 203, 0.25);
+}
+
+/* ================================
+   TASKS — Linear/Jira-inspired ticket cards
+================================ */
+/* OLD STYLE BACKUP: .taskList { display:flex; flex-direction:column; gap:2px } */
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* OLD STYLE BACKUP: border:1px solid rgba(37,99,235,0.08), background:white */
+.taskItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 16px 13px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(99, 142, 203, 0.09);
+  border-left: 3px solid #638ECB;
+  background: white;
+  box-shadow: 0 1px 6px rgba(99, 142, 203, 0.05);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  animation: slideInTask 0.3s ease forwards;
+}
+
+@keyframes slideInTask {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.taskItem:hover {
+  transform: translateX(3px);
+  box-shadow: 0 4px 16px rgba(99, 142, 203, 0.10);
+  border-color: rgba(99, 142, 203, 0.18);
+}
+
+/* OLD STYLE BACKUP: opacity 0.65, background #f8fafc */
+.taskItemCompleted {
+  border-left-color: #22c55e;
+  opacity: 0.70;
+  background: #f8fffe;
+}
+
+.taskItemCompleted:hover {
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.taskContent { flex: 1; min-width: 0; }
+
+/* OLD STYLE BACKUP: font-weight:600, color var(--text-main) */
+.taskTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main, #1e3a5f);
+  margin: 0 0 3px 0;
+  line-height: 1.3;
+}
+
+.taskTitleDone {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.taskDesc {
+  font-size: 13px;
+  color: var(--text-muted, #5B5B8A);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.taskDescDone { color: #cbd5e1; }
+
+/* OLD STYLE BACKUP: padding 6px 12px, border 1.5px transparent */
+.taskToggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  min-width: 70px;
+  justify-content: center;
+}
+
+/* OLD STYLE BACKUP: bg #dcfce7, color #166534 */
+.taskToggleDone {
+  background: linear-gradient(135deg, rgba(57, 88, 134, 0.08), rgba(99, 142, 203, 0.06));
+  color: #395886;
+  border-color: rgba(99, 142, 203, 0.20);
+}
+.taskToggleDone:hover {
+  background: linear-gradient(135deg, rgba(57, 88, 134, 0.14), rgba(99, 142, 203, 0.12));
+}
+
+/* OLD STYLE BACKUP: bg #f1f5f9, color #64748b */
+.taskToggleUndo {
+  background: rgba(34, 197, 94, 0.08);
+  color: #15803d;
+  border-color: rgba(34, 197, 94, 0.22);
+}
+.taskToggleUndo:hover { background: rgba(34, 197, 94, 0.14); }
+
+/* OLD STYLE BACKUP: text-align center, padding 24px, dashed border */
+.emptyText {
+  color: var(--text-muted, #5B5B8A);
+  font-size: 14px;
+  text-align: center;
+  padding: 28px 20px;
+  border: 1.5px dashed rgba(99, 142, 203, 0.14);
+  border-radius: 14px;
+  background: rgba(99, 142, 203, 0.02);
+}
+
+/* ================================
+   MESSAGES — Slack-inspired chat bubbles
+================================ */
+/* OLD STYLE BACKUP: display:flex; flex-direction:column; gap:12px; max-height:calc(100% - 120px) */
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 142, 203, 0.12) transparent;
+}
+
+/* OLD STYLE BACKUP: bg rgba(37,99,235,0.04), border 1px, border-radius:12px, padding 12px 14px */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+  animation: messageIn 0.25s ease forwards;
+}
+
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.message:hover { background: rgba(99, 142, 203, 0.03); }
+
+/* NEW — letter avatar (was not in old version) */
+.messageAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  /* NEW MODERN UI UPDATE — visible #8AAEE0 in avatar gradient */
+  background: linear-gradient(135deg, #395886, #8AAEE0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(138, 174, 224, 0.35);
+}
+
+/* NEW — message bubble wrapper */
+.messageBubble {
+  flex: 1;
+  min-width: 0;
+}
+
+/* OLD STYLE BACKUP: font-size:12px, font-weight:700, color #2563eb */
+.messageAuthor {
+  font-size: 12px;
+  font-weight: 700;
+  color: #638ECB;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* OLD STYLE BACKUP: bg rgba(37,99,235,0.10), color #1e40af */
+.messageRoleBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--gradient-accent, linear-gradient(135deg, #638ECB, #8AAEE0));
+  color: white;
+}
+
+/* NEW — message timestamp */
+.messageTime {
+  font-size: 10px;
+  color: var(--text-muted, #5B5B8A);
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* OLD STYLE BACKUP: font-size:14px, color var(--text-main) */
+.messageContent {
+  font-size: 14px;
+  color: var(--text-main, #1e3a5f);
+  line-height: 1.55;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* OLD STYLE BACKUP: display:flex; flex-direction:column; gap:10px; padding-top:14px; border-top */
+.messageInputRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(99, 142, 203, 0.08);
+  margin-top: auto;
+}
+
+/* ================================
+   RESOURCES — File manager grid
+================================ */
+/* OLD STYLE BACKUP: display:flex; flex-direction:column; gap:10px */
+.resourceList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 640px) { .resourceList { grid-template-columns: 1fr; } }
+
+/* OLD STYLE BACKUP: padding 14px 16px, border 1px, border-radius:14px */
+.resourceCard {
+  padding: 0;
+  border: 1px solid rgba(99, 142, 203, 0.09);
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 1px 6px rgba(99, 142, 203, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+.resourceCard:hover {
+  box-shadow: 0 6px 20px rgba(99, 142, 203, 0.10);
+  border-color: rgba(99, 142, 203, 0.18);
+  transform: translateY(-2px);
+}
+
+/* NEW — colored type indicator bar */
+.resourceTypeBar {
+  height: 3px;
+  width: 100%;
+  border-radius: 0;
+}
+
+/* Type-specific color bars */
+.typeLink .resourceTypeBar {
+  background: var(--gradient-primary, linear-gradient(90deg, #395886, #638ECB));
+}
+.typeFile .resourceTypeBar {
+  background: linear-gradient(90deg, #166534, #22c55e);
+}
+.typeVideo .resourceTypeBar {
+  background: linear-gradient(90deg, #9a3412, #f97316);
+}
+.typeNote .resourceTypeBar {
+  background: linear-gradient(90deg, #92400e, #f59e0b);
+}
+
+/* Resource card content padding */
+.resourceCardContent {
+  padding: 12px 14px;
+}
+
+.resourceCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.resourceDeleteBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.resourceDeleteBtn:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+}
+
+/* OLD STYLE BACKUP: font-size:14px, font-weight:600, margin 0 0 8px */
+.resourceTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main, #1e3a5f);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resourceBody { margin-top: 2px; }
+
+/* OLD STYLE BACKUP: color #2563eb, inline-flex, gap 6px */
+.resourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #638ECB;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease, gap 0.15s ease;
+}
+.resourceLink:hover { color: #395886; gap: 8px; }
+
+.resourceNote {
+  margin: 0;
+  color: var(--text-main, #1e3a5f);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.resourceVideo {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* ── Pending / optimistic upload card ── */
+.resourceCardPending {
+  opacity: 0.75;
+  border-style: dashed !important;
+  border-color: rgba(99, 142, 203, 0.25) !important;
+  background: linear-gradient(160deg, rgba(99,142,203,0.04), white) !important;
+  animation: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.uploadSpinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(99, 142, 203, 0.20);
+  border-top-color: #638ECB;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+.uploadingLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #638ECB;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.progressBarTrack {
+  height: 4px;
+  background: rgba(99, 142, 203, 0.15);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: #638ECB;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ================================
+   SUBMISSIONS — Review board style
+================================ */
+/* OLD STYLE BACKUP: display:flex; flex-direction:column; gap:14px */
+.submissionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* OLD STYLE BACKUP: padding 16px 18px, border, border-radius:16px */
+.submissionCard {
+  border: 1px solid rgba(99, 142, 203, 0.09);
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(99, 142, 203, 0.05);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+  animation: fadeInUp 0.35s ease forwards;
+}
+
+.submissionCard:hover {
+  box-shadow: 0 6px 22px rgba(99, 142, 203, 0.10);
+}
+
+/* NEW — gradient header band */
+.submissionHeader {
+  padding: 12px 16px;
+  /* NEW MODERN UI UPDATE — visible #D5DEEF → #8AAEE0 gradient header */
+  background: linear-gradient(135deg, rgba(213, 222, 239, 0.18) 0%, rgba(138, 174, 224, 0.12) 60%, rgba(99, 142, 203, 0.06) 100%);
+  border-bottom: 1px solid rgba(138, 174, 224, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* NEW — body section */
+.submissionBody {
+  padding: 14px 16px;
+}
+
+/* OLD STYLE BACKUP: font-size:13px, font-weight:700, color #2563eb */
+.submissionAuthor {
+  font-size: 12px;
+  font-weight: 700;
+  color: #638ECB;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* OLD STYLE BACKUP: font-size:15px, font-weight:600, margin 0 0 4px */
+.submissionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main, #1e3a5f);
+  margin: 0 0 5px 0;
+}
+
+/* OLD STYLE BACKUP: font-size:14px, color text-muted */
+.submissionDesc {
+  font-size: 13px;
+  color: var(--text-muted, #5B5B8A);
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+
+/* OLD STYLE BACKUP: color #2563eb, inline-flex */
+.submissionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #638ECB;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 5px 12px;
+  background: rgba(99, 142, 203, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(99, 142, 203, 0.14);
+  transition: background 0.18s ease;
+}
+.submissionLink:hover { background: rgba(99, 142, 203, 0.10); text-decoration: none; }
+
+/* OLD STYLE BACKUP: font-size:12px, color text-muted, margin-top:8px */
+.submissionMeta {
+  font-size: 11px;
+  color: var(--text-muted, #5B5B8A);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.8;
+}
+
+/* OLD STYLE BACKUP: bg rgba(37,99,235,0.04), border, padding 12px 14px, border-radius:12px */
+.feedbackBox {
+  margin-top: 12px;
+  background: linear-gradient(135deg, rgba(99, 142, 203, 0.05), rgba(138, 174, 224, 0.03));
+  border: 1px solid rgba(99, 142, 203, 0.10);
+  padding: 12px 14px;
+  border-radius: 12px;
+  border-left: 3px solid #638ECB;
+}
+
+/* OLD STYLE BACKUP: font-size:13px, font-weight:700, margin-bottom:6px */
+.feedbackHeader {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main, #1e3a5f);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* OLD STYLE BACKUP: font-size:14px, color text-muted */
+.feedbackText {
+  font-size: 13px;
+  color: var(--text-muted, #5B5B8A);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Status badges ── */
+/* OLD STYLE BACKUP: display:inline-flex, font-size:11px, font-weight:700, padding 3px 10px */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.statusPending {
+  background: rgba(249, 115, 22, 0.10);
+  color: #c2410c;
+  border: 1px solid rgba(249, 115, 22, 0.22);
+}
+.statusReviewed {
+  background: rgba(99, 142, 203, 0.08);
+  color: #395886;
+  border: 1px solid rgba(99, 142, 203, 0.18);
+}
+.statusApproved {
+  background: rgba(34, 197, 94, 0.10);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+.statusNeedsChanges {
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+}
+
+/* ── Feedback form ── */
+/* OLD STYLE BACKUP: margin-top:14px, border 1.5px solid rgba(37,99,235,0.12), border-radius:12px */
+.feedbackForm {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1.5px solid rgba(99, 142, 203, 0.12);
+  border-radius: 12px;
+  background: rgba(99, 142, 203, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedbackFormRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Submit button wrapper */
+.submitBtnWrapper { margin-top: 2px; }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 768px) {
+  .form {
+    padding: 14px;
+  }
+
+  .typeTabs {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .typeTab {
+    flex: 1;
+    min-width: 72px;
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .messageList {
+    max-height: 320px;
+  }
+
+  .message {
+    gap: 8px;
+  }
+
+  .messageAvatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .submissionCard {
+    border-radius: 12px;
+  }
+
+  .taskItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .taskToggle {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .sectionTitle {
+    font-size: 14px;
+  }
+
+  .formInput,
+  .formTextarea {
+    font-size: 14px;
+  }
+
+  .resourceList {
+    grid-template-columns: 1fr;
+  }
+
+  .feedbackFormRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .messageInputRow {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

@@ -150,6 +150,64 @@ function InvitationsPage() {
                   </span>
                 </div>
 
+                {/* Project details — always visible */}
+                {(() => {
+                  const project = invite.workspaces?.projects;
+                  return (
+                    <div style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "10px",
+                      padding: "1rem",
+                      marginBottom: "0.75rem",
+                      fontSize: "0.875rem",
+                      color: "#334155",
+                    }}>
+                      {project ? (
+                        <>
+                          {project.description && (
+                            <div style={{ marginBottom: "0.75rem" }}>
+                              <p style={{ fontWeight: 700, color: "#0f172a", margin: "0 0 0.25rem" }}>
+                                About this project
+                              </p>
+                              <p style={{ margin: 0, lineHeight: 1.6 }}>{project.description}</p>
+                            </div>
+                          )}
+                          {project.tasks && (
+                            <div style={{ marginBottom: "0.75rem" }}>
+                              <p style={{ fontWeight: 700, color: "#0f172a", margin: "0 0 0.25rem" }}>
+                                Key Tasks & Responsibilities
+                              </p>
+                              <p style={{ margin: 0, lineHeight: 1.6 }}>{project.tasks}</p>
+                            </div>
+                          )}
+                          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                            {project.category && (
+                              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                                📂 {project.category}
+                              </span>
+                            )}
+                            {project.location && (
+                              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                                📍 {project.location}
+                              </span>
+                            )}
+                            {project.organization_email && (
+                              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                                🏢 {project.organization_email}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <p style={{ margin: 0, color: "#94a3b8" }}>
+                          No project details available.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* ACTION BUTTONS */}
                 <div style={{ display: "flex", gap: "0.75rem" }}>
                   <button

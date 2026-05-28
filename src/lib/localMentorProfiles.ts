@@ -1,139 +1,68 @@
-/* ===============================
-   Mentor Profile Local Storage
-   =============================== */
+import { supabase } from "@/lib/supabaseClient";
 
 export type MentorProfile = {
   full_name: string;
   location: string;
   headline: string;
   photo_url: string;
-
   about: string;
-
   expertise: string[];
   sectors: string[];
   mentorship_focus: string[];
-
   experience_years: string;
-  current_role: string;
+  current_position: string;
   achievements: string;
-
   availability_hours: string;
   available_days: string[];
   collaboration_type: string;
-
   languages: string;
-
   updated_at: string;
 };
 
-const KEY_PREFIX = "vidzel:profiles:mentor:";
+export async function loadMentorProfile(userId: string): Promise<MentorProfile | null> {
+  const { data } = await supabase
+    .from("mentor_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-/* ===============================
-   Helpers
-   =============================== */
+  if (data) return data as MentorProfile;
 
-export function getMentorProfileKey(userIdOrEmail: string) {
-  return `${KEY_PREFIX}${userIdOrEmail}`;
-}
-
-function isBrowser() {
-  return typeof window !== "undefined";
-}
-
-/* ===============================
-   Load Profile
-   =============================== */
-
-export function loadMentorProfile(
-  userIdOrEmail: string
-): MentorProfile | null {
-  if (!isBrowser()) return null;
-
-  try {
-    const raw = localStorage.getItem(
-      getMentorProfileKey(userIdOrEmail)
-    );
-
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw);
-
-    return parsed as MentorProfile;
-  } catch (error) {
-    console.error("Failed to load mentor profile:", error);
-    return null;
+  // One-time migration: if Supabase is empty, check localStorage for old data
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem(`vidzel:profiles:mentor:${userId}`);
+    if (raw) {
+      try {
+        const old = JSON.parse(raw) as MentorProfile;
+        await saveMentorProfile(userId, old);
+        localStorage.removeItem(`vidzel:profiles:mentor:${userId}`);
+        return old;
+      } catch {}
+    }
   }
+
+  return null;
 }
 
-/* ===============================
-   Save Profile
-   =============================== */
-
-export function saveMentorProfile(
-  userIdOrEmail: string,
-  profile: MentorProfile
-) {
-  if (!isBrowser()) return;
-
-  try {
-    const profileWithTimestamp: MentorProfile = {
-      ...profile,
-      updated_at: new Date().toISOString(),
-    };
-
-    localStorage.setItem(
-      getMentorProfileKey(userIdOrEmail),
-      JSON.stringify(profileWithTimestamp)
+export async function saveMentorProfile(userId: string, profile: MentorProfile): Promise<void> {
+  await supabase
+    .from("mentor_profiles")
+    .upsert(
+      { ...profile, user_id: userId, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
     );
-  } catch (error) {
-    console.error("Failed to save mentor profile:", error);
-  }
 }
 
-/* ===============================
-   Delete Profile
-   =============================== */
-
-export function deleteMentorProfile(userIdOrEmail: string) {
-  if (!isBrowser()) return;
-
-  try {
-    localStorage.removeItem(
-      getMentorProfileKey(userIdOrEmail)
-    );
-  } catch (error) {
-    console.error("Failed to delete mentor profile:", error);
-  }
+export async function deleteMentorProfile(userId: string): Promise<void> {
+  await supabase.from("mentor_profiles").delete().eq("user_id", userId);
 }
-
-/* ===============================
-   Default Empty Profile Template
-   =============================== */
 
 export function getEmptyMentorProfile(): MentorProfile {
   return {
-    full_name: "",
-    location: "",
-    headline: "",
-    photo_url: "",
-
-    about: "",
-
-    expertise: [],
-    sectors: [],
-    mentorship_focus: [],
-
-    experience_years: "",
-    current_role: "",
-    achievements: "",
-
-    availability_hours: "",
-    available_days: [],
-    collaboration_type: "",
-
-    languages: "",
-
-    updated_at: "",
+    full_name: "", location: "", headline: "", photo_url: "",
+    about: "", expertise: [], sectors: [], mentorship_focus: [],
+    experience_years: "", current_position: "", achievements: "",
+    availability_hours: "", available_days: [], collaboration_type: "",
+    languages: "", updated_at: "",
   };
 }

@@ -1,147 +1,218 @@
-/* =============================
-   GRID
-============================= */
+/* ============================================================
+   ROLE SELECTION — Minimalist Elevate (Light Mode)
+============================================================ */
 
 .rolesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 22px;
   max-width: 1100px;
   margin: 0 auto;
 }
 
-/* =============================
-   ROLE CARD (MEDIUM DARK – KEEPING YOUR COLORS)
-============================= */
-
+/* ── Base card ── */
 .roleCard {
-  position: relative;
-  padding: 1.4rem 1.5rem;
-  border-radius: 14px;
-
-  background: linear-gradient(
-    180deg,
-    #aed2f6 0%,
-    #e5ebf4 100%
-  );
-
-  border: 1px solid rgba(37, 99, 235, 0.22);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-
+  border-radius: 24px;
+  border: 1.5px solid transparent;
+  padding: 32px 26px 28px;
   cursor: pointer;
   text-align: left;
-
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
-
+  background: #ffffff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 10px 30px rgba(31, 41, 55, 0.05),
+    0 1px 4px rgba(31, 41, 55, 0.04);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
   animation: cardFadeUp 0.45s ease-out both;
 }
 
-/* subtle brand glow */
-.roleCard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    circle at top left,
-    rgba(37, 99, 235, 0.16),
-    transparent 65%
-  );
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
+.roleCard:nth-child(2) { animation-delay: 0.07s; }
+.roleCard:nth-child(3) { animation-delay: 0.14s; }
+.roleCard:nth-child(4) { animation-delay: 0.21s; }
 
+/* Hover — border prend la couleur d'accent + ombre plus profonde */
 .roleCard:hover {
-  transform: translateY(-4px);
-  border-color: #2563eb;
-  box-shadow: 0 20px 45px rgba(37, 99, 235, 0.22);
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 50px rgba(31, 41, 55, 0.10),
+    0 4px 12px rgba(31, 41, 55, 0.06);
 }
 
-.roleCard:hover::before {
-  opacity: 1;
+.roleCard:nth-child(1):hover { border-color: rgba(59, 130, 246, 0.45); }
+.roleCard:nth-child(2):hover { border-color: rgba(139, 92, 246, 0.45); }
+.roleCard:nth-child(3):hover { border-color: rgba(16, 185, 129, 0.45); }
+.roleCard:nth-child(4):hover { border-color: rgba(245, 158, 11, 0.45); }
+
+/* ══════════════════════════════════
+   STEP NUMBER — filigrane gris clair
+══════════════════════════════════ */
+
+.cardNumber {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 1;
+  color: #E2E8F0;
+  pointer-events: none;
+  letter-spacing: -0.04em;
+  z-index: 0;
+  user-select: none;
 }
 
-/* =============================
-   ICON + ROLE (INLINE + MORE SPACE)
-============================= */
+/* ══════════════════════════════════
+   DECORATIVE RINGS (très subtils)
+══════════════════════════════════ */
 
-.roleHeader {
+.cardRing {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  bottom: -42px;
+  right: -42px;
+  pointer-events: none;
+}
+
+.cardRing::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  top: -35px;
+  left: -35px;
+}
+
+/* ══════════════════════════════════
+   ICON — couleur d'accent par rôle
+══════════════════════════════════ */
+
+.iconWrap {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  margin-bottom: 0.35rem;
-}
-
-/* icon */
-.roleIcon {
-  color: #2563eb;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-
-  margin-right: 0.40rem;
-
-  /* 👇 animation setup */
-  transition: transform 0.25s ease, filter 0.25s ease;
-}
-
-/* 🎯 ICON HOVER ANIMATION */
-.roleCard:hover .roleIcon {
-  transform: translateY(-2px) scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.35));
-}
-
-/* role text */
-.roleTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1;
-
+  margin-bottom: 20px;
+  border: 1.5px solid;
+  transition: transform 0.22s ease;
   position: relative;
-  top: 10px;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
-/* =============================
+.roleCard:hover .iconWrap { transform: scale(1.07) rotate(-3deg); }
+
+.roleCard:nth-child(1) .iconWrap { background: rgba(59, 130, 246, 0.08);  border-color: rgba(59, 130, 246, 0.22);  color: #3B82F6; }
+.roleCard:nth-child(2) .iconWrap { background: rgba(139, 92, 246, 0.08);  border-color: rgba(139, 92, 246, 0.22);  color: #8B5CF6; }
+.roleCard:nth-child(3) .iconWrap { background: rgba(16, 185, 129, 0.08);  border-color: rgba(16, 185, 129, 0.22);  color: #10B981; }
+.roleCard:nth-child(4) .iconWrap { background: rgba(245, 158, 11, 0.08);  border-color: rgba(245, 158, 11, 0.22);  color: #F59E0B; }
+
+/* ══════════════════════════════════
+   TITLE
+══════════════════════════════════ */
+
+.roleTitle {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 10px 0;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════
+   BADGE — couleur pastel par rôle
+══════════════════════════════════ */
+
+.roleTag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+  border: 1px solid;
+  position: relative;
+  z-index: 1;
+}
+
+.roleCard:nth-child(1) .roleTag { background: rgba(59, 130, 246, 0.08);  color: #3B82F6;  border-color: rgba(59, 130, 246, 0.22); }
+.roleCard:nth-child(2) .roleTag { background: rgba(139, 92, 246, 0.08);  color: #8B5CF6;  border-color: rgba(139, 92, 246, 0.22); }
+.roleCard:nth-child(3) .roleTag { background: rgba(16, 185, 129, 0.08);  color: #10B981;  border-color: rgba(16, 185, 129, 0.22); }
+.roleCard:nth-child(4) .roleTag { background: rgba(245, 158, 11, 0.08);  color: #F59E0B;  border-color: rgba(245, 158, 11, 0.22); }
+
+/* ══════════════════════════════════
    DESCRIPTION
-============================= */
+══════════════════════════════════ */
 
 .roleDesc {
-  font-size: 0.9rem;
-  color: #7b7d80;
-  line-height: 1.45;
-  margin: 0;
+  font-size: 14px;
+  color: #64748B;
+  line-height: 1.65;
+  margin: 0 0 22px 0;
+  flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
-/* =============================
-   ENTRANCE ANIMATION
-============================= */
+/* ══════════════════════════════════
+   CTA
+══════════════════════════════════ */
+
+.cardCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: gap 0.20s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.roleCard:nth-child(1) .cardCta { color: #3B82F6; }
+.roleCard:nth-child(2) .cardCta { color: #8B5CF6; }
+.roleCard:nth-child(3) .cardCta { color: #10B981; }
+.roleCard:nth-child(4) .cardCta { color: #F59E0B; }
+
+.roleCard:hover .cardCta { gap: 9px; }
+
+.ctaArrow {
+  display: inline-block;
+  transition: transform 0.20s ease;
+}
+
+.roleCard:hover .ctaArrow { transform: translateX(3px); }
+
+/* ══════════════════════════════════
+   ANIMATION
+══════════════════════════════════ */
 
 @keyframes cardFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* =============================
-   MOBILE
-============================= */
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
 
 @media (max-width: 768px) {
-  .rolesGrid {
-    gap: 1rem;
-  }
+  .rolesGrid { gap: 16px; }
+  .roleCard  { padding: 26px 20px 24px; }
+}
 
-  .roleCard {
-    padding: 1.25rem;
-  }
+@media (max-width: 480px) {
+  .rolesGrid { grid-template-columns: 1fr; }
 }

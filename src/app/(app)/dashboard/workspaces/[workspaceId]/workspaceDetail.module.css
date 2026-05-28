@@ -1,0 +1,184 @@
+﻿/* NEW MODERN UI UPDATE — created for workspaces/[workspaceId]/page.tsx
+   (page previously had inline styles only, no CSS module existed) */
+
+/* ================= PAGE LAYOUT ================= */
+/* OLD STYLE BACKUP: style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:"2rem", padding:"3rem", maxWidth:"1400px" }} */
+.page {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 32px 36px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+/* ================= LEFT COLUMN ================= */
+.leftColumn {
+  min-width: 0;
+}
+
+/* ================= WORKSPACE HEADER ================= */
+/* OLD STYLE BACKUP: <div style={{ marginBottom: "1.5rem" }}> */
+.workspaceHeader {
+  margin-bottom: 24px;
+}
+
+.workspaceTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 10px 0;
+}
+
+/* OLD STYLE BACKUP: <span style={{ fontSize:"12px", padding:"2px 10px", borderRadius:"20px", background: conditional }} */
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.roleBadgeAdmin {
+  /* NEW MODERN UI UPDATE — visible #8AAEE0 */
+  background: linear-gradient(135deg, rgba(138, 174, 224, 0.18), rgba(99, 142, 203, 0.10));
+  color: #8AAEE0;
+  border: 1px solid rgba(138, 174, 224, 0.30);
+}
+
+.roleBadgeMember {
+  /* NEW MODERN UI UPDATE — visible #D5DEEF tint */
+  background: linear-gradient(135deg, rgba(213, 222, 239, 0.25), rgba(138, 174, 224, 0.12));
+  color: #395886;
+  border: 1px solid rgba(213, 222, 239, 0.40);
+}
+
+/* ================= ARCHIVED NOTICE ================= */
+/* OLD STYLE BACKUP: <div style={{ marginBottom: "1rem", color: "#b45309" }}> */
+.archivedNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(180, 83, 9, 0.08);
+  border: 1.5px solid rgba(180, 83, 9, 0.22);
+  color: #92400e;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+/* ================= SECTION PANELS ================= */
+/* OLD STYLE BACKUP: panelStyle = { border:"1px solid #e5e7eb", borderRadius:"14px", padding:"1.5rem", background:"white", marginBottom:"2rem" } */
+.panel {
+  background: linear-gradient(160deg, #F0F3FA 0%, white 50%);
+  border: 1.5px solid rgba(99, 142, 203, 0.16);
+  border-top: 3px solid #638ECB;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 18px rgba(99, 142, 203, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.panel:hover {
+  box-shadow: 0 8px 28px rgba(99, 142, 203, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ================= BOTTOM ACTION BAR ================= */
+/* OLD STYLE BACKUP: <div style={{ marginTop:"3rem", display:"flex", justifyContent:"space-between", alignItems:"center" }}> */
+.bottomBar {
+  margin-top: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  background: linear-gradient(160deg, #F0F3FA 0%, white 60%);
+  border: 1.5px solid rgba(99, 142, 203, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(99, 142, 203, 0.07);
+}
+
+/* ================= RIGHT COLUMN: CHAT ================= */
+/* OLD STYLE BACKUP: <div style={{ marginTop:"4.65rem", position:"sticky", top:"6.5rem", height:"calc(100vh - 8rem)", ... }}> */
+.chatColumn {
+  position: sticky;
+  top: 6.5rem;
+  height: calc(100vh - 8rem);
+  overflow: auto;
+  background: linear-gradient(180deg, #F0F3FA 0%, white 30%);
+  border: 1.5px solid rgba(99, 142, 203, 0.16);
+  border-top: 3px solid #8AAEE0;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 18px rgba(99, 142, 203, 0.08);
+}
+
+/* ================= PANEL COLOR VARIANTS ================= */
+/* Each workspace section gets a distinct accent color */
+.panelTasks {
+  border-top-color: #638ECB;
+}
+
+.panelResources {
+  border-top-color: #10B981;
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.04) 0%, white 50%);
+}
+
+.panelSubmissions {
+  border-top-color: #F59E0B;
+  background: linear-gradient(160deg, rgba(245, 158, 11, 0.04) 0%, white 50%);
+}
+
+/* ================= GUARD STATES ================= */
+.guardState {
+  padding: 48px 36px;
+  font-size: 15px;
+  color: var(--text-muted, #475569);
+}
+
+.errorState {
+  padding: 48px 36px;
+  font-size: 15px;
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.05);
+  border-radius: 14px;
+  margin: 32px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .page {
+    grid-template-columns: 1fr;
+    padding: 24px 20px;
+  }
+
+  .chatColumn {
+    position: static;
+    height: 500px;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .bottomBar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    text-align: center;
+  }
+}

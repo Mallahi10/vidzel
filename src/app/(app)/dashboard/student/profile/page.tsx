@@ -1,7 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./profile.module.css";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
+import { Trash2 } from "lucide-react";
 
 /* ================= OPTIONS ================= */
 
@@ -51,11 +54,78 @@ const ROLES = [
 /* ================= COMPONENT ================= */
 
 export default function StudentProfilePage() {
+  const { user } = useAuth();
   const [form, setForm] = useState<any>({
     impactAreas: [],
     skills: [],
     days: [],
   });
+
+  const [cvUrl, setCvUrl]         = useState<string | null>(null);
+  const [cvUploading, setCvUploading] = useState(false);
+  const [cvDeleting, setCvDeleting]   = useState(false);
+
+  // AJOUTÉ [Task 3] : charger le CV existant depuis profiles
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("cv_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.cv_url) setCvUrl(data.cv_url);
+      });
+  }, [user?.id]);
+
+  // AJOUTÉ [Task 3] : upload CV vers Storage + sauvegarde URL dans profiles
+  const handleCvUpload = async (file: File) => {
+    if (!user) return;
+    setCvUploading(true);
+
+    const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("cv-uploads")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("[CV upload]", uploadError.message);
+      setCvUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("cv-uploads")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+
+    await supabase
+      .from("profiles")
+      .update({ cv_url: publicUrl })
+      .eq("id", user.id);
+
+    setCvUrl(publicUrl);
+    setCvUploading(false);
+  };
+
+  const handleDeleteCV = async () => {
+    if (!user || !cvUrl) return;
+    setCvDeleting(true);
+
+    // Extract the storage path from the full public URL
+    // Format: .../storage/v1/object/public/cv-uploads/<path>
+    const marker = "/cv-uploads/";
+    const markerIdx = cvUrl.indexOf(marker);
+    if (markerIdx !== -1) {
+      const storagePath = cvUrl.substring(markerIdx + marker.length);
+      await supabase.storage.from("cv-uploads").remove([storagePath]);
+    }
+
+    await supabase.from("profiles").update({ cv_url: null }).eq("id", user.id);
+    setCvUrl(null);
+    setCvDeleting(false);
+  };
 
   /* ================= PROFILE SCORE ================= */
 
@@ -356,6 +426,64 @@ export default function StudentProfilePage() {
             }
           />
         </Field>
+      </div>
+
+      {/* AJOUTÉ [Task 3] : section upload CV/Resume */}
+      <div className={styles.card}>
+        <h2 className={styles.sectionTitle}>CV / Resume</h2>
+
+        {cvUrl && (
+          <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 600 }}>
+              ✅ CV uploaded
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <a
+                href={cvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.85rem", color: "#2563eb", fontWeight: 600 }}
+              >
+                View current CV
+              </a>
+              <button
+                onClick={handleDeleteCV}
+                disabled={cvDeleting}
+                title="Delete CV"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: cvDeleting ? "wait" : "pointer",
+                  padding: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  color: "#dc2626",
+                  opacity: cvDeleting ? 0.5 : 1,
+                  transition: "opacity 0.15s",
+                }}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, fontSize: "0.9rem", color: "#374151" }}>
+          {cvUrl ? "Replace CV" : "Upload your CV"} (PDF)
+        </label>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          disabled={cvUploading}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleCvUpload(file);
+          }}
+          style={{ width: "100%", marginBottom: "0.5rem" }}
+        />
+        {cvUploading && (
+          <p style={{ fontSize: "0.85rem", color: "#2563eb", margin: 0 }}>Uploading...</p>
+        )}
       </div>
     </div>
   );

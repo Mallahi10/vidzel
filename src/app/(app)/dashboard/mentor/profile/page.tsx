@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+// AJOUTÉ [Task 3] : upload CV vers Supabase Storage
+import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import Button from "@/components/Button";
 import styles from "./mentorProfile.module.css";
@@ -61,6 +63,9 @@ export default function MentorProfilePage() {
   );
 
   const [saved, setSaved] = useState(false);
+  // AJOUTÉ [Task 3] : états pour le CV
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
+  const [cvUploading, setCvUploading] = useState(false);
 
   const userKey = useMemo(() => {
     if (!user) return "";
@@ -71,12 +76,42 @@ export default function MentorProfilePage() {
 
   useEffect(() => {
     if (!userKey) return;
-
-    const existing = loadMentorProfile(userKey);
-    if (existing) {
-      setProfile(existing);
-    }
+    loadMentorProfile(userKey).then((existing) => {
+      if (existing) setProfile(existing);
+    });
   }, [userKey]);
+
+  // AJOUTÉ [Task 3] : charger le CV existant depuis profiles
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("cv_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.cv_url) setCvUrl(data.cv_url);
+      });
+  }, [user?.id]);
+
+  // AJOUTÉ [Task 3] : upload CV vers Storage + sauvegarde URL dans profiles
+  const handleCvUpload = async (file: File) => {
+    if (!user) return;
+    setCvUploading(true);
+    const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("cv-uploads")
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) {
+      console.error("[CV upload]", uploadError.message);
+      setCvUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("cv-uploads").getPublicUrl(filePath);
+    await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
+    setCvUrl(urlData.publicUrl);
+    setCvUploading(false);
+  };
 
   /* ================= SCORE ================= */
 
@@ -87,13 +122,10 @@ export default function MentorProfilePage() {
 
   function handleSave() {
     if (!userKey) return;
-
-    saveMentorProfile(userKey, profile);
-    setSaved(true);
-
-    setTimeout(() => {
-      setSaved(false);
-    }, 2500);
+    saveMentorProfile(userKey, profile).then(() => {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    });
   }
 
   /* ================= TOGGLE ARRAY ================= */
@@ -291,6 +323,28 @@ export default function MentorProfilePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* AJOUTÉ [Task 3] : section CV/Resume */}
+      <div className={styles.card}>
+        <h3 className={styles.sectionTitle}>CV / Resume</h3>
+        {cvUrl && (
+          <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 600 }}>✅ CV uploaded</span>
+            <a href={cvUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", color: "#2563eb", fontWeight: 600 }}>View current CV</a>
+          </div>
+        )}
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, fontSize: "0.9rem", color: "#374151" }}>
+          {cvUrl ? "Replace CV" : "Upload your CV"} (PDF)
+        </label>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          disabled={cvUploading}
+          onChange={(e) => { const file = e.target.files?.[0]; if (file) handleCvUpload(file); }}
+          style={{ width: "100%", marginBottom: "0.5rem" }}
+        />
+        {cvUploading && <p style={{ fontSize: "0.85rem", color: "#2563eb", margin: 0 }}>Uploading...</p>}
       </div>
 
       {/* ACTIONS */}

@@ -24,7 +24,9 @@ export default function AppLayout({
         <Providers>
           <div className="appRoot">
             <Header />
-            {children}
+            <main style={{ paddingTop: "64px" }}>
+              {children}
+            </main>
           </div>
         </Providers>
       </body>

@@ -1,143 +1,232 @@
-/* =========================
-   Page Layout
-========================= */
+/* ============================================================
+   HOMEPAGE
+============================================================ */
 
 .main {
   width: 100%;
-  min-height: 100vh;
-
-  /* soft atmospheric background */
-  background:
-    radial-gradient(
-      1200px 600px at 20% 0%,
-      rgba(56, 189, 248, 0.18),
-      transparent
-    ),
-    radial-gradient(
-      1000px 500px at 90% 100%,
-      rgba(94, 234, 212, 0.18),
-      transparent
-    ),
-    linear-gradient(
-      180deg,
-      #f1f7fe 0%,
-      #e6f0fb 100%
-    );
+  overflow-x: hidden;
+  background: #F4F7FA;
 }
 
-/* =========================
-   Hero Section
-========================= */
+/* ============================================================
+   HERO SECTION
+============================================================ */
 
-.hero {
-  padding: 3rem 2rem 2rem;
+.heroSection {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a1628;
+  padding: 72px 36px 140px;
+}
+
+/* Purple blob — stands out clearly on the blue gradient */
+.blob1 {
+  position: absolute;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(109, 40, 217, 0.55) 0%, transparent 68%);
+  filter: blur(90px);
+  top: -220px;
+  left: -200px;
+  animation: blobFloat1 11s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* White-tinted glow — creates a bright spot on top-right */
+.blob2 {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 65%);
+  filter: blur(70px);
+  top: -60px;
+  right: -140px;
+  animation: blobFloat2 14s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Deep navy blob — adds depth at the bottom */
+.blob3 {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(15, 23, 60, 0.40) 0%, transparent 65%);
+  filter: blur(68px);
+  bottom: -40px;
+  left: 40%;
+  animation: blobFloat3 17s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hero content */
+.heroContent {
+  position: relative;
+  z-index: 3;
   text-align: center;
+  max-width: 780px;
+  animation: fadeInUp 0.55s ease forwards;
 }
 
-/* HERO TITLE — UNIQUE BRAND MOMENT */
+.heroPill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s ease 0.06s both;
+}
+
 .title {
-  font-size: 2.5rem;
+  font-size: clamp(2.1rem, 5vw, 3.5rem);
   font-weight: 800;
-  line-height: 1.05;
-
-  /* brand-aligned gradient text */
-  background: linear-gradient(
-    90deg,
-    #1e3a8a,
-    #2563eb,
-    #38bdf8
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: -0.026em;
+  color: white;
+  margin: 0 0 20px 0;
+  animation: fadeInUp 0.5s ease 0.12s both;
 }
 
-/* =========================
-   Journey Section (MAIN CARD)
-========================= */
-
-.journey {
-  max-width: 1300px;
-  margin: 0 auto 5rem;
-  padding: 4.8rem 3.5rem 5.8rem;
-  border-radius: 40px;
-
-  background:
-    radial-gradient(
-      900px 450px at 15% 10%,
-      rgba(37, 99, 235, 0.22),
-      transparent
-    ),
-    radial-gradient(
-      900px 450px at 85% 90%,
-      rgba(56, 189, 248, 0.25),
-      transparent
-    ),
-    linear-gradient(
-      180deg,
-      #eaf2ff 0%,
-      #dbeafe 100%
-    );
-
-  box-shadow:
-    0 40px 90px rgba(30, 58, 138, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+.heroSubtitle {
+  font-size: 17px;
+  line-height: 1.72;
+  color: rgba(255, 255, 255, 0.68);
+  max-width: 520px;
+  margin: 0 auto 40px;
+  animation: fadeInUp 0.5s ease 0.20s both;
 }
 
-/* =========================
-   Titles
-========================= */
-
-.journeyTitle {
-  text-align: center;
-  font-size: 2.3rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 0.6rem;
+/* Social proof */
+.socialProof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.5s ease 0.36s both;
 }
 
-.journeySubtitle {
-  text-align: center;
-  max-width: 900px;
-  margin: 0 auto 3rem;
-  font-size: 1.12rem;
-  line-height: 1;
-  color: #334155;
+.proofLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
 }
 
-/* =========================
-   Roles Area
-========================= */
+.proofLogo {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.26);
+  transition: color 0.2s ease;
+  cursor: default;
+}
+
+.proofLogo:hover { color: rgba(255, 255, 255, 0.52); }
+
+/* ============================================================
+   ROLES SECTION
+============================================================ */
+
+.rolesSection {
+  background: #F4F7FA;
+  padding: 100px 36px 100px;
+  position: relative;
+  z-index: 10;
+  margin-top: -80px;
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
+}
 
 .rolesArea {
-  width: 100%;
-  margin-bottom: 3rem;
+  max-width: 1300px;
+  margin: 0 auto;
 }
 
-/* =========================
-   Shared Impact Button
-========================= */
-
-.impactArea {
-  display: flex;
-  justify-content: center;
+.sectionEyebrow {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: #3B82F6;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
 }
 
-.impactBadge {
-  background: linear-gradient(
-    90deg,
-    #1e3a8a,
-    #2563eb,
-    #38bdf8
-  );
-  color: white;
-  padding: 1rem 4.8rem;
-  border-radius: 999px;
-  font-size: 1rem;
-  font-weight: 800;
+.sectionTitle {
+  text-align: center;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 52px 0;
+  letter-spacing: -0.015em;
+}
 
-  box-shadow:
-    0 18px 45px rgba(37, 99, 235, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+/* ============================================================
+   KEYFRAMES
+============================================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes blobFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(45px, 35px) scale(1.09); }
+  66%       { transform: translate(-25px, 55px) scale(0.93); }
+}
+
+@keyframes blobFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-55px, 25px) scale(1.07); }
+  66%       { transform: translate(35px, -45px) scale(0.95); }
+}
+
+@keyframes blobFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-35px, -22px) scale(1.11); }
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 768px) {
+  .heroSection  { padding: 56px 20px 110px; }
+  .rolesSection { padding: 80px 20px 72px; margin-top: -60px; border-radius: 20px 20px 0 0; }
+}
+
+@media (max-width: 480px) {
+  .heroSection  { padding: 44px 16px 100px; }
+  .rolesSection { padding: 72px 16px 64px; margin-top: -48px; border-radius: 16px 16px 0 0; }
 }

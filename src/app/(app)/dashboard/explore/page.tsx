@@ -2,12 +2,11 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import Link from "next/link";
-// AJOUTÉ [Étape 4] : client Supabase pour remplacer localStorage
 import { supabase } from "@/lib/supabaseClient";
+import { Building2, MapPin } from "lucide-react";
+import styles from "./explore.module.css";
 
-// MODIFIÉ [Étape 4] : type mis à jour pour correspondre aux colonnes Supabase
 type Project = {
   id: string;
   title: string;
@@ -15,171 +14,150 @@ type Project = {
   organization_email: string;
   status: string;
   visibility: string;
+  category: string | null;
+  location: string | null;
 };
 
-type Application = {
-  id: string;
-  projectId: string;
-  projectTitle: string;
 
-  applicantId: string;
-  applicantName: string;
-  applicantEmail: string;
-  applicantRole: string;
-
-  status: "pending" | "accepted" | "rejected";
-  createdAt: string;
+/* Category → badge colour mapping */
+const CATEGORY_STYLE: Record<string, { bg: string; color: string; border: string }> = {
+  "Technology":          { bg: "#dbeafe", color: "#1d4ed8", border: "#bfdbfe" },
+  "Technology for Good": { bg: "#dbeafe", color: "#1d4ed8", border: "#bfdbfe" },
+  "Education":           { bg: "#ede9fe", color: "#6d28d9", border: "#ddd6fe" },
+  "Health":              { bg: "#d1fae5", color: "#065f46", border: "#a7f3d0" },
+  "Environment":         { bg: "#ccfbf1", color: "#0f766e", border: "#99f6e4" },
+  "Social":              { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
+  "Social Innovation":   { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
+  "Youth Development":   { bg: "#fef9c3", color: "#854d0e", border: "#fde68a" },
+  "Human Rights":        { bg: "#fce7f3", color: "#9d174d", border: "#fbcfe8" },
+  "Public Policy":       { bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" },
+  "Entrepreneurship":    { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
 };
+
+const DEFAULT_CAT = { bg: "#f1f5f9", color: "#475569", border: "#e2e8f0" };
+
+function getCatStyle(cat?: string | null) {
+  return CATEGORY_STYLE[cat ?? ""] ?? DEFAULT_CAT;
+}
+
+/* ================= PAGE ================= */
 
 export default function ExploreProjectsPage() {
   const { user, loading } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects]   = useState<Project[]>([]);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
-    // MODIFIÉ [Étape 4] : lecture depuis Supabase (remplace localStorage)
-    // La RLS filtre automatiquement les projets privés pour les non-membres
-    const fetchProjects = async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id, title, description, organization_email, status, visibility")
-        .neq("status", "completed")
-        .order("created_at", { ascending: false });
+    supabase
+      .from("projects")
+      .select("id, title, description, organization_email, status, visibility, category, location")
+      .eq("visibility", "open")
+      .neq("status", "completed")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error) setProjects(data || []);
+      });
 
-      if (!error) setProjects(data || []);
-    };
-
-    fetchProjects();
-
-    const apps: Application[] = JSON.parse(
-      localStorage.getItem("vidzel_applications") || "[]"
-    );
-
-    // ✅ Match by BOTH id and email (defensive)
-    const myApplied = apps
-      .filter(
-        (a) =>
-          a.applicantId === user.id ||
-          a.applicantEmail === user.email
-      )
-      .map((a) => a.projectId);
-
-    setAppliedIds(myApplied);
-  // FIX : [user?.id] au lieu de [user] — évite les appels multiples quand React re-crée l'objet user
+    supabase
+      .from("applications")
+      .select("project_id")
+      .eq("applicant_id", user.id)
+      .then(({ data }) => {
+        setAppliedIds((data ?? []).map((a: any) => a.project_id));
+      });
   }, [user?.id]);
 
-  if (loading) {
-    return <div style={{ padding: "3rem" }}>Loading...</div>;
-  }
+  if (loading) return <div style={{ padding: "3rem" }}>Loading...</div>;
+  if (!user)   return <div style={{ padding: "3rem" }}>Please log in.</div>;
 
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in.</div>;
-  }
-
-  // ❌ Organizations cannot apply
   if (user.role === "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Organizations cannot apply to projects.
-      </div>
-    );
+    return <div style={{ padding: "3rem" }}>Organizations cannot apply to projects.</div>;
   }
 
-  const applyToProject = (project: Project) => {
-    const apps: Application[] = JSON.parse(
-      localStorage.getItem("vidzel_applications") || "[]"
-    );
-
-    const alreadyApplied = apps.some(
-      (a) =>
-        a.projectId === project.id &&
-        (a.applicantId === user.id ||
-          a.applicantEmail === user.email)
-    );
-
-    if (alreadyApplied) return;
-
-    // ✅ GUARANTEED COMPLETE APPLICATION OBJECT
-    const application: Application = {
-      id: "app_" + Date.now(),
-      projectId: project.id,
-      projectTitle: project.title,
-
-      applicantId: user.id,
-      applicantName: user.email || "Unnamed Applicant",
-      applicantEmail: user.email || "",
-      applicantRole: user.role || "participant",
-
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
-
-    localStorage.setItem(
-      "vidzel_applications",
-      JSON.stringify([...apps, application])
-    );
-
-    setAppliedIds((prev) => [...prev, project.id]);
-  };
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "1100px" }}>
-      <h1>Explore Projects</h1>
+    <div className={styles.page}>
 
-      {projects.length === 0 && (
-        <p style={{ color: "#64748b", marginTop: "1rem" }}>
-          No projects available at the moment.
-        </p>
-      )}
+      {/* Header */}
+      <div className={styles.header}>
+        <h1>Explore Projects</h1>
+        <p>Discover open opportunities and make an impact.</p>
+        {projects.length > 0 && (
+          <span className={styles.count}>
+            {projects.length} project{projects.length !== 1 ? "s" : ""} available
+          </span>
+        )}
+      </div>
 
-      {projects.map((project) => (
-        <div
-          key={project.id}
-          style={{
-            marginTop: "1.5rem",
-            padding: "1.75rem",
-            borderRadius: "16px",
-            border: "1px solid #e5e7eb",
-            background: "white",
-          }}
-        >
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-            {project.title}
-          </h3>
+      {/* Grid */}
+      <div className={styles.grid}>
 
-          {/* MODIFIÉ [Étape 4] : organization_email remplace organizationName/createdBy */}
-          <p style={{ marginTop: "0.25rem", color: "#475569" }}>
-            Organization: {project.organization_email}
-          </p>
-
-          <div
-            style={{
-              marginTop: "1.25rem",
-              display: "flex",
-              gap: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <Link href={`/dashboard/projects/${project.id}`}>
-              <Button variant="secondary">
-                View Details
-              </Button>
-            </Link>
-
-            {appliedIds.includes(project.id) ? (
-              <Button variant="secondary" disabled>
-                Applied
-              </Button>
-            ) : (
-              <Button onClick={() => applyToProject(project)}>
-                Apply / Ask to Join
-              </Button>
-            )}
+        {/* Empty state */}
+        {projects.length === 0 && (
+          <div className={styles.empty}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>🔍</div>
+            <p style={{ color: "#334155", fontWeight: 600, margin: "0 0 0.25rem" }}>No projects available</p>
+            <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: 0 }}>Check back soon for new opportunities.</p>
           </div>
-        </div>
-      ))}
+        )}
+
+        {projects.map((project) => {
+          const cat     = getCatStyle(project.category);
+          const applied = appliedIds.includes(project.id);
+
+          return (
+            <div key={project.id} className={styles.card}>
+
+              {/* Badges */}
+              <div className={styles.cardTop}>
+                {project.category && (
+                  <span
+                    className={styles.badge}
+                    style={{ background: cat.bg, color: cat.color, borderColor: cat.border }}
+                  >
+                    {project.category}
+                  </span>
+                )}
+                {project.location && (
+                  <span
+                    className={styles.badge}
+                    style={{ background: "#f1f5f9", color: "#475569", borderColor: "#e2e8f0" }}
+                  >
+                    <MapPin size={10} />
+                    {project.location}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className={styles.cardTitle}>{project.title}</h3>
+
+              {/* Description */}
+              {project.description && (
+                <p className={styles.cardDesc}>{project.description}</p>
+              )}
+
+              {/* Organization */}
+              <div className={styles.orgRow}>
+                <div className={styles.orgIcon}><Building2 size={14} /></div>
+                <span>{project.organization_email}</span>
+              </div>
+
+              {/* Actions */}
+              <div className={styles.cardActions}>
+                <Link href={`/dashboard/projects/${project.id}`} className={styles.btnSecondary}>
+                  View Details
+                </Link>
+                {applied && (
+                  <span className={styles.btnApplied}>✓ Applied</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -4,193 +4,108 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Button from "@/components/Button";
-
-/* ================= TYPES ================= */
+import styles from "./applications.module.css";
+import { ClipboardList, Clock, CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 type Application = {
   id: string;
-  projectId: string;
-
-  applicantId?: string;
-  applicantName?: string;
-  applicantEmail?: string;
-  applicantRole?: string;
-
-  status?: "pending" | "accepted" | "rejected";
-  createdAt?: string;
+  project_id: string;
+  applicant_id: string;
+  applicant_email: string | null;
+  applicant_role: string | null;
+  status: "pending" | "accepted" | "rejected" | null;
+  created_at: string;
+  projects: { title: string | null; organization_id: string } | null;
+  profiles: { email: string | null; role: string | null } | null;
 };
-
-type Project = {
-  id: string;
-  title?: string;
-  createdBy?: string;
-};
-
-type Account = {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-};
-
-/* ================= STORAGE KEYS ================= */
-
-const LS = {
-  applications: "vidzel_applications",
-  projects: "vidzel_projects",
-  accounts: "vidzel_accounts",
-};
-
-function readLS<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-/* ================= PAGE ================= */
 
 export default function ApplicationsPage() {
   const { user } = useAuth();
-
   const [applications, setApplications] = useState<Application[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role !== "organization") return;
 
-    setApplications(readLS<Application[]>(LS.applications, []));
-    setProjects(readLS<Project[]>(LS.projects, []));
-    setAccounts(readLS<Account[]>(LS.accounts, []));
-  }, [user]);
+    supabase
+      .from("applications")
+      .select(`
+        id, project_id, applicant_id, applicant_email, applicant_role, status, created_at,
+        projects!project_id(title, organization_id),
+        profiles!applicant_id(email, role)
+      `)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setApplications((data as unknown as Application[]) || []);
+        setLoading(false);
+      });
+  }, [user?.id]);
 
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in.</div>;
-  }
+  if (!user) return <div className={styles.page}>Please log in.</div>;
+  if (user.role !== "organization") return <div className={styles.page}>Only organizations can view applications.</div>;
 
-  if (user.role !== "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Only organizations can view applications.
-      </div>
-    );
-  }
-
-  /* ================= FILTER ONLY MY PROJECTS ================= */
-
-  const myProjectIds = useMemo(() => {
-    return projects
-      .filter((p) => p.createdBy === user.email)
-      .map((p) => String(p.id));
-  }, [projects, user.email]);
-
-  const myApplications = useMemo(() => {
-    return applications.filter((a) =>
-      myProjectIds.includes(String(a.projectId))
-    );
-  }, [applications, myProjectIds]);
-
-  /* ================= ACCOUNT MAPS ================= */
-
-  const accountById = useMemo(() => {
-    const map = new Map<string, Account>();
-    accounts.forEach((a) => map.set(String(a.id), a));
-    return map;
-  }, [accounts]);
-
-  const accountByEmail = useMemo(() => {
-    const map = new Map<string, Account>();
-    accounts.forEach((a) =>
-      map.set((a.email || "").toLowerCase(), a)
-    );
-    return map;
-  }, [accounts]);
-
-  const resolveAccount = (app: Application): Account | null => {
-    if (app.applicantId && accountById.has(String(app.applicantId))) {
-      return accountById.get(String(app.applicantId)) || null;
-    }
-
-    const email = (app.applicantEmail || "").toLowerCase();
-    if (!email) return null;
-
-    return accountByEmail.get(email) || null;
-  };
-
-  /* ================= UI ================= */
+  // Only show applications to this org's projects
+  const myApplications = useMemo(
+    () => applications.filter((a) => a.projects?.organization_id === user.id),
+    [applications, user.id]
+  );
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "1000px" }}>
-      <h1>Applications</h1>
+    <div className={styles.page}>
+      <div className={styles.pageHero}>
+        <div>
+          <h1 className={styles.heroTitle}>Applications</h1>
+          <p className={styles.heroSubtitle}>Review and manage applications to your organization's projects.</p>
+          <span className={styles.heroBadge}>Organization</span>
+        </div>
+      </div>
 
-      {myApplications.length === 0 && (
-        <p style={{ color: "#64748b" }}>No applications yet.</p>
+      {loading && (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8", fontSize: 14 }}>
+          Loading…
+        </div>
       )}
 
-      {myApplications.map((app) => {
-        const account = resolveAccount(app);
+      {!loading && myApplications.length === 0 && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}><ClipboardList size={40} /></div>
+          <p className={styles.emptyTitle}>No applications yet</p>
+          <p className={styles.emptyText}>Applications to your projects will appear here.</p>
+        </div>
+      )}
 
-        const displayName =
-          app.applicantName ||
-          account?.name ||
-          "Unnamed Applicant";
-
-        const applicantAccountId =
-          account?.id || app.applicantId || null;
+      {!loading && myApplications.map((app) => {
+        const displayName = app.profiles?.email || app.applicant_email || "Unknown Applicant";
+        const role = app.profiles?.role || app.applicant_role || "";
+        const appStatus = app.status || "pending";
 
         return (
-          <div
-            key={app.id}
-            style={{
-              marginTop: "1rem",
-              padding: "1.25rem",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              background: "white",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "1rem",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <p style={{ margin: 0 }}>
-                  <strong>{displayName}</strong>{" "}
-                  <span style={{ color: "#64748b" }}>
-                    ({app.applicantRole || account?.role || "—"})
-                  </span>
-                </p>
-
-                {(app.applicantEmail || account?.email) && (
-                  <p style={{ margin: "0.25rem 0 0", color: "#64748b" }}>
-                    {app.applicantEmail || account?.email}
-                  </p>
+          <div key={app.id} className={styles.appCard}>
+            <div className={styles.appRow}>
+              <div className={styles.appInfo}>
+                <div className={styles.appNameRow}>
+                  <span className={styles.appName}>{displayName}</span>
+                  {role && <span className={styles.appRole}>{role}</span>}
+                </div>
+                <span className={`${styles.statusBadge} ${
+                  appStatus === "accepted" ? styles.statusAccepted :
+                  appStatus === "rejected" ? styles.statusRejected : styles.statusPending
+                }`}>
+                  {appStatus === "accepted" ? <CheckCircle size={11} /> : appStatus === "rejected" ? <XCircle size={11} /> : <Clock size={11} />}
+                  {appStatus}
+                </span>
+                {app.projects?.title && (
+                  <p className={styles.appEmail}>Project: {app.projects.title}</p>
                 )}
-
-                <p style={{ margin: "0.5rem 0 0" }}>
-                  Status: {app.status || "pending"}
-                </p>
               </div>
 
-              {applicantAccountId ? (
-                <Link href={`/dashboard/profiles/${applicantAccountId}`}>
-                  <Button variant="secondary">
-                    View Profile
-                  </Button>
+              {app.applicant_id ? (
+                <Link href={`/dashboard/profiles/${app.applicant_id}`}>
+                  <Button variant="secondary">View Profile</Button>
                 </Link>
               ) : (
-                <Button variant="secondary" disabled>
-                  View Profile
-                </Button>
+                <Button variant="secondary" disabled>View Profile</Button>
               )}
             </div>
           </div>

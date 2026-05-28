@@ -1,18 +1,67 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Button from "@/components/Button";
 import styles from "./mentor.module.css";
+// AJOUTÉ : Supabase pour stats dynamiques
+import { supabase } from "@/lib/supabaseClient";
+// NEW MODERN UI UPDATE — Lucide icons replace emoji icons
+import {
+  GraduationCap,
+  FolderOpen,
+  ClipboardList,
+  CheckSquare,
+  Timer,
+  Search,
+  LayoutGrid,
+  BarChart3,
+  Clock,
+} from "lucide-react";
 
 export default function MentorDashboard() {
   const { user, loading } = useAuth();
 
+  // AJOUTÉ : vraies stats depuis Supabase
+  const [stats, setStats] = useState({
+    activeMentorships:  0,
+    projectsSupported:  0,
+    pendingReviews:     0,
+    completedProjects:  0,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      // Step 1 — récupérer les workspaces du mentor
+      const { data: memberships } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", user.id);
+
+      const wsIds = (memberships || []).map((m: any) => m.workspace_id);
+
+      const [activeRes, totalRes, completedRes, pendingRes] = await Promise.all([
+        supabase.from("workspace_members").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active"),
+        supabase.from("workspace_members").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("workspace_members").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "completed"),
+        wsIds.length > 0
+          ? supabase.from("submissions").select("id", { count: "exact", head: true }).in("workspace_id", wsIds).eq("feedback_status", "pending")
+          : Promise.resolve({ count: 0 }),
+      ]);
+
+      setStats({
+        activeMentorships: activeRes.count   ?? 0,
+        projectsSupported: totalRes.count    ?? 0,
+        pendingReviews:    pendingRes.count  ?? 0,
+        completedProjects: completedRes.count ?? 0,
+      });
+    })();
+  }, [user?.id]);
+
   if (loading) return null;
-
-  if (!user)
-    return <div className={styles.wrapper}>Please log in.</div>;
-
+  if (!user) return <div className={styles.wrapper}>Please log in.</div>;
   if (user.role !== "mentor")
     return <div className={styles.wrapper}>Access denied.</div>;
 
@@ -22,12 +71,8 @@ export default function MentorDashboard() {
       <div className={styles.hero}>
         <div>
           <h1>Welcome back</h1>
-          <p>
-            Support projects, guide participants, and track your impact.
-          </p>
-          <span className={styles.roleBadge}>
-            Mentor Dashboard
-          </span>
+          <p>Support projects, guide participants, and track your impact.</p>
+          <span className={styles.roleBadge}>Mentor Dashboard</span>
         </div>
 
         <div className={styles.heroButtons}>
@@ -35,41 +80,20 @@ export default function MentorDashboard() {
             <Button>Explore Projects</Button>
           </Link>
 
+          {/* FIX : variant="secondary" (fond blanc) pour être visible sur le hero sombre */}
           <Link href="/dashboard/mentor/profile">
-            <Button variant="outline">
-              View & Edit Profile
-            </Button>
+            <Button variant="secondary">View &amp; Edit Profile</Button>
           </Link>
         </div>
       </div>
 
-      {/* STATS */}
+      {/* STATS — MODIFIÉ : valeurs dynamiques depuis Supabase */}
       <div className={styles.statsBar}>
-        <Stat
-          icon="🧑‍🏫"
-          title="Active Mentorships"
-          value="4"
-        />
-        <Stat
-          icon="📂"
-          title="Projects Supported"
-          value="6"
-        />
-        <Stat
-          icon="📝"
-          title="Reviews Submitted"
-          value="12"
-        />
-        <Stat
-          icon="✅"
-          title="Completed Projects"
-          value="3"
-        />
-        <Stat
-          icon="⏱️"
-          title="Impact Hours"
-          value="84h"
-        />
+        <Stat icon={<GraduationCap size={20} />} title="Active Mentorships"  value={String(stats.activeMentorships)} />
+        <Stat icon={<FolderOpen size={20} />}    title="Projects Supported"  value={String(stats.projectsSupported)} />
+        <Stat icon={<Clock size={20} />}          title="Pending Reviews"     value={String(stats.pendingReviews)} />
+        <Stat icon={<CheckSquare size={20} />}   title="Completed Projects"  value={String(stats.completedProjects)} />
+        <Stat icon={<Timer size={20} />}          title="Impact Hours"        value="—" />
       </div>
 
       {/* MAIN GRID */}
@@ -78,9 +102,7 @@ export default function MentorDashboard() {
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h3>Recent Activity</h3>
-            <span className={styles.viewLink}>
-              View All →
-            </span>
+            <span className={styles.viewLink}>View All →</span>
           </div>
 
           <Activity text="Provided feedback on Youth Leadership Project" />
@@ -95,28 +117,23 @@ export default function MentorDashboard() {
             <h3>Quick Actions</h3>
           </div>
 
-          <Quick icon="🔎" text="Browse Projects" />
-          <Quick icon="📝" text="Review Submissions" />
-          <Quick icon="🗂️" text="My Workspaces" />
-          <Quick icon="📊" text="Impact Overview" />
+          <Quick icon={<Search size={18} />}       text="Browse Projects"      link="/dashboard/explore" />
+          {/* MODIFIÉ : lien vers la vraie page Review Submissions du mentor */}
+          <Quick icon={<ClipboardList size={18} />} text="Review Submissions"  link="/dashboard/mentor/submissions" />
+          <Quick icon={<LayoutGrid size={18} />}    text="My Workspaces"       link="/dashboard/workspaces" />
+          <Quick icon={<BarChart3 size={18} />}     text="Impact Overview"     link="/dashboard/mentor/impact" />
         </div>
 
-        {/* Mentorship Status */}
+        {/* Mentorship Status — MODIFIÉ : affiche les vraies stats */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h3>Mentorship Status</h3>
           </div>
 
           <div className={styles.statusRow}>
-            <span className={styles.active}>
-              Active 4
-            </span>
-            <span className={styles.completed}>
-              Completed 3
-            </span>
-            <span className={styles.pending}>
-              Pending 2
-            </span>
+            <span className={`${styles.statusBadge} ${styles.active}`}>Active · {stats.activeMentorships}</span>
+            <span className={`${styles.statusBadge} ${styles.completed}`}>Completed · {stats.completedProjects}</span>
+            <span className={`${styles.statusBadge} ${styles.pending}`}>Pending Reviews · {stats.pendingReviews}</span>
           </div>
 
           <div className={styles.chartMock}></div>
@@ -126,35 +143,36 @@ export default function MentorDashboard() {
       {/* BOTTOM GRID */}
       <div className={styles.bottomGrid}>
         <ActionCard
-          icon="🔎"
+          icon={<Search size={22} />}
           title="Browse Projects"
           text="Discover new projects to mentor."
           link="/dashboard/explore"
           buttonText="View Projects"
         />
 
+        {/* MODIFIÉ : lien vers la page Review Submissions du mentor */}
         <ActionCard
-          icon="📝"
+          icon={<ClipboardList size={22} />}
           title="Review Submissions"
-          text="Provide feedback to participants."
-          link="/dashboard/applications"
+          text="View and provide feedback on workspace submissions."
+          link="/dashboard/mentor/submissions"
           buttonText="Review Work"
         />
 
         <ActionCard
-          icon="🗂️"
+          icon={<LayoutGrid size={22} />}
           title="My Workspaces"
           text="Access active mentorship spaces."
           link="/dashboard/workspaces"
           buttonText="View Workspaces"
         />
 
-        {/* FIXED ROUTE HERE */}
+        {/* MODIFIÉ : pointe vers la vraie page Impact Overview, non plus le profil */}
         <ActionCard
-          icon="📊"
+          icon={<BarChart3 size={22} />}
           title="Impact Overview"
-          text="Track your mentoring contributions."
-          link="/dashboard/mentor/profile"
+          text="Track your mentoring contributions and profile score."
+          link="/dashboard/mentor/impact"
           buttonText="View Impact"
         />
       </div>
@@ -164,15 +182,7 @@ export default function MentorDashboard() {
 
 /* ================= COMPONENTS ================= */
 
-function Stat({
-  icon,
-  title,
-  value,
-}: {
-  icon: string;
-  title: string;
-  value: string;
-}) {
+function Stat({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
     <div className={styles.statItem}>
       <div className={styles.statIcon}>{icon}</div>
@@ -193,29 +203,19 @@ function Activity({ text }: { text: string }) {
   );
 }
 
-function Quick({
-  icon,
-  text,
-}: {
-  icon: string;
-  text: string;
-}) {
+function Quick({ icon, text, link }: { icon: React.ReactNode; text: string; link: string }) {
   return (
-    <div className={styles.quickItem}>
+    <Link href={link} className={styles.quickItem}>
       <div className={styles.quickIcon}>{icon}</div>
       <span>{text}</span>
-    </div>
+    </Link>
   );
 }
 
 function ActionCard({
-  icon,
-  title,
-  text,
-  link,
-  buttonText,
+  icon, title, text, link, buttonText,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   text: string;
   link: string;
@@ -231,9 +231,7 @@ function ActionCard({
 
       <div className={styles.cardButton}>
         <Link href={link}>
-          <Button variant="outline">
-            {buttonText} →
-          </Button>
+          <Button variant="outline">{buttonText} →</Button>
         </Link>
       </div>
     </div>

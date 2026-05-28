@@ -1,13 +1,49 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Button from "@/components/Button";
 import styles from "./volunteer.module.css";
+// AJOUTÉ : Supabase pour stats dynamiques (même pattern que student dashboard)
+import { supabase } from "@/lib/supabaseClient";
+// NEW MODERN UI UPDATE — Lucide icons replace emoji icons
+import {
+  FileText,
+  LayoutGrid,
+  Clock,
+  CheckSquare,
+  Timer,
+  Search,
+  Award,
+  User,
+} from "lucide-react";
 
 export default function VolunteerDashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
+  // AJOUTÉ : vraies stats depuis Supabase
+  const [stats, setStats] = useState({ applications: 0, activeProjects: 0, pending: 0, completed: 0 });
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [appsRes, activeRes, pendingRes, completedRes] = await Promise.all([
+        supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", user.id),
+        supabase.from("workspace_members").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active"),
+        supabase.from("applications").select("id", { count: "exact", head: true }).eq("applicant_id", user.id).eq("status", "pending"),
+        supabase.from("workspace_members").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "completed"),
+      ]);
+      setStats({
+        applications:   appsRes.count    ?? 0,
+        activeProjects: activeRes.count  ?? 0,
+        pending:        pendingRes.count ?? 0,
+        completed:      completedRes.count ?? 0,
+      });
+    })();
+  }, [user?.id]);
+
+  if (loading) return null;
   if (!user) return <div className={styles.wrapper}>Please log in.</div>;
   if (user.role !== "volunteer")
     return <div className={styles.wrapper}>Access denied.</div>;
@@ -29,19 +65,20 @@ export default function VolunteerDashboard() {
 
           <Link href="/dashboard/volunteer/profile">
             <Button variant="secondary">
-              View & Edit Profile
+              View &amp; Edit Profile
             </Button>
           </Link>
         </div>
       </div>
 
       {/* ================= STATS ================= */}
+      {/* MODIFIÉ : valeurs dynamiques depuis Supabase — plus de chiffres statiques */}
       <div className={styles.statsBar}>
-        <Stat icon="📄" title="Applications" value="6" />
-        <Stat icon="🗂️" title="Active Projects" value="2" />
-        <Stat icon="⏳" title="Pending" value="1" />
-        <Stat icon="✅" title="Completed" value="4" />
-        <Stat icon="⏱️" title="Impact Hours" value="36h" />
+        <Stat icon={<FileText size={20} />}    title="Applications"    value={String(stats.applications)} />
+        <Stat icon={<LayoutGrid size={20} />}  title="Active Projects"  value={String(stats.activeProjects)} />
+        <Stat icon={<Clock size={20} />}       title="Pending"          value={String(stats.pending)} />
+        <Stat icon={<CheckSquare size={20} />} title="Completed"        value={String(stats.completed)} />
+        <Stat icon={<Timer size={20} />}       title="Impact Hours"     value="—" />
       </div>
 
       {/* ================= MAIN GRID ================= */}
@@ -65,38 +102,22 @@ export default function VolunteerDashboard() {
             <h3>Quick Actions</h3>
           </div>
 
-          <Quick
-            icon="🔎"
-            text="Browse Projects"
-            link="/dashboard/explore"
-          />
-          <Quick
-            icon="📄"
-            text="View Applications"
-            link="/dashboard/my-applications"
-          />
-          <Quick
-            icon="🗂️"
-            text="My Workspaces"
-            link="/dashboard/workspaces"
-          />
-          <Quick
-            icon="📜"
-            text="Certificates"
-            link="/dashboard/certificates"
-          />
+          <Quick icon={<Search size={18} />}    text="Browse Projects"    link="/dashboard/explore" />
+          <Quick icon={<FileText size={18} />}  text="View Applications"  link="/dashboard/my-applications" />
+          <Quick icon={<LayoutGrid size={18} />} text="My Workspaces"     link="/dashboard/workspaces" />
+          <Quick icon={<Award size={18} />}     text="Certificates"       link="/dashboard/certificates" />
         </div>
 
-        {/* Contribution Status */}
+        {/* Contribution Status — MODIFIÉ : affiche les vraies stats dynamiques */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h3>Contribution Status</h3>
           </div>
 
           <div className={styles.statusRow}>
-            <span className={styles.active}>Active 2</span>
-            <span className={styles.completed}>Completed 4</span>
-            <span className={styles.pending}>Pending 1</span>
+            <span className={`${styles.statusBadge} ${styles.active}`}>Active · {stats.activeProjects}</span>
+            <span className={`${styles.statusBadge} ${styles.completed}`}>Completed · {stats.completed}</span>
+            <span className={`${styles.statusBadge} ${styles.pending}`}>Pending · {stats.pending}</span>
           </div>
 
           <div className={styles.chartMock}></div>
@@ -106,7 +127,7 @@ export default function VolunteerDashboard() {
       {/* ================= BOTTOM GRID ================= */}
       <div className={styles.bottomGrid}>
         <ActionCard
-          icon="🔎"
+          icon={<Search size={22} />}
           title="Explore Projects"
           text="Find new impact opportunities."
           link="/dashboard/explore"
@@ -114,7 +135,7 @@ export default function VolunteerDashboard() {
         />
 
         <ActionCard
-          icon="📄"
+          icon={<FileText size={22} />}
           title="My Applications"
           text="Track your project applications."
           link="/dashboard/my-applications"
@@ -122,7 +143,7 @@ export default function VolunteerDashboard() {
         />
 
         <ActionCard
-          icon="🗂️"
+          icon={<LayoutGrid size={22} />}
           title="My Workspaces"
           text="Access active collaborations."
           link="/dashboard/workspaces"
@@ -130,7 +151,7 @@ export default function VolunteerDashboard() {
         />
 
         <ActionCard
-          icon="📜"
+          icon={<Award size={22} />}
           title="Certificates"
           text="View your earned certificates."
           link="/dashboard/certificates"
@@ -138,7 +159,7 @@ export default function VolunteerDashboard() {
         />
 
         <ActionCard
-          icon="🧑"
+          icon={<User size={22} />}
           title="Volunteer Profile"
           text="Complete and manage your profile to improve matching."
           link="/dashboard/volunteer/profile"
@@ -151,7 +172,7 @@ export default function VolunteerDashboard() {
 
 /* ================= COMPONENTS ================= */
 
-function Stat({ icon, title, value }: any) {
+function Stat({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
     <div className={styles.statItem}>
       <div className={styles.statIcon}>{icon}</div>
@@ -163,7 +184,7 @@ function Stat({ icon, title, value }: any) {
   );
 }
 
-function Activity({ text }: any) {
+function Activity({ text }: { text: string }) {
   return (
     <div className={styles.activityItem}>
       <div className={styles.avatar}></div>
@@ -172,8 +193,7 @@ function Activity({ text }: any) {
   );
 }
 
-/* 🔥 UPDATED QUICK COMPONENT (NOW CLICKABLE) */
-function Quick({ icon, text, link }: any) {
+function Quick({ icon, text, link }: { icon: React.ReactNode; text: string; link: string }) {
   return (
     <Link href={link} className={styles.quickItem}>
       <div className={styles.quickIcon}>{icon}</div>
@@ -182,7 +202,13 @@ function Quick({ icon, text, link }: any) {
   );
 }
 
-function ActionCard({ icon, title, text, link, buttonText }: any) {
+function ActionCard({ icon, title, text, link, buttonText }: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  link: string;
+  buttonText: string;
+}) {
   return (
     <div className={styles.card}>
       <div>

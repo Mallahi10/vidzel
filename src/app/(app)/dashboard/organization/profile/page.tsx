@@ -109,56 +109,55 @@ export default function OrganizationProfilePage() {
     }
   }, [loading, user, router]);
 
-  /* ===================== LOAD FROM LOCAL STORAGE ===================== */
+  /* ===================== LOAD FROM SUPABASE ===================== */
   useEffect(() => {
     if (!userKey || userKey === "unknown-user") return;
     if (loadedOnce) return;
 
-    const existing = loadOrgProfile(userKey);
-    if (existing) {
-      setOrganizationName(existing.organization_name || "");
-      setOrganizationType(existing.organization_type || "");
-      setCountry(existing.country || "");
-      setCity(existing.city || "");
-      setYearFounded(existing.year_founded || "");
-      setWebsite(existing.website || "");
-      setLogoUrl(existing.logo_url || "");
+    loadOrgProfile(userKey).then((existing) => {
+      if (existing) {
+        setOrganizationName(existing.organization_name || "");
+        setOrganizationType(existing.organization_type || "");
+        setCountry(existing.country || "");
+        setCity(existing.city || "");
+        setYearFounded(existing.year_founded || "");
+        setWebsite(existing.website || "");
+        setLogoUrl(existing.logo_url || "");
 
-      setMission(existing.mission || "");
-      setFocusAreas(existing.focus_areas || []);
-      setTargetPopulation(existing.target_population || "");
+        setMission(existing.mission || "");
+        setFocusAreas(existing.focus_areas || []);
+        setTargetPopulation(existing.target_population || "");
 
-      setTeamSize(existing.team_size || "");
-      setManagedVolunteers(existing.managed_volunteers ?? null);
-      setHostedStudents(existing.hosted_students ?? null);
-      setHasCoordinator(existing.has_coordinator ?? null);
+        setTeamSize(existing.team_size || "");
+        setManagedVolunteers(existing.managed_volunteers ?? null);
+        setHostedStudents(existing.hosted_students ?? null);
+        setHasCoordinator(existing.has_coordinator ?? null);
 
-      // NEW FIELDS (safe optional reads)
-      setContactName((existing as any).contact_name || "");
-      setContactEmail((existing as any).contact_email || "");
-      setContactPhone((existing as any).contact_phone || "");
-      setContactRole((existing as any).contact_role || "");
-      setSocialLinkedIn((existing as any).social_linkedin || "");
-      setSocialInstagram((existing as any).social_instagram || "");
-      setSocialFacebook((existing as any).social_facebook || "");
+        setContactName(existing.contact_name || "");
+        setContactEmail(existing.contact_email || "");
+        setContactPhone(existing.contact_phone || "");
+        setContactRole(existing.contact_role || "");
+        setSocialLinkedIn(existing.social_linkedin || "");
+        setSocialInstagram(existing.social_instagram || "");
+        setSocialFacebook(existing.social_facebook || "");
 
-      setMainPrograms((existing as any).main_programs || "");
-      setImpactMetrics((existing as any).impact_metrics || "");
-      setRegionsServed((existing as any).regions_served || "");
-      setSuccessStory((existing as any).success_story || "");
+        setMainPrograms(existing.main_programs || "");
+        setImpactMetrics(existing.impact_metrics || "");
+        setRegionsServed(existing.regions_served || "");
+        setSuccessStory(existing.success_story || "");
 
-      setCollaborationPreference((existing as any).collaboration_preference || "");
-      setPreferredLanguages((existing as any).preferred_languages || "");
-      setTimeZone((existing as any).time_zone || "");
-      setAvailabilityNotes((existing as any).availability_notes || "");
+        setCollaborationPreference(existing.collaboration_preference || "");
+        setPreferredLanguages(existing.preferred_languages || "");
+        setTimeZone(existing.time_zone || "");
+        setAvailabilityNotes(existing.availability_notes || "");
 
-      setSupportNeeded((existing as any).support_needed || "");
-      setResourcesAvailable((existing as any).resources_available || "");
-      setToolsUsed((existing as any).tools_used || "");
-      setPartnerships((existing as any).partnerships || "");
-    }
-
-    setLoadedOnce(true);
+        setSupportNeeded(existing.support_needed || "");
+        setResourcesAvailable(existing.resources_available || "");
+        setToolsUsed(existing.tools_used || "");
+        setPartnerships(existing.partnerships || "");
+      }
+      setLoadedOnce(true);
+    });
   }, [userKey, loadedOnce]);
 
   /* ===================== SCORE ===================== */
@@ -320,10 +319,10 @@ export default function OrganizationProfilePage() {
       } as any ),
     };
 
-    saveOrgProfile(userKey, profile);
-
-    setSuccessMsg("Saved successfully.");
-    setSaving(false);
+    saveOrgProfile(userKey, profile).then(() => {
+      setSuccessMsg("Saved successfully.");
+      setSaving(false);
+    });
   };
 
   if (loading) return null;

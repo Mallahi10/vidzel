@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"c:\\\\Users\\\\malak's PC\\\\Desktop\\\\job project\\\\vidzel\"; Get-ChildItem -Path src\\\\app\\\\\\(app\\)\\\\dashboard -Directory | Select-Object Name)"
+    ]
+  }
+}

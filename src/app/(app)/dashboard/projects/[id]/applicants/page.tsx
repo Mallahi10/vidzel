@@ -5,203 +5,103 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/Button";
-
-/* ================= TYPES ================= */
+import styles from "./applicants.module.css";
+import { ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 type Application = {
   id: string;
-  projectId: string;
-
-  applicantId?: string;
-  applicantName?: string;
-  applicantEmail?: string;
-  applicantRole?: string;
-
-  status?: "pending" | "accepted" | "rejected";
-  createdAt?: string;
+  project_id: string;
+  applicant_id: string;
+  applicant_email: string | null;
+  applicant_role: string | null;
+  status: "pending" | "accepted" | "rejected" | null;
+  profiles: { email: string | null; role: string | null } | null;
 };
-
-type Account = {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-};
-
-/* ================= STORAGE KEYS ================= */
-
-const LS = {
-  applications: "vidzel_applications",
-  accounts: "vidzel_accounts",
-};
-
-function readLS<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-/* ================= PAGE ================= */
 
 export default function ProjectApplicantsPage() {
   const { user } = useAuth();
-  const router = useRouter();
-  const params = useParams();
+  const router   = useRouter();
+  const params   = useParams();
   const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [applications, setApplications] = useState<Application[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-
-  // 🔎 Filters
-  const [search, setSearch] = useState("");
-  const [roles, setRoles] = useState<string[]>([]);
+  const [loadingApps, setLoadingApps]   = useState(true);
+  const [search,   setSearch]   = useState("");
+  const [roles,    setRoles]    = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user || !projectId) return;
-    setApplications(readLS<Application[]>(LS.applications, []));
-    setAccounts(readLS<Account[]>(LS.accounts, []));
-  }, [user, projectId]);
-
-  if (!user) {
-    return <div style={{ padding: "3rem" }}>Please log in.</div>;
-  }
-
-  if (user.role !== "organization") {
-    return (
-      <div style={{ padding: "3rem" }}>
-        Only organizations can view applicants.
-      </div>
-    );
-  }
-
-  /* ================= HELPERS ================= */
-
-  const accountById = useMemo(() => {
-    const map = new Map<string, Account>();
-    accounts.forEach((a) => map.set(String(a.id), a));
-    return map;
-  }, [accounts]);
-
-  const resolveAccount = (app: Application): Account | null => {
-    if (app.applicantId && accountById.has(String(app.applicantId))) {
-      return accountById.get(String(app.applicantId)) || null;
-    }
-    return null;
-  };
-
-  /* ================= FILTERED DATA ================= */
-
-  const filteredApplications = useMemo(() => {
-    return applications
-      .filter((a) => String(a.projectId) === String(projectId))
-      .filter((a) => {
-        const account = resolveAccount(a);
-
-        const role =
-          (a.applicantRole || account?.role || "").toLowerCase();
-
-        const status = (a.status || "pending").toLowerCase();
-
-        const name =
-          (a.applicantName || account?.name || "").toLowerCase();
-
-        const email =
-          (a.applicantEmail || account?.email || "").toLowerCase();
-
-        const query = search.toLowerCase();
-
-        // ✅ FIXED LOGIC
-        const roleMatch =
-          roles.length === 0 || roles.includes(role);
-
-        const statusMatch =
-          statuses.length === 0 || statuses.includes(status);
-
-        const searchMatch =
-          !query || name.includes(query) || email.includes(query);
-
-        return roleMatch && statusMatch && searchMatch;
+    supabase
+      .from("applications")
+      .select("id, project_id, applicant_id, applicant_email, applicant_role, status, profiles!applicant_id(email, role)")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setApplications((data as unknown as Application[]) || []);
+        setLoadingApps(false);
       });
-  }, [applications, projectId, roles, statuses, search, accountById]);
+  }, [user?.id, projectId]);
 
-  /* ================= UI ================= */
+  if (!user)                    return <div className={styles.page}>Please log in.</div>;
+  if (user.role !== "organization") return <div className={styles.page}>Only organizations can view applicants.</div>;
+
+  const filtered = useMemo(() => {
+    return applications.filter((a) => {
+      const role   = (a.profiles?.role   || a.applicant_role || "").toLowerCase();
+      const status = (a.status || "pending").toLowerCase();
+      const email  = (a.profiles?.email  || a.applicant_email || "").toLowerCase();
+      const query  = search.toLowerCase();
+
+      return (
+        (roles.length   === 0 || roles.includes(role))   &&
+        (statuses.length === 0 || statuses.includes(status)) &&
+        (!query || email.includes(query))
+      );
+    });
+  }, [applications, roles, statuses, search]);
 
   return (
-    <div style={{ padding: "3rem", maxWidth: "1100px" }}>
-      <h1>Project Applicants</h1>
+    <div className={styles.page}>
+      {/* HERO */}
+      <div className={styles.pageHero}>
+        <div>
+          <h1 className={styles.heroTitle}>Project Applicants</h1>
+          <p className={styles.heroSubtitle}>Review and manage applications for this project.</p>
+          <span className={styles.heroBadge}>Organization</span>
+        </div>
+        <button type="button" onClick={() => router.push("/dashboard/projects")} className={styles.heroBackBtn}>
+          <ArrowLeft size={15} /> My Projects
+        </button>
+      </div>
 
-      {/* 🔎 FILTER BAR */}
-      <div
-        style={{
-          marginTop: "1.5rem",
-          padding: "1.25rem",
-          border: "1px solid #e5e7eb",
-          borderRadius: "12px",
-          background: "#f8fafc",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "1.5rem",
-        }}
-      >
-        {/* Search */}
+      {/* FILTERS */}
+      <div className={styles.filterBar}>
         <input
           type="text"
-          placeholder="Search by name or email…"
+          placeholder="Search by email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: "0.5rem 0.75rem",
-            borderRadius: "8px",
-            border: "1px solid #cbd5e1",
-            minWidth: "220px",
-          }}
+          className={styles.searchInput}
         />
-
-        {/* Role filters */}
-        <div>
-          <strong>Role:</strong>
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.25rem" }}>
+        <div className={styles.filterGroup}>
+          <span className={styles.filterGroupLabel}>Role</span>
+          <div className={styles.checkboxRow}>
             {["student", "volunteer", "mentor"].map((r) => (
-              <label key={r}>
-                <input
-                  type="checkbox"
-                  checked={roles.includes(r)}
-                  onChange={() =>
-                    setRoles((prev) =>
-                      prev.includes(r)
-                        ? prev.filter((x) => x !== r)
-                        : [...prev, r]
-                    )
-                  }
-                />{" "}
+              <label key={r} className={styles.checkboxLabel}>
+                <input type="checkbox" checked={roles.includes(r)} onChange={() => setRoles((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r])} />
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </label>
             ))}
           </div>
         </div>
-
-        {/* Status filters */}
-        <div>
-          <strong>Status:</strong>
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.25rem" }}>
+        <div className={styles.filterGroup}>
+          <span className={styles.filterGroupLabel}>Status</span>
+          <div className={styles.checkboxRow}>
             {["pending", "accepted", "rejected"].map((s) => (
-              <label key={s}>
-                <input
-                  type="checkbox"
-                  checked={statuses.includes(s)}
-                  onChange={() =>
-                    setStatuses((prev) =>
-                      prev.includes(s)
-                        ? prev.filter((x) => x !== s)
-                        : [...prev, s]
-                    )
-                  }
-                />{" "}
+              <label key={s} className={styles.checkboxLabel}>
+                <input type="checkbox" checked={statuses.includes(s)} onChange={() => setStatuses((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])} />
                 {s.charAt(0).toUpperCase() + s.slice(1)}
               </label>
             ))}
@@ -209,59 +109,39 @@ export default function ProjectApplicantsPage() {
         </div>
       </div>
 
-      {/* RESULTS */}
-      {filteredApplications.length === 0 && (
-        <p style={{ marginTop: "1.5rem", color: "#64748b" }}>
-          No applicants match the selected filters.
-        </p>
+      {/* LOADING */}
+      {loadingApps && (
+        <p style={{ color: "#94a3b8", textAlign: "center", padding: "40px 0" }}>Loading…</p>
       )}
 
-      {filteredApplications.map((app) => {
-        const account = resolveAccount(app);
-        const displayName =
-          app.applicantName || account?.name || "Unnamed Applicant";
+      {/* LIST */}
+      {!loadingApps && filtered.length === 0 && (
+        <p className={styles.emptyText}>No applicants match the selected filters.</p>
+      )}
+
+      {!loadingApps && filtered.map((app) => {
+        const displayEmail = app.profiles?.email || app.applicant_email || "Unknown";
+        const role         = app.profiles?.role  || app.applicant_role  || "";
+        const appStatus    = app.status || "pending";
 
         return (
-          <div
-            key={app.id}
-            style={{
-              marginTop: "1rem",
-              padding: "1.25rem",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              background: "white",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "1rem",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <p style={{ margin: 0 }}>
-                  <strong>{displayName}</strong>{" "}
-                  <span style={{ color: "#64748b" }}>
-                    ({app.applicantRole || account?.role || "—"})
-                  </span>
-                </p>
-
-                {(app.applicantEmail || account?.email) && (
-                  <p style={{ margin: "0.25rem 0 0", color: "#64748b" }}>
-                    {app.applicantEmail || account?.email}
-                  </p>
-                )}
-
-                <p style={{ margin: "0.5rem 0 0" }}>
-                  Status: {app.status || "pending"}
-                </p>
+          <div key={app.id} className={styles.appCard}>
+            <div className={styles.appRow}>
+              <div className={styles.appInfo}>
+                <div className={styles.appNameRow}>
+                  <span className={styles.appName}>{displayEmail}</span>
+                  {role && <span className={styles.appRole}>{role}</span>}
+                </div>
+                <span className={`${styles.statusBadge} ${
+                  appStatus === "accepted" ? styles.statusAccepted :
+                  appStatus === "rejected" ? styles.statusRejected : styles.statusPending
+                }`}>
+                  {appStatus === "accepted" ? <CheckCircle size={11} /> : appStatus === "rejected" ? <XCircle size={11} /> : <Clock size={11} />}
+                  {appStatus}
+                </span>
               </div>
-
-              {app.applicantId && (
-                <Link href={`/dashboard/profiles/${app.applicantId}`}>
+              {app.applicant_id && (
+                <Link href={`/dashboard/profiles/${app.applicant_id}`}>
                   <Button variant="secondary">View Profile</Button>
                 </Link>
               )}
@@ -270,13 +150,9 @@ export default function ProjectApplicantsPage() {
         );
       })}
 
-      {/* 🔙 BACK */}
-      <div style={{ marginTop: "3rem" }}>
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/dashboard")}
-        >
-          ← Back to Dashboard
+      <div className={styles.backRow}>
+        <Button variant="secondary" onClick={() => router.push("/dashboard")}>
+          <ArrowLeft size={15} /> Back to Dashboard
         </Button>
       </div>
     </div>

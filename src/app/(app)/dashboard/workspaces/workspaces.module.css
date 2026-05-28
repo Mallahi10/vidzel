@@ -1,0 +1,341 @@
+﻿/* NEW MODERN UI UPDATE — created for workspaces/page.tsx
+   (page previously had inline styles only, no CSS module existed) */
+
+/* ================= PAGE WRAPPER ================= */
+.page {
+  padding: 32px 36px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ================= PAGE HERO ================= */
+.pageHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px),
+    linear-gradient(135deg, #1e3a5f 0%, #395886 40%, #638ECB 80%, #8AAEE0 100%);
+  background-size: 22px 22px, 100% 100%;
+  padding: 28px 32px;
+  border-radius: 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 32px rgba(57, 88, 134, 0.25);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInDown 0.40s ease forwards;
+}
+
+.pageHero::before {
+  content: "";
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+  animation: heroPulse 5s ease-in-out infinite;
+}
+
+.pageHero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.07) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: heroShimmer 5s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.heroTitle {
+  font-size: 26px; font-weight: 700;
+  color: white; margin: 0 0 6px 0;
+  animation: slideFromLeft 0.45s ease 0.08s both;
+}
+
+.heroSubtitle {
+  font-size: 14px; color: rgba(255,255,255,0.82);
+  margin: 0; line-height: 1.5;
+  animation: slideFromLeft 0.45s ease 0.18s both;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.28);
+  backdrop-filter: blur(4px);
+  animation: slideFromLeft 0.45s ease 0.28s both;
+}
+
+/* Back button styled for inside the hero */
+.pageHero .backLink {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.30);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.pageHero .backLink:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+/* ================= PAGE HEADER ================= */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted, #475569);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(99, 142, 203, 0.15);
+  background: white;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
+}
+
+.backLink:hover {
+  background: rgba(99, 142, 203, 0.06);
+  color: #638ECB;
+  border-color: rgba(99, 142, 203, 0.30);
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 28px 0;
+}
+
+/* ================= SECTION ================= */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  margin-top: 36px;
+}
+
+.sectionHeader:first-of-type {
+  margin-top: 0;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+}
+
+.sectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 142, 203, 0.10);
+  color: #638ECB;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 9px;
+  min-width: 24px;
+}
+
+/* ================= WORKSPACE CARDS ================= */
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.workspaceCard {
+  background: linear-gradient(160deg, #F0F3FA 0%, white 50%);
+  border: 1.5px solid rgba(99, 142, 203, 0.18);
+  border-top: 3px solid #638ECB;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 16px rgba(99, 142, 203, 0.06);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.workspaceCard:nth-child(2n+2) {
+  border-top-color: #7C3AED;
+  background: linear-gradient(160deg, rgba(124,58,237,0.05) 0%, white 50%);
+}
+.workspaceCard:nth-child(3n+3) {
+  border-top-color: #0891B2;
+  background: linear-gradient(160deg, rgba(8,145,178,0.05) 0%, white 50%);
+}
+.workspaceCard:nth-child(4n+4) {
+  border-top-color: #10B981;
+  background: linear-gradient(160deg, rgba(16,185,129,0.05) 0%, white 50%);
+}
+
+.workspaceCard:hover {
+  box-shadow: 0 8px 28px rgba(99, 142, 203, 0.12);
+  border-color: rgba(99, 142, 203, 0.22);
+  transform: translateY(-2px);
+}
+
+.workspaceCardCompleted {
+  background: #f8fafc;
+  opacity: 0.82;
+}
+
+.cardIconRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #395886, #638ECB);
+  box-shadow: 0 4px 12px rgba(99, 142, 203, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.workspaceCard:nth-child(2n+2) .cardIcon {
+  background: linear-gradient(135deg, #6D28D9, #7C3AED);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
+}
+.workspaceCard:nth-child(3n+3) .cardIcon {
+  background: linear-gradient(135deg, #0E7490, #0891B2);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.28);
+}
+.workspaceCard:nth-child(4n+4) .cardIcon {
+  background: linear-gradient(135deg, #059669, #10B981);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  margin: 0;
+  flex: 1;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted, #475569);
+}
+
+.metaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.metaBadgePrivate {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}
+
+.metaBadgeOpen {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid rgba(34, 197, 94, 0.20);
+}
+
+/* ================= EMPTY STATE ================= */
+.emptyState {
+  text-align: center;
+  padding: 48px 32px;
+  border: 1.5px dashed rgba(99, 142, 203, 0.16);
+  border-radius: 18px;
+  background: rgba(99, 142, 203, 0.02);
+  color: var(--text-muted, #475569);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.emptyIcon {
+  color: #8AAEE0;
+  margin-bottom: 12px;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 32px;
+  color: var(--text-muted, #475569);
+  font-size: 15px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .workspaceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .sectionHeader {
+    margin-top: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 12px;
+  }
+}
+

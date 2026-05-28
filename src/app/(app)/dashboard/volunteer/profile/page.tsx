@@ -14,6 +14,8 @@ import {
 
 import { calculateVolunteerProfileScore } from "@/lib/volunteerProfileScore";
 import { useAuth } from "@/context/AuthContext";
+// AJOUTÉ [Task 3] : upload CV vers Supabase Storage
+import { supabase } from "@/lib/supabaseClient";
 
 function getUserKey(user: any) {
   return user?.id || user?.email || "unknown-user";
@@ -74,14 +76,50 @@ export default function VolunteerProfilePage() {
   const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [motivation, setMotivation] = useState("");
 
+  // AJOUTÉ [Task 3] : états pour le CV
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
+  const [cvUploading, setCvUploading] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [loading, user, router]);
 
+  // AJOUTÉ [Task 3] : charger le CV existant depuis profiles
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("cv_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.cv_url) setCvUrl(data.cv_url);
+      });
+  }, [user?.id]);
+
+  // AJOUTÉ [Task 3] : upload CV vers Storage + sauvegarde URL dans profiles
+  const handleCvUpload = async (file: File) => {
+    if (!user) return;
+    setCvUploading(true);
+    const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("cv-uploads")
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) {
+      console.error("[CV upload]", uploadError.message);
+      setCvUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("cv-uploads").getPublicUrl(filePath);
+    await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
+    setCvUrl(urlData.publicUrl);
+    setCvUploading(false);
+  };
+
   useEffect(() => {
     if (!userKey) return;
-    const existing = loadVolunteerProfile(userKey);
-    if (existing) {
+    loadVolunteerProfile(userKey).then((existing) => {
+      if (!existing) return;
       setFullName(existing.full_name);
       setLocation(existing.location);
       setHeadline(existing.headline);
@@ -95,7 +133,7 @@ export default function VolunteerProfilePage() {
       setAvailabilityHours(existing.availability_hours);
       setAvailableDays(existing.available_days || []);
       setMotivation(existing.motivation || "");
-    }
+    });
   }, [userKey]);
 
   const score = useMemo(() => {
@@ -156,8 +194,9 @@ export default function VolunteerProfilePage() {
       updated_at: new Date().toISOString(),
     };
 
-    saveVolunteerProfile(userKey, profile);
-    alert("Saved successfully.");
+    saveVolunteerProfile(userKey, profile).then(() => {
+      alert("Saved successfully.");
+    });
   };
 
   if (loading) return null;
@@ -323,6 +362,28 @@ export default function VolunteerProfilePage() {
             />
           </div>
         </div>
+      </div>
+
+      {/* AJOUTÉ [Task 3] : section CV/Resume */}
+      <div className={styles.card}>
+        <h2 className={styles.sectionTitle}>CV / Resume</h2>
+        {cvUrl && (
+          <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 600 }}>✅ CV uploaded</span>
+            <a href={cvUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.85rem", color: "#2563eb", fontWeight: 600 }}>View current CV</a>
+          </div>
+        )}
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, fontSize: "0.9rem", color: "#374151" }}>
+          {cvUrl ? "Replace CV" : "Upload your CV"} (PDF)
+        </label>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          disabled={cvUploading}
+          onChange={(e) => { const file = e.target.files?.[0]; if (file) handleCvUpload(file); }}
+          style={{ width: "100%", marginBottom: "0.5rem" }}
+        />
+        {cvUploading && <p style={{ fontSize: "0.85rem", color: "#2563eb", margin: 0 }}>Uploading...</p>}
       </div>
 
       <div className={styles.actions}>

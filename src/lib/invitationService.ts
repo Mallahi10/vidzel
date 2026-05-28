@@ -21,8 +21,19 @@ export type Invitation = {
   expires_at: string;
   responded_at: string | null;
   created_at: string;
-  // Join optionnel — workspace title pour affichage
-  workspaces?: { title: string } | null;
+  // MODIFIÉ [Task 4] : join étendu — workspace + project pour affichage des détails
+  workspaces?: {
+    title: string;
+    projects?: {
+      title: string | null;
+      description: string | null;
+      tasks: string | null;
+      category: string | null;
+      location: string | null;
+      organization_email: string | null;
+      roles: string[] | null;
+    } | null;
+  } | null;
 };
 
 
@@ -39,14 +50,34 @@ export async function sendInvitation(
   internalRole: MemberRole,
   invitedBy: string
 ): Promise<Invitation | null> {
+  const normalizedEmail = invitedEmail.toLowerCase().trim();
+
+  // Anti-doublon: block if a pending invitation already exists for this email + workspace
+  const { data: existing } = await supabase
+    .from("invitations")
+    .select("id")
+    .eq("workspace_id", workspaceId)
+    .eq("invited_email", normalizedEmail)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (existing) {
+    console.warn("[sendInvitation] duplicate: pending invitation already exists");
+    return null;
+  }
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7-day expiry
+
   const { data, error } = await supabase
     .from("invitations")
     .insert({
       workspace_id:  workspaceId,
       invited_by:    invitedBy,
-      invited_email: invitedEmail.toLowerCase().trim(),
+      invited_email: normalizedEmail,
       internal_role: internalRole,
       status:        "pending",
+      expires_at:    expiresAt.toISOString(),
     })
     .select()
     .single();
@@ -72,9 +103,42 @@ export async function sendInvitation(
       title:        "New Workspace Invitation",
       message:      `You have been invited to join a workspace. Go to My Invitations to accept or decline.`,
       workspace_id: workspaceId,
+      project_id:   null,
       is_read:      false,
     });
   }
+
+  // Envoyer un email à l'invité via Resend
+  await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to:      normalizedEmail,
+      subject: "You have been invited to a workspace on Vidzel",
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:2rem;background:#f8fafc;border-radius:12px;">
+          <div style="background:linear-gradient(135deg,#1e3a5f,#395886,#638ECB);border-radius:10px;padding:1.5rem 2rem;margin-bottom:1.5rem;">
+            <h1 style="color:white;margin:0;font-size:1.4rem;font-weight:800;">Vidzel</h1>
+            <p style="color:rgba(255,255,255,0.75);margin:4px 0 0;font-size:0.85rem;">Collaborative Impact Platform</p>
+          </div>
+          <h2 style="color:#0f172a;margin:0 0 0.75rem;">You've been invited!</h2>
+          <p style="color:#334155;line-height:1.6;margin:0 0 1rem;">
+            You have been invited to join a workspace on <strong>Vidzel</strong> as a <strong>${internalRole}</strong>.
+          </p>
+          <p style="color:#334155;line-height:1.6;margin:0 0 1.5rem;">
+            Log in to your account to view the invitation details and accept or decline.
+          </p>
+          <a href="https://vidzel.vercel.app/dashboard/invitations"
+             style="display:inline-block;padding:0.75rem 1.75rem;background:#395886;color:white;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.95rem;">
+            View My Invitations →
+          </a>
+          <p style="margin-top:2rem;color:#94a3b8;font-size:0.8rem;border-top:1px solid #e2e8f0;padding-top:1rem;">
+            This invitation expires in 7 days. If you did not expect this email, you can safely ignore it.
+          </p>
+        </div>
+      `,
+    }),
+  }).catch((err) => console.error("[sendInvitation] email error:", err)); // log but don't block
 
   return data as Invitation;
 }
@@ -114,18 +178,23 @@ export async function getOrgInvitations(
 export async function getMyInvitations(
   userEmail: string
 ): Promise<Invitation[]> {
-  const { data, error } = await supabase
-    .from("invitations")
-    .select("*, workspaces(title)")
-    .eq("invited_email", userEmail.toLowerCase().trim())
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("[getMyInvitations]", error.message);
+  // Use the server-side API route so the service role key can bypass RLS.
+  // Pending invitees are not yet workspace members, so the normal Supabase
+  // client cannot read workspace/project details before they accept.
+  try {
+    const res = await fetch(
+      `/api/invitations?email=${encodeURIComponent(userEmail.toLowerCase().trim())}`
+    );
+    if (!res.ok) {
+      console.error("[getMyInvitations] API error:", res.status);
+      return [];
+    }
+    const { data } = await res.json();
+    return (data ?? []) as Invitation[];
+  } catch (err) {
+    console.error("[getMyInvitations]", err);
     return [];
   }
-
-  return data as Invitation[];
 }
 
 
@@ -144,6 +213,23 @@ export async function acceptInvitation(
   internalRole: MemberRole,
   userId: string
 ): Promise<boolean> {
+  // Verify invitation is still pending and not expired
+  const { data: invite } = await supabase
+    .from("invitations")
+    .select("status, expires_at")
+    .eq("id", invitationId)
+    .maybeSingle();
+
+  if (!invite || invite.status !== "pending") {
+    console.warn("[acceptInvitation] invitation not found or already responded");
+    return false;
+  }
+
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    console.warn("[acceptInvitation] invitation has expired");
+    return false;
+  }
+
   // Étape 1 — marquer l'invitation comme acceptée
   const { error: inviteError } = await supabase
     .from("invitations")

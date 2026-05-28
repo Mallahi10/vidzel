@@ -40,7 +40,7 @@ export default function AppLayout({
             }}
           >
             <Header />
-            <main style={{ flex: 1 }}>{children}</main>
+            <main style={{ flex: 1, paddingTop: "64px" }}>{children}</main>
           </div>
         </Providers>
       </body>

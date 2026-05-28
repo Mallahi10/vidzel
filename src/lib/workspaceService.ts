@@ -135,11 +135,14 @@ export async function getWorkspacesForMember(
 
 /* ============================================================
    GET ONE — fetch a single workspace by its UUID.
-   Returns null if not found or if RLS blocks access.
+   If userId is provided, verifies the caller is either the org
+   owner or an active workspace_member before returning data.
+   Returns null if not found, access denied, or RLS blocks.
 ============================================================ */
 
 export async function getWorkspaceById(
-  workspaceId: string
+  workspaceId: string,
+  userId?: string
 ): Promise<Workspace | null> {
   const { data, error } = await supabase
     .from("workspaces")
@@ -148,14 +151,28 @@ export async function getWorkspaceById(
     .single();
 
   if (error) {
-    // PGRST116 = "no rows" — not a real error, just not found / no access
     if (error.code !== "PGRST116") {
       console.error("[getWorkspaceById]", error.message);
     }
     return null;
   }
 
-  return data as Workspace;
+  const workspace = data as Workspace;
+
+  // Defense-in-depth: verify access if userId provided
+  if (userId && workspace.organization_id !== userId) {
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (!membership) return null;
+  }
+
+  return workspace;
 }
 
 

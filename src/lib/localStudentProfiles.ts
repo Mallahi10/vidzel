@@ -1,47 +1,77 @@
+import { supabase } from "@/lib/supabaseClient";
+
 export type StudentProfile = {
   full_name: string;
   location: string;
   headline: string;
-
   school: string;
   major: string;
   year_of_study: string;
   graduation_year: string;
-
   languages: string;
-
-  interests: string[]; // selected + “Other” values stored here
-  skills: string[]; // selected + “Other” values stored here
-
-  work_preference: "Remote" | "In-Person" | "Hybrid" | "";
+  impact_areas: string[];
+  skills: string[];
+  collab_type: string;
+  role_preference: string;
   available_days: string[];
   hours_per_week: string;
-
   experience: string;
   goals: string;
-  wants_mentorship: "Yes" | "No" | "Maybe" | "";
-
   updated_at: string;
 };
 
-const KEY_PREFIX = "vidzel:profiles:student:";
+export async function loadStudentProfile(userId: string): Promise<StudentProfile | null> {
+  const { data } = await supabase
+    .from("student_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-export function getStudentProfileKey(userIdOrEmail: string) {
-  return `${KEY_PREFIX}${userIdOrEmail}`;
-}
+  if (data) return data as StudentProfile;
 
-export function loadStudentProfile(userIdOrEmail: string): StudentProfile | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(getStudentProfileKey(userIdOrEmail));
-    if (!raw) return null;
-    return JSON.parse(raw) as StudentProfile;
-  } catch {
-    return null;
+  // One-time migration: if Supabase is empty, check localStorage for old data
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem(`vidzel:profiles:student:${userId}`);
+    if (raw) {
+      try {
+        const old = JSON.parse(raw) as StudentProfile;
+        await saveStudentProfile(userId, old);
+        localStorage.removeItem(`vidzel:profiles:student:${userId}`);
+        return old;
+      } catch {}
+    }
   }
+
+  return null;
 }
 
-export function saveStudentProfile(userIdOrEmail: string, profile: StudentProfile) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(getStudentProfileKey(userIdOrEmail), JSON.stringify(profile));
+export async function saveStudentProfile(userId: string, profile: StudentProfile): Promise<void> {
+  await supabase
+    .from("student_profiles")
+    .upsert(
+      { ...profile, user_id: userId, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+}
+
+export function getEmptyStudentProfile(): StudentProfile {
+  return {
+    full_name: "",
+    location: "",
+    headline: "",
+    school: "",
+    major: "",
+    year_of_study: "",
+    graduation_year: "",
+    languages: "",
+    impact_areas: [],
+    skills: [],
+    collab_type: "",
+    role_preference: "",
+    available_days: [],
+    hours_per_week: "",
+    experience: "",
+    goals: "",
+    updated_at: "",
+  };
 }

@@ -1,0 +1,205 @@
+﻿/* NEW MODERN UI UPDATE — created for applications/page.tsx */
+
+.page {
+  padding: 32px 36px;
+  max-width: 1000px;
+}
+
+/* ================= PAGE HERO ================= */
+.pageHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px),
+    linear-gradient(135deg, #1e3a5f 0%, #395886 40%, #638ECB 80%, #8AAEE0 100%);
+  background-size: 22px 22px, 100% 100%;
+  padding: 28px 32px;
+  border-radius: 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 32px rgba(57, 88, 134, 0.25);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInDown 0.40s ease forwards;
+}
+
+.pageHero::before {
+  content: "";
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+  animation: heroPulse 5s ease-in-out infinite;
+}
+
+.pageHero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.07) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: heroShimmer 5s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.heroTitle {
+  font-size: 26px; font-weight: 700;
+  color: white; margin: 0 0 6px 0;
+  animation: slideFromLeft 0.45s ease 0.08s both;
+}
+
+.heroSubtitle {
+  font-size: 14px; color: rgba(255,255,255,0.82);
+  margin: 0; line-height: 1.5;
+  animation: slideFromLeft 0.45s ease 0.18s both;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.28);
+  backdrop-filter: blur(4px);
+  animation: slideFromLeft 0.45s ease 0.28s both;
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 28px 0;
+}
+
+/* OLD STYLE BACKUP: marginTop:"1rem", padding:"1.25rem", border:"1px solid #e5e7eb", borderRadius:"12px", background:"white" */
+.appCard {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding: 20px 22px;
+  border: 1.5px solid rgba(99, 142, 203, 0.16);
+  border-top: 3px solid #638ECB;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #F0F3FA 0%, white 50%);
+  box-shadow: 0 4px 14px rgba(99, 142, 203, 0.07);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.appCard:hover {
+  box-shadow: 0 8px 26px rgba(99, 142, 203, 0.12);
+  border-color: rgba(99, 142, 203, 0.22);
+  transform: translateY(-1px);
+}
+
+/* OLD STYLE BACKUP: display:"flex", justifyContent:"space-between", alignItems:"center", gap:"1rem", flexWrap:"wrap" */
+.appRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.appInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.appNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+/* OLD STYLE BACKUP: <strong>{displayName}</strong> */
+.appName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+}
+
+/* OLD STYLE BACKUP: <span style={{ color:"#64748b" }}>({role})</span> */
+.appRole {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(99, 142, 203, 0.08);
+  color: #395886;
+  border: 1px solid rgba(99, 142, 203, 0.16);
+}
+
+/* OLD STYLE BACKUP: <p style={{ margin:"0.25rem 0 0", color:"#64748b" }}> */
+.appEmail {
+  font-size: 13px;
+  color: var(--text-muted, #475569);
+  margin: 0 0 6px 0;
+}
+
+/* OLD STYLE BACKUP: <p style={{ margin:"0.5rem 0 0" }}>Status: {app.status || "pending"}</p> */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.statusPending  { background: #fff7ed; color: #92400e; border: 1px solid rgba(249,115,22,0.20); }
+.statusAccepted { background: #f0fdf4; color: #166534; border: 1px solid rgba(34,197,94,0.20); }
+.statusRejected { background: #fef2f2; color: #991b1b; border: 1px solid rgba(220,38,38,0.18); }
+
+.emptyState {
+  text-align: center;
+  padding: 56px 32px;
+  border: 1.5px dashed rgba(99, 142, 203, 0.16);
+  border-radius: 18px;
+  background: rgba(99, 142, 203, 0.02);
+}
+
+.emptyIcon {
+  color: #8AAEE0;
+  margin-bottom: 14px;
+}
+
+.emptyTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-main, #0f172a);
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  color: var(--text-muted, #475569);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .appRow { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 16px 12px; }
+  .appCard { padding: 16px; }
+}
+

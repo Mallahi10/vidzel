@@ -1,12 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Button from "@/components/Button";
 import styles from "./organization.module.css";
 // AJOUTÉ [Étape 5] : client Supabase pour les vraies stats
 import { supabase } from "@/lib/supabaseClient";
+// NEW MODERN UI UPDATE — Lucide icons replace emoji icons
+import {
+  FolderOpen,
+  Users,
+  CheckSquare,
+  Plus,
+  UserPlus,
+  FileText,
+  LayoutGrid,
+  Search,
+  Shield,
+  Megaphone, // NEW ANNOUNCEMENT SYSTEM
+} from "lucide-react";
 
 export default function OrganizationDashboard() {
   const { user, loading } = useAuth();
@@ -107,10 +120,11 @@ export default function OrganizationDashboard() {
 
       {/* STATS BAR */}
       {/* MODIFIÉ [Étape 5] : vraies stats depuis Supabase */}
+      {/* NEW MODERN UI UPDATE — Lucide icons replace emojis: 📁→FolderOpen, 🧑‍🤝‍🧑→Users, ✅→CheckSquare */}
       <div className={styles.statsBar}>
-        <Stat icon="📁" title="Active Projects" value={loadingStats ? "—" : String(stats.activeProjects)} />
-        <Stat icon="🧑‍🤝‍🧑" title="Active Contributors" value={loadingStats ? "—" : String(stats.activeContributors)} />
-        <Stat icon="✅" title="Completed Tasks" value={loadingStats ? "—" : String(stats.completedTasks)} />
+        <Stat icon={<FolderOpen size={22} />} title="Active Projects" value={loadingStats ? "—" : String(stats.activeProjects)} />
+        <Stat icon={<Users size={22} />} title="Active Contributors" value={loadingStats ? "—" : String(stats.activeContributors)} />
+        <Stat icon={<CheckSquare size={22} />} title="Completed Tasks" value={loadingStats ? "—" : String(stats.completedTasks)} />
       </div>
 
       {/* MAIN GRID */}
@@ -144,27 +158,34 @@ export default function OrganizationDashboard() {
             <h3>Quick Actions</h3>
           </div>
 
+          {/* NEW MODERN UI UPDATE — Lucide icons replace emojis: ➕→Plus, 👤→UserPlus, 📄→FileText, 🗂️→LayoutGrid */}
           <Quick
-            icon="➕"
+            icon={<Plus size={18} />}
             text="Create Project"
             link="/dashboard/projects/create"
           />
           {/* MODIFIÉ [Étape 3] : lien mis à jour vers la page d'invitation */}
           <Quick
-            icon="👤"
+            icon={<UserPlus size={18} />}
             text="Invite Contributor"
             link="/dashboard/invite"
           />
           <Quick
-            icon="📄"
+            icon={<FileText size={18} />}
             text="Review Applications"
             link="/dashboard/applications"
           />
           {/* MODIFIÉ [Étape 5] : lien corrigé — /workspaces/create n'existe pas */}
           <Quick
-            icon="🗂️"
+            icon={<LayoutGrid size={18} />}
             text="My Workspaces"
             link="/dashboard/workspaces"
+          />
+          {/* NEW ANNOUNCEMENT SYSTEM */}
+          <Quick
+            icon={<Megaphone size={18} />}
+            text="Announcements"
+            link="/dashboard/announcements"
           />
         </div>
 
@@ -174,20 +195,19 @@ export default function OrganizationDashboard() {
             <h3>Project Status</h3>
           </div>
 
-          {/* MODIFIÉ [Étape 5] : vrais comptes depuis Supabase */}
-          <div className={styles.statusRow}>
-            <span className={styles.active}>Active {loadingStats ? "—" : projectCounts.active}</span>
-            <span className={styles.planning}>Completed {loadingStats ? "—" : projectCounts.completed}</span>
-          </div>
-
-          <div className={styles.chartMock}></div>
+          <ProjectStatusChart
+            active={loadingStats ? 0 : projectCounts.active}
+            completed={loadingStats ? 0 : projectCounts.completed}
+            loading={loadingStats}
+          />
         </div>
       </div>
 
       {/* BOTTOM GRID */}
+      {/* NEW MODERN UI UPDATE — Lucide icons replace emojis: 📁→FolderOpen, 🔎→Search, 🗂️→LayoutGrid, 🛡️→Shield */}
       <div className={styles.bottomGrid}>
         <ActionCard
-          icon="📁"
+          icon={<FolderOpen size={22} />}
           title="Manage Projects"
           text="View, edit, and track projects created by your organization."
           link="/dashboard/projects"
@@ -195,7 +215,7 @@ export default function OrganizationDashboard() {
         />
 
         <ActionCard
-          icon="🔎"
+          icon={<Search size={22} />}
           title="Browse Profiles"
           text="Invite volunteers, students, and mentors to collaborate."
           link="/dashboard/profiles"
@@ -203,7 +223,7 @@ export default function OrganizationDashboard() {
         />
 
         <ActionCard
-          icon="🗂️"
+          icon={<LayoutGrid size={22} />}
           title="My Workspaces"
           text="Access active collaborations and stay engaged in ongoing projects."
           link="/dashboard/workspaces"
@@ -211,7 +231,7 @@ export default function OrganizationDashboard() {
         />
 
         <ActionCard
-          icon="🛡️"
+          icon={<Shield size={22} />}
           title="Organization Profile"
           text="Your profile score"
           progress={80}
@@ -225,7 +245,8 @@ export default function OrganizationDashboard() {
 
 /* ================= COMPONENTS ================= */
 
-function Stat({ icon, title, value }: any) {
+// NEW MODERN UI UPDATE — icon prop now accepts ReactNode (Lucide icon) instead of emoji string
+function Stat({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
     <div className={styles.statItem}>
       <div className={styles.statIcon}>{icon}</div>
@@ -249,7 +270,8 @@ function Activity({ name, action }: any) {
 }
 
 /* 🔥 UPDATED QUICK COMPONENT (NOW CLICKABLE) */
-function Quick({ icon, text, link }: any) {
+// NEW MODERN UI UPDATE — icon prop now accepts ReactNode (Lucide icon) instead of emoji string
+function Quick({ icon, text, link }: { icon: React.ReactNode; text: string; link: string }) {
   return (
     <Link href={link} className={styles.quickItem}>
       <div className={styles.quickIcon}>{icon}</div>
@@ -258,6 +280,96 @@ function Quick({ icon, text, link }: any) {
   );
 }
 
+function ProjectStatusChart({
+  active,
+  completed,
+  loading,
+}: {
+  active: number;
+  completed: number;
+  loading: boolean;
+}) {
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+
+      {/* Mini KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
+        {/* Active */}
+        <div style={{
+          position: "relative", overflow: "hidden",
+          background: "linear-gradient(135deg, rgba(16,185,129,0.10), rgba(16,185,129,0.03))",
+          border: "1.5px solid rgba(16,185,129,0.22)",
+          borderRadius: 14, padding: "14px 14px 12px",
+        }}>
+          <div style={{ position: "absolute", top: 10, right: 10, color: "rgba(16,185,129,0.28)" }}>
+            <FolderOpen size={18} />
+          </div>
+          <div style={{ fontSize: 34, fontWeight: 800, color: "#059669", lineHeight: 1, marginBottom: 6 }}>
+            {loading ? "—" : active}
+          </div>
+          <div style={{ fontSize: 11, color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Active Projects
+          </div>
+        </div>
+
+        {/* Completed */}
+        <div style={{
+          position: "relative", overflow: "hidden",
+          background: "linear-gradient(135deg, rgba(99,142,203,0.10), rgba(99,142,203,0.03))",
+          border: "1.5px solid rgba(99,142,203,0.22)",
+          borderRadius: 14, padding: "14px 14px 12px",
+        }}>
+          <div style={{ position: "absolute", top: 10, right: 10, color: "rgba(99,142,203,0.28)" }}>
+            <CheckSquare size={18} />
+          </div>
+          <div style={{ fontSize: 34, fontWeight: 800, color: "#395886", lineHeight: 1, marginBottom: 6 }}>
+            {loading ? "—" : completed}
+          </div>
+          <div style={{ fontSize: 11, color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Completed
+          </div>
+        </div>
+      </div>
+
+      {/* Area Chart */}
+      <div style={{
+        flex: 1, minHeight: 90, borderRadius: 14, overflow: "hidden",
+        position: "relative", background: "rgba(99,142,203,0.03)",
+        border: "1px solid rgba(99,142,203,0.09)",
+      }}>
+        <svg
+          viewBox="0 0 300 90"
+          preserveAspectRatio="none"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
+        >
+          <defs>
+            <linearGradient id="orgAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#638ECB" stopOpacity="0.30" />
+              <stop offset="100%" stopColor="#638ECB" stopOpacity="0.01" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M0 72 C25 68, 45 52, 70 54 C95 56, 110 36, 140 28 C165 21, 185 38, 210 26 C232 15, 258 30, 300 20 L300 90 L0 90 Z"
+            fill="url(#orgAreaGrad)"
+          />
+          <path
+            d="M0 72 C25 68, 45 52, 70 54 C95 56, 110 36, 140 28 C165 21, 185 38, 210 26 C232 15, 258 30, 300 20"
+            fill="none"
+            stroke="#638ECB"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle cx="300" cy="20" r="3.5" fill="#638ECB" />
+          <circle cx="300" cy="20" r="6" fill="rgba(99,142,203,0.22)" />
+        </svg>
+      </div>
+
+    </div>
+  );
+}
+
+// NEW MODERN UI UPDATE — icon prop now accepts ReactNode (Lucide icon) instead of emoji string
 function ActionCard({
   icon,
   title,
@@ -265,7 +377,14 @@ function ActionCard({
   progress,
   link,
   buttonText,
-}: any) {
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  progress?: number;
+  link: string;
+  buttonText: string;
+}) {
   return (
     <div className={styles.card}>
       <div className={styles.cardContent}>

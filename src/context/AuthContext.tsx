@@ -62,35 +62,12 @@ export const AuthProvider = ({
   /* ================= AUTH LISTENER ONLY ================= */
 
   useEffect(() => {
-    const initialize = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const role =
-          (session.user.user_metadata?.role as Role) || "volunteer";
-
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          role,
-        });
-      } else {
-        setUser(null);
-      }
-
-      setLoading(false);
-    };
-
-    initialize();
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      // Gestion explicite de la déconnexion pour éviter les conflits d'état
       if (event === "SIGNED_OUT") {
         setUser(null);
+        setLoading(false);
         return;
       }
 
@@ -103,10 +80,13 @@ export const AuthProvider = ({
           email: session.user.email!,
           role,
         });
+      } else if (event === "INITIAL_SESSION") {
+        setUser(null);
       }
-      // FIX : pas de else { setUser(null) } ici.
-      // setUser(null) est géré uniquement par SIGNED_OUT (ci-dessus).
-      // L'event INITIAL_SESSION sans session ne doit pas effacer un user déjà défini.
+
+      if (event === "INITIAL_SESSION") {
+        setLoading(false);
+      }
     });
 
     return () => {

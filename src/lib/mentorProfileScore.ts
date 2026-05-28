@@ -63,7 +63,7 @@ export function calculateMentorProfileScore(
      ============================= */
 
   if (profile.experience_years?.trim()) score += 5;
-  if (profile.current_role?.trim()) score += 5;
+  if (profile.current_position?.trim()) score += 5;
 
   if (profile.achievements?.trim()) {
     if (profile.achievements.length > 60) score += 5;
