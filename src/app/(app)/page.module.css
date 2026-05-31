@@ -20,7 +20,9 @@
   align-items: center;
   justify-content: center;
   background: #0a1628;
-  padding: 72px 36px 140px;
+  /* Remonte derrière le header — annule le padding-top: 60px du main */
+  margin-top: -60px;
+  padding: 130px 36px 140px;
 }
 
 /* Purple blob — stands out clearly on the blue gradient */

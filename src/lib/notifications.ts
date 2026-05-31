@@ -33,7 +33,9 @@ export async function getUserNotifications(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("[getUserNotifications]", error.message);
+    if (!error.message?.includes("AbortError")) {
+      console.error("[getUserNotifications]", error.message);
+    }
     return [];
   }
 

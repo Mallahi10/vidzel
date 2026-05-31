@@ -4,9 +4,9 @@
 
 .rolesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 22px;
-  max-width: 1100px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -196,6 +196,31 @@
 .roleCard:hover .ctaArrow { transform: translateX(3px); }
 
 /* ══════════════════════════════════
+   CARD 5 — TRAINEE (Cyan accent)
+══════════════════════════════════ */
+
+.roleCard:nth-child(5) { animation-delay: 0.28s; }
+.roleCard:nth-child(5):hover { border-color: rgba(14, 165, 233, 0.45); }
+
+.roleCard:nth-child(5) .iconWrap {
+  background: rgba(14, 165, 233, 0.09);
+  border-color: rgba(14, 165, 233, 0.24);
+  color: #0284C7;
+}
+
+.roleCard:nth-child(5):hover .iconWrap {
+  background: rgba(14, 165, 233, 0.14);
+}
+
+.roleCard:nth-child(5) .roleTag {
+  background: rgba(14, 165, 233, 0.09);
+  color: #0284C7;
+  border-color: rgba(14, 165, 233, 0.24);
+}
+
+.roleCard:nth-child(5) .cardCta { color: #0EA5E9; }
+
+/* ══════════════════════════════════
    ANIMATION
 ══════════════════════════════════ */
 
@@ -208,8 +233,12 @@
    RESPONSIVE
 ══════════════════════════════════ */
 
+@media (max-width: 1100px) {
+  .rolesGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
 @media (max-width: 768px) {
-  .rolesGrid { gap: 16px; }
+  .rolesGrid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .roleCard  { padding: 26px 20px 24px; }
 }
 

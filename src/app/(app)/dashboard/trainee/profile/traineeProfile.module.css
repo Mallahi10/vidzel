@@ -1,0 +1,282 @@
+/* traineeProfile.module.css — mirrors volunteerProfile.module.css, cyan accent */
+
+.page {
+  padding: 32px 36px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── TOP ROW ── */
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 8px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted, #475569);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+/* ── SCORE BOX ── */
+.scoreBox {
+  min-width: 240px;
+  background: linear-gradient(160deg, rgba(14,165,233,0.05) 0%, white 55%);
+  border-radius: 20px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 6px 22px rgba(14,165,233,0.10);
+  border: 1.5px solid rgba(14,165,233,0.16);
+  border-top: 3px solid #0EA5E9;
+  flex-shrink: 0;
+}
+
+.scoreLabel {
+  color: var(--text-muted, #475569);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.scoreValue {
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0284C7, #0EA5E9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.progressTrack {
+  height: 6px;
+  background: rgba(14,165,233,0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0284C7, #0EA5E9);
+  transition: width 0.4s ease;
+}
+
+.scoreTip {
+  font-size: 12px;
+  color: var(--text-muted, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── CARD ── */
+.card {
+  background: linear-gradient(160deg, rgba(14,165,233,0.03) 0%, white 50%);
+  border-radius: 20px;
+  padding: 26px 28px;
+  box-shadow: 0 4px 18px rgba(14,165,233,0.08);
+  border: 1.5px solid rgba(14,165,233,0.12);
+  border-top: 3px solid #0EA5E9;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 18px;
+}
+
+.cardHint {
+  font-size: 13px;
+  color: var(--text-muted, #475569);
+  margin: -10px 0 14px;
+}
+
+/* ── FORM GRID ── */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldFull {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label,
+.fieldFull label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #475569);
+}
+
+.field input,
+.field select,
+.fieldFull input,
+.fieldFull textarea {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(14,165,233,0.18);
+  background: white;
+  font-size: 14px;
+  color: var(--text-main, #0f172a);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field input:focus,
+.field select:focus,
+.fieldFull textarea:focus {
+  border-color: #0EA5E9;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
+}
+
+.fieldFull textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ── SKILLS PILLS ── */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(14,165,233,0.22);
+  background: white;
+  color: var(--text-muted, #475569);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pill:hover {
+  border-color: rgba(14,165,233,0.45);
+  color: #0284C7;
+  background: rgba(14,165,233,0.05);
+}
+
+.pillActive {
+  background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(56,189,248,0.08));
+  border-color: #0EA5E9;
+  color: #0284C7;
+  font-weight: 600;
+}
+
+/* ── CV SECTION ── */
+.cvBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(16,185,129,0.07);
+  border: 1px solid rgba(16,185,129,0.22);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.cvBanner span { color: #059669; font-weight: 600; }
+
+.cvBanner a {
+  font-size: 13px;
+  color: #0284C7;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cvBanner a:hover { text-decoration: underline; }
+
+.cvLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #475569);
+  margin-bottom: 8px;
+}
+
+.fileInput {
+  width: 100%;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.uploading {
+  font-size: 13px;
+  color: #0284C7;
+  margin: 6px 0 0;
+  font-weight: 500;
+}
+
+/* ── SAVE ROW ── */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
+.backLink {
+  font-size: 14px;
+  color: var(--text-muted, #475569);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.backLink:hover { color: var(--text-main, #0f172a); }
+
+.savedMsg {
+  font-size: 13px;
+  color: #059669;
+  font-weight: 600;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .page { padding: 24px 16px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .topRow { flex-direction: column; }
+  .scoreBox { width: 100%; }
+  .actions { flex-direction: column; gap: 14px; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .page { padding: 16px 12px; }
+  .card { padding: 20px 16px; }
+}

@@ -47,7 +47,7 @@ export default function Home() {
 
       {/* ══════════════════════ ROLES ══════════════════════ */}
       <section id="roles" className={styles.rolesSection}>
-        <p className={styles.sectionEyebrow}>WHO IT'S FOR</p>
+        <p className={styles.sectionEyebrow}>WHO IT&#39;S FOR</p>
         <h2 className={styles.sectionTitle}>Different roles. One shared mission.</h2>
         <div className={styles.rolesArea}>
           <RoleSelection />

@@ -3,10 +3,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import styles from "./RoleSelection.module.css";
-import { Shield, GraduationCap, Heart, Users } from "lucide-react";
+import { Shield, GraduationCap, Heart, Users, Briefcase } from "lucide-react";
 import { Sora } from "next/font/google";
 
-type UserRole = "organization" | "student" | "volunteer" | "mentor";
+type UserRole = "organization" | "student" | "volunteer" | "mentor" | "trainee";
 
 const sora = Sora({ subsets: ["latin"], weight: ["400", "600"] });
 
@@ -45,6 +45,13 @@ export default function RoleSelection() {
       icon: Users,
       desc: "Share expertise & guide teams.",
       tag: "Lead & inspire",
+    },
+    {
+      id: "trainee",
+      label: "Trainee",
+      icon: Briefcase,
+      desc: "Find internships & grow your career.",
+      tag: "Launch your journey",
     },
   ] as const;
 

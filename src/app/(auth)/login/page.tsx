@@ -90,6 +90,7 @@ function RoleSelect({ value, onChange }: { value: string; onChange: (v: string) 
         <option value="volunteer">Volunteer</option>
         <option value="mentor">Mentor</option>
         <option value="organization">Organization</option>
+        <option value="trainee">Trainee</option>
       </select>
     </div>
   );

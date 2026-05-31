@@ -6,12 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 
-type Role = "organization" | "student" | "volunteer" | "mentor";
+type Role = "organization" | "student" | "volunteer" | "mentor" | "trainee";
 
 function normalizeRole(v: string | null): Role {
   if (!v) return "volunteer";
   const r = v.trim().toLowerCase();
-  if (r === "organization" || r === "student" || r === "volunteer" || r === "mentor") return r as Role;
+  if (r === "organization" || r === "student" || r === "volunteer" || r === "mentor" || r === "trainee") return r as Role;
   return "volunteer";
 }
 
@@ -36,7 +36,7 @@ function SignupContent() {
     }
     const success = await signup(email, password, role);
     if (!success) return;
-    router.push(role === "organization" ? "/dashboard/projects" : "/dashboard/profile");
+    router.push(role === "organization" ? "/dashboard/projects" : "/dashboard");
   };
 
   return (
@@ -113,6 +113,7 @@ function SignupContent() {
             <option value="student">Student</option>
             <option value="volunteer">Volunteer</option>
             <option value="mentor">Mentor</option>
+            <option value="trainee">Trainee</option>
           </select>
 
           <Button type="submit" style={{ width: "100%", marginTop: "0.9rem" }}>

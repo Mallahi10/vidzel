@@ -14,7 +14,8 @@ type Role =
   | "organization"
   | "student"
   | "volunteer"
-  | "mentor";
+  | "mentor"
+  | "trainee";
 
 type User = {
   id: string;
