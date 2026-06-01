@@ -266,8 +266,8 @@ function OtpBoxes({ value, onChange }: { value: string; onChange: (v: string) =>
 /* ── Resend countdown ────────────────────────────────────────────────────── */
 
 function ResendTimer({ onResend }: { onResend: () => Promise<void> }) {
-  const [secs, setSecs]       = useState(60);
-  const [busy, setBusy]       = useState(false);
+  const [secs, setSecs] = useState(60);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (secs <= 0) return;
@@ -349,10 +349,20 @@ const LockIcon = () => (
 /* ── Panel config per step ───────────────────────────────────────────────── */
 
 const PANEL = {
-  1: { icon: <MailIcon />,   title: "Reset your password.",    subtitle: "We will send a 6-digit verification code to your inbox." },
-  2: { icon: <ShieldIcon />, title: "Verify your identity.",   subtitle: "Enter the 6-digit code sent to your email address." },
-  3: { icon: <LockIcon />,   title: "Secure your account.",    subtitle: "Choose a strong and memorable new password." },
+  1: { icon: <MailIcon />,   title: "Reset your password.",  subtitle: "We will send a 6-digit verification code to your inbox." },
+  2: { icon: <ShieldIcon />, title: "Verify your identity.", subtitle: "Enter the 6-digit code sent to your email address." },
+  3: { icon: <LockIcon />,   title: "Secure your account.",  subtitle: "Choose a strong and memorable new password." },
 } as const;
+
+/* ── Role → dashboard route ──────────────────────────────────────────────── */
+
+const ROLE_ROUTE: Record<string, string> = {
+  organization: "/dashboard/organization",
+  student:      "/dashboard/student",
+  volunteer:    "/dashboard/volunteer",
+  mentor:       "/dashboard/mentor",
+  trainee:      "/dashboard/trainee",
+};
 
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN PAGE
@@ -377,6 +387,7 @@ export default function ForgotPasswordPage() {
     if (!email.trim()) return;
     setLoading(true);
     setError("");
+    /* redirectTo omitted → Supabase sends a 6-digit OTP code (no magic link) */
     const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim());
     setLoading(false);
     if (err) setError(err.message);
@@ -400,7 +411,7 @@ export default function ForgotPasswordPage() {
     else     setStep(3);
   };
 
-  /* ── Step 3: update password ── */
+  /* ── Step 3: update password then redirect to role dashboard ── */
   const updatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -414,9 +425,16 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     const { error: err } = await supabase.auth.updateUser({ password: newPass });
-    setLoading(false);
-    if (err) setError(err.message);
-    else     router.push("/dashboard");
+    if (err) {
+      setLoading(false);
+      setError(err.message);
+      return;
+    }
+    /* Session is already active after verifyOtp — read the user's role and go directly to their dashboard */
+    const { data: { user } } = await supabase.auth.getUser();
+    const role  = (user?.user_metadata?.role as string) || "student";
+    const route = ROLE_ROUTE[role] ?? "/dashboard";
+    router.push(route);
   };
 
   const panel = PANEL[step];
