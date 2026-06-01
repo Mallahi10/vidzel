@@ -21,23 +21,23 @@ import {
 type TabFilter = "all" | ApplicationStatus;
 
 const TABS: { key: TabFilter; label: string }[] = [
-  { key: "all",       label: "Toutes" },
-  { key: "pending",   label: "En attente" },
-  { key: "reviewed",  label: "Examinées" },
-  { key: "interview", label: "Entretien" },
-  { key: "accepted",  label: "Acceptées" },
-  { key: "rejected",  label: "Refusées" },
+  { key: "all",       label: "All" },
+  { key: "pending",   label: "Pending" },
+  { key: "reviewed",  label: "Reviewed" },
+  { key: "interview", label: "Interview" },
+  { key: "accepted",  label: "Accepted" },
+  { key: "rejected",  label: "Rejected" },
 ];
 
 const STATUS_CONFIG: Record<
   ApplicationStatus,
   { label: string; cls: string }
 > = {
-  pending:   { label: "En attente",  cls: "statusPending" },
-  reviewed:  { label: "Examinée",    cls: "statusReviewed" },
-  interview: { label: "Entretien",   cls: "statusInterview" },
-  accepted:  { label: "Acceptée",    cls: "statusAccepted" },
-  rejected:  { label: "Refusée",     cls: "statusRejected" },
+  pending:   { label: "Pending",   cls: "statusPending" },
+  reviewed:  { label: "Reviewed",  cls: "statusReviewed" },
+  interview: { label: "Interview", cls: "statusInterview" },
+  accepted:  { label: "Accepted",  cls: "statusAccepted" },
+  rejected:  { label: "Rejected",  cls: "statusRejected" },
 };
 
 export default function TraineeApplicationsPage() {
@@ -76,11 +76,11 @@ export default function TraineeApplicationsPage() {
       {/* ── HEADER ── */}
       <div className={styles.header}>
         <div>
-          <h1>Mes candidatures</h1>
-          <p>Suivez l&apos;avancement de toutes vos candidatures de stage.</p>
+          <h1>My Applications</h1>
+          <p>Track the progress of all your internship applications.</p>
         </div>
         <Link href="/dashboard/trainee/offers" className={styles.exploreBtn}>
-          <Search size={16} /> Explorer les offres
+          <Search size={16} /> Explore Offers
         </Link>
       </div>
 
@@ -93,17 +93,17 @@ export default function TraineeApplicationsPage() {
             accent="#0EA5E9"
           />
           <SummaryCard
-            label="En attente"
+            label="Pending"
             value={countByStatus("pending")}
             accent="#F59E0B"
           />
           <SummaryCard
-            label="Entretiens"
+            label="Interviews"
             value={countByStatus("interview")}
             accent="#0284C7"
           />
           <SummaryCard
-            label="Acceptées"
+            label="Accepted"
             value={countByStatus("accepted")}
             accent="#10B981"
           />
@@ -142,17 +142,17 @@ export default function TraineeApplicationsPage() {
           <div className={styles.emptyIcon}><ClipboardList size={36} /></div>
           <p className={styles.emptyTitle}>
             {activeTab === "all"
-              ? "Aucune candidature envoyée"
-              : `Aucune candidature "${TABS.find((t) => t.key === activeTab)?.label}"`}
+              ? "No applications sent yet"
+              : `No "${TABS.find((t) => t.key === activeTab)?.label}" applications`}
           </p>
           <p className={styles.emptySubtitle}>
             {activeTab === "all"
-              ? "Explorez les offres et postulez à votre premier stage !"
-              : "Changez de filtre pour voir d'autres candidatures."}
+              ? "Explore offers and apply to your first internship!"
+              : "Change the filter to see other applications."}
           </p>
           {activeTab === "all" && (
             <Link href="/dashboard/trainee/offers" className={styles.emptyBtn}>
-              Explorer les offres →
+              Explore Offers →
             </Link>
           )}
         </div>
@@ -220,11 +220,11 @@ function ApplicationRow({ application }: { application: TraineeApplication }) {
           {offer?.location_type && (
             <span>
               <MapPin size={12} />
-              {{ remote: "Remote", "on-site": "Sur site", hybrid: "Hybride" }[offer.location_type]}
+              {{ remote: "Remote", "on-site": "On-site", hybrid: "Hybrid" }[offer.location_type]}
             </span>
           )}
           <span>
-            Postuléle {new Date(application.created_at).toLocaleDateString("fr-FR")}
+            Applied on {new Date(application.created_at).toLocaleDateString("en-GB")}
           </span>
         </div>
 
@@ -239,8 +239,8 @@ function ApplicationRow({ application }: { application: TraineeApplication }) {
         {/* Interview date */}
         {application.status === "interview" && application.interview_date && (
           <div className={styles.interviewBadge}>
-            Entretien prévu le{" "}
-            {new Date(application.interview_date).toLocaleString("fr-FR", {
+            Interview scheduled for{" "}
+            {new Date(application.interview_date).toLocaleString("en-GB", {
               dateStyle: "long",
               timeStyle: "short",
             })}
@@ -255,8 +255,8 @@ function ApplicationRow({ application }: { application: TraineeApplication }) {
         </span>
         {application.updated_at !== application.created_at && (
           <span className={styles.updatedAt}>
-            Mis à jour le{" "}
-            {new Date(application.updated_at).toLocaleDateString("fr-FR")}
+            Updated on{" "}
+            {new Date(application.updated_at).toLocaleDateString("en-GB")}
           </span>
         )}
       </div>

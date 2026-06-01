@@ -112,17 +112,17 @@ export default function TraineeDashboard() {
 
   const onboardingSteps: OnboardingStep[] = [
     {
-      label: "Complétez votre profil",
+      label: "Complete your profile",
       done: profileScore >= 80,
       href: "/dashboard/trainee/profile",
     },
     {
-      label: "Uploadez votre CV",
+      label: "Upload your CV",
       done: cvUploaded,
       href: "/dashboard/trainee/profile",
     },
     {
-      label: "Explorez votre première offre",
+      label: "Explore your first offer",
       done: stats.applicationsSent > 0,
       href: "/dashboard/trainee/offers",
     },
@@ -142,9 +142,9 @@ export default function TraineeDashboard() {
           <div className={styles.onboardingLeft}>
             <Rocket size={20} className={styles.onboardingIcon} />
             <div>
-              <p className={styles.onboardingTitle}>Bienvenue sur Vidzel Trainee 🎉</p>
+              <p className={styles.onboardingTitle}>Welcome to Vidzel Trainee! 🎉</p>
               <p className={styles.onboardingSubtitle}>
-                Complétez ces étapes pour commencer à postuler.
+                Complete these steps to start applying.
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function TraineeDashboard() {
           <button
             className={styles.onboardingClose}
             onClick={() => setOnboardingDismissed(true)}
-            aria-label="Fermer"
+            aria-label="Close"
           >
             <X size={16} />
           </button>
@@ -176,15 +176,15 @@ export default function TraineeDashboard() {
       <div className={styles.hero}>
         <div>
           <h1>Welcome back</h1>
-          <p>Gérez vos candidatures, explorez les offres et suivez vos missions.</p>
+          <p>Manage your applications, explore internship offers and track your missions.</p>
           <span className={styles.roleBadge}>Trainee Dashboard</span>
         </div>
         <div className={styles.heroButtons}>
           <Link href="/dashboard/trainee/offers">
-            <Button>Explorer les offres</Button>
+            <Button>Explore Offers</Button>
           </Link>
           <Link href="/dashboard/trainee/profile">
-            <Button variant="outline">Mon Profil</Button>
+            <Button variant="outline">My Profile</Button>
           </Link>
         </div>
       </div>
@@ -193,27 +193,27 @@ export default function TraineeDashboard() {
       <div className={styles.statsBar}>
         <Stat
           icon={<Briefcase size={20} />}
-          title="Offres disponibles"
+          title="Available Offers"
           value={val(stats.offersAvailable)}
         />
         <Stat
           icon={<FileText size={20} />}
-          title="Candidatures envoyées"
+          title="Applications Sent"
           value={val(stats.applicationsSent)}
         />
         <Stat
           icon={<CalendarCheck size={20} />}
-          title="Entretiens en cours"
+          title="Pending Interviews"
           value={val(stats.interviewsPending)}
         />
         <Stat
           icon={<ListTodo size={20} />}
-          title="Tâches assignées"
+          title="Assigned Tasks"
           value={val(stats.tasksAssigned)}
         />
         <Stat
           icon={<User size={20} />}
-          title="Profil complété"
+          title="Profile Completion"
           value={loadingStats ? "—" : `${profileScore}%`}
         />
       </div>
@@ -224,16 +224,16 @@ export default function TraineeDashboard() {
         {/* Recent Activity */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>Activité récente</h3>
+            <h3>Recent Activity</h3>
             <Link href="/dashboard/trainee/applications" className={styles.viewLink}>
-              Voir tout →
+              View all →
             </Link>
           </div>
           {loadingStats ? (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>Chargement…</p>
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>Loading…</p>
           ) : recentApps.length === 0 ? (
             <p style={{ color: "#94a3b8", fontSize: 14 }}>
-              Aucune candidature pour le moment.
+              No applications yet.
             </p>
           ) : (
             recentApps.map((app, i) => (
@@ -250,19 +250,19 @@ export default function TraineeDashboard() {
         {/* Quick Actions */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>Accès rapide</h3>
+            <h3>Quick Access</h3>
           </div>
-          <Quick icon={<Search size={18} />} text="Explorer les offres" link="/dashboard/trainee/offers" />
-          <Quick icon={<ClipboardList size={18} />} text="Mes candidatures" link="/dashboard/trainee/applications" />
-          <Quick icon={<User size={18} />} text="Mon profil" link="/dashboard/trainee/profile" />
-          <Quick icon={<LayoutGrid size={18} />} text="Mes workspaces" link="/dashboard/workspaces" />
+          <Quick icon={<Search size={18} />} text="Explore Offers" link="/dashboard/trainee/offers" />
+          <Quick icon={<ClipboardList size={18} />} text="My Applications" link="/dashboard/trainee/applications" />
+          <Quick icon={<User size={18} />} text="My Profile" link="/dashboard/trainee/profile" />
+          <Quick icon={<LayoutGrid size={18} />} text="My Workspaces" link="/dashboard/workspaces" />
           <Quick icon={<ListTodo size={18} />} text="Notifications" link="/notifications" />
         </div>
 
         {/* Applications Chart */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3>Mes candidatures</h3>
+            <h3>My Applications</h3>
           </div>
           <ApplicationChart
             sent={loadingStats ? 0 : stats.applicationsSent}
@@ -276,32 +276,32 @@ export default function TraineeDashboard() {
       <div className={styles.bottomGrid}>
         <ActionCard
           icon={<Search size={22} />}
-          title="Explorer les offres"
-          text="Découvrez toutes les offres de stage disponibles et postulez en quelques clics."
+          title="Explore Offers"
+          text="Discover all available internship offers and apply in just a few clicks."
           link="/dashboard/trainee/offers"
-          buttonText="Voir les offres"
+          buttonText="View Offers"
         />
         <ActionCard
           icon={<ClipboardList size={22} />}
-          title="Mes candidatures"
-          text="Suivez l'avancement de toutes vos candidatures et leur statut en temps réel."
+          title="My Applications"
+          text="Track the progress of all your applications and their status in real time."
           link="/dashboard/trainee/applications"
-          buttonText="Voir mes candidatures"
+          buttonText="View Applications"
         />
         <ActionCard
           icon={<LayoutGrid size={22} />}
-          title="Mes workspaces"
-          text="Accédez aux espaces collaboratifs de vos stages en cours."
+          title="My Workspaces"
+          text="Access the collaborative spaces for your ongoing internships."
           link="/dashboard/workspaces"
-          buttonText="Voir les workspaces"
+          buttonText="View Workspaces"
         />
         <ActionCard
           icon={<User size={22} />}
-          title="Mon profil"
-          text="Profil complété à"
+          title="My Profile"
+          text="Profile completed at"
           progress={profileScore}
           link="/dashboard/trainee/profile"
-          buttonText="Compléter le profil"
+          buttonText="Complete Profile"
         />
       </div>
     </div>
@@ -359,7 +359,7 @@ function ApplicationChart({
             {loading ? "—" : sent}
           </div>
           <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.06em" }}>
-            Envoyées
+            Sent
           </div>
         </div>
         <div style={{
@@ -376,7 +376,7 @@ function ApplicationChart({
             {loading ? "—" : interviews}
           </div>
           <div style={{ fontSize: 10, color: "#64748B", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.06em" }}>
-            Entretiens
+            Interviews
           </div>
         </div>
       </div>

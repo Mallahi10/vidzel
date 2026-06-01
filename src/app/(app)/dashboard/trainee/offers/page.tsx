@@ -29,15 +29,21 @@ import {
 } from "lucide-react";
 import Button from "@/components/Button";
 
-const DOMAINS = [
-  "Technologie", "Marketing", "Design", "Data",
-  "Finance", "RH", "Communication", "Commerce",
+const DOMAINS: { value: string; label: string }[] = [
+  { value: "Technologie", label: "Technology" },
+  { value: "Marketing",   label: "Marketing"  },
+  { value: "Design",      label: "Design"     },
+  { value: "Data",        label: "Data"       },
+  { value: "Finance",     label: "Finance"    },
+  { value: "RH",          label: "HR"         },
+  { value: "Communication", label: "Communication" },
+  { value: "Commerce",    label: "Business"   },
 ];
 
 const LOCATION_TYPES = [
   { value: "remote", label: "Remote" },
-  { value: "on-site", label: "Sur site" },
-  { value: "hybrid", label: "Hybride" },
+  { value: "on-site", label: "On-site" },
+  { value: "hybrid", label: "Hybrid" },
 ];
 
 type OfferTab = "all" | "saved";
@@ -137,12 +143,12 @@ export default function TraineeOffersPage() {
       {/* ── HEADER ── */}
       <div className={styles.header}>
         <div>
-          <h1>Explorer les offres de stage</h1>
-          <p>Découvrez les opportunités publiées par les organisations.</p>
+          <h1>Explore Internship Offers</h1>
+          <p>Discover opportunities posted by organizations.</p>
         </div>
         {offers.length > 0 && (
           <span className={styles.count}>
-            {offers.length} offre{offers.length !== 1 ? "s" : ""} disponible{offers.length !== 1 ? "s" : ""}
+            {offers.length} offer{offers.length !== 1 ? "s" : ""} available
           </span>
         )}
       </div>
@@ -153,14 +159,14 @@ export default function TraineeOffersPage() {
           className={`${styles.tab} ${activeTab === "all" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("all")}
         >
-          Toutes les offres
+          All Offers
           {offers.length > 0 && <span className={styles.tabCount}>{offers.length}</span>}
         </button>
         <button
           className={`${styles.tab} ${activeTab === "saved" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("saved")}
         >
-          <BookmarkCheck size={15} /> Sauvegardées
+          <BookmarkCheck size={15} /> Saved
           {bookmarkedIds.length > 0 && <span className={styles.tabCount}>{bookmarkedIds.length}</span>}
         </button>
       </div>
@@ -172,7 +178,7 @@ export default function TraineeOffersPage() {
             <Search size={16} className={styles.searchIcon} />
             <input
               className={styles.searchInput}
-              placeholder="Rechercher une offre ou entreprise…"
+              placeholder="Search for an offer or company..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadData()}
@@ -186,8 +192,8 @@ export default function TraineeOffersPage() {
               value={filterDomain}
               onChange={(e) => setFilterDomain(e.target.value)}
             >
-              <option value="">Tous les domaines</option>
-              {DOMAINS.map((d) => <option key={d} value={d}>{d}</option>)}
+              <option value="">All domains</option>
+              {DOMAINS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
             </select>
 
             <select
@@ -195,7 +201,7 @@ export default function TraineeOffersPage() {
               value={filterLoc}
               onChange={(e) => setFilterLoc(e.target.value)}
             >
-              <option value="">Tous lieux</option>
+              <option value="">All locations</option>
               {LOCATION_TYPES.map((l) => (
                 <option key={l.value} value={l.value}>{l.label}</option>
               ))}
@@ -206,7 +212,7 @@ export default function TraineeOffersPage() {
                 className={styles.clearBtn}
                 onClick={() => { setFilterDomain(""); setFilterLoc(""); setSearch(""); }}
               >
-                <X size={14} /> Réinitialiser
+                <X size={14} /> Reset
               </button>
             )}
           </div>
@@ -225,17 +231,17 @@ export default function TraineeOffersPage() {
           </div>
           <p className={styles.emptyTitle}>
             {activeTab === "saved"
-              ? "Aucune offre sauvegardée"
-              : "Aucune offre trouvée"}
+              ? "No saved offers"
+              : "No offers found"}
           </p>
           <p className={styles.emptySubtitle}>
             {activeTab === "saved"
-              ? "Cliquez sur le signet d'une offre pour la sauvegarder."
-              : "Essayez de modifier vos filtres ou revenez plus tard."}
+              ? "Click the bookmark icon on an offer to save it."
+              : "Try adjusting your filters or check back later."}
           </p>
           {activeTab === "saved" && (
             <button className={styles.emptyBtn} onClick={() => setActiveTab("all")}>
-              Explorer les offres
+              Explore Offers
             </button>
           )}
         </div>
@@ -270,7 +276,7 @@ export default function TraineeOffersPage() {
                 <h2 className={styles.modalTitle}>{modalOffer.title}</h2>
                 <p className={styles.modalOrg}>{modalOffer.org_name}</p>
               </div>
-              <button className={styles.modalClose} onClick={closeModal} aria-label="Fermer">
+              <button className={styles.modalClose} onClick={closeModal} aria-label="Close">
                 <X size={18} />
               </button>
             </div>
@@ -278,12 +284,12 @@ export default function TraineeOffersPage() {
             {applySuccess ? (
               <div className={styles.successState}>
                 <div className={styles.successIcon}><Check size={28} /></div>
-                <h3>Candidature envoyée ! 🚀</h3>
+                <h3>Application Sent! 🚀</h3>
                 <p>
-                  Votre candidature chez <strong>{modalOffer.org_name}</strong> a bien été soumise.
-                  Suivez son avancement dans &quot;Mes candidatures&quot;.
+                  Your application to <strong>{modalOffer.org_name}</strong> has been submitted.
+                  Track its progress in &quot;My Applications&quot;.
                 </p>
-                <Button onClick={closeModal}>Fermer</Button>
+                <Button onClick={closeModal}>Close</Button>
               </div>
             ) : (
               <>
@@ -295,26 +301,26 @@ export default function TraineeOffersPage() {
                   </div>
 
                   <label className={styles.modalLabel}>
-                    Lettre de motivation (optionnel)
+                    Cover Letter (optional)
                   </label>
                   <textarea
                     className={styles.modalTextarea}
                     rows={5}
-                    placeholder="Expliquez pourquoi vous souhaitez rejoindre cette organisation…"
+                    placeholder="Explain why you want to join this organization..."
                     value={coverLetter}
                     onChange={(e) => setCoverLetter(e.target.value)}
                   />
 
                   <p className={styles.modalCvNote}>
-                    Votre CV enregistré dans votre profil sera joint automatiquement.
+                    Your CV saved in your profile will be attached automatically.
                   </p>
                 </div>
 
                 <div className={styles.modalActions}>
-                  <Button variant="outline" onClick={closeModal}>Annuler</Button>
+                  <Button variant="outline" onClick={closeModal}>Cancel</Button>
                   <Button onClick={handleApply} disabled={applying}>
                     <Rocket size={16} />
-                    {applying ? "Envoi…" : "Envoyer ma candidature"}
+                    {applying ? "Submitting…" : "Submit Application"}
                   </Button>
                 </div>
               </>
@@ -347,8 +353,8 @@ function OfferCard({
 }) {
   const locLabel: Record<string, string> = {
     "remote": "Remote",
-    "on-site": "Sur site",
-    "hybrid": "Hybride",
+    "on-site": "On-site",
+    "hybrid": "Hybrid",
   };
 
   return (
@@ -372,7 +378,7 @@ function OfferCard({
         <button
           className={`${styles.bookmarkBtn} ${isSaved ? styles.bookmarkActive : ""}`}
           onClick={onBookmark}
-          aria-label={isSaved ? "Retirer des favoris" : "Sauvegarder"}
+          aria-label={isSaved ? "Remove from saved" : "Save"}
         >
           {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
         </button>
@@ -415,18 +421,18 @@ function OfferCard({
 
       {/* Publication date */}
       <p className={styles.pubDate}>
-        Publié le {new Date(offer.created_at).toLocaleDateString("fr-FR")}
+        Published on {new Date(offer.created_at).toLocaleDateString("en-GB")}
       </p>
 
       {/* Actions */}
       <div className={styles.cardActions}>
         {isApplied ? (
           <span className={styles.appliedBadge}>
-            <Check size={14} /> Candidature envoyée
+            <Check size={14} /> Applied
           </span>
         ) : (
           <button className={styles.applyBtn} onClick={onApply}>
-            <Rocket size={15} /> Postuler
+            <Rocket size={15} /> Apply
           </button>
         )}
       </div>

@@ -194,9 +194,10 @@ function SlidingAuth() {
       <style>{`
         * { box-sizing: border-box; }
         @media (max-width: 680px) {
-          .auth-shell { flex-direction: column !important; height: auto !important; max-width: 400px !important; }
-          .auth-panel { width: 100% !important; }
+          .auth-shell   { flex-direction: column !important; height: auto !important; max-width: 420px !important; margin: 0 auto; }
+          .auth-panel   { width: 100% !important; padding: 40px 28px !important; }
           .auth-overlay { display: none !important; }
+          .auth-hide-mobile { display: none !important; }
         }
       `}</style>
 
@@ -226,7 +227,7 @@ function SlidingAuth() {
         }}>
 
           {/* ══ PANNEAU GAUCHE — Sign In ══ */}
-          <div className="auth-panel" style={{
+          <div className={`auth-panel${isSignUp ? " auth-hide-mobile" : ""}`} style={{
             width: "50%", flexShrink: 0,
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "48px 52px",
@@ -280,7 +281,7 @@ function SlidingAuth() {
           </div>
 
           {/* ══ PANNEAU DROIT — Sign Up ══ */}
-          <div className="auth-panel" style={{
+          <div className={`auth-panel${!isSignUp ? " auth-hide-mobile" : ""}`} style={{
             width: "50%", flexShrink: 0,
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "48px 52px",

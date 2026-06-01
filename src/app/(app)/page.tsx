@@ -32,7 +32,7 @@ export default function Home() {
           </h1>
 
           <p className={styles.heroSubtitle} style={{ fontFamily: sora.style.fontFamily }}>
-            Vidzel connects organizations, students, volunteers, and mentors
+            Vidzel connects organizations, students, trainees, volunteers, and mentors
             around shared impact goals — in one unified workspace.
           </p>
 

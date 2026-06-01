@@ -129,67 +129,67 @@ export default function TraineeProfilePage() {
       {/* Top row: title + score */}
       <div className={styles.topRow}>
         <div>
-          <h1 className={styles.title}>Mon Profil Stagiaire</h1>
+          <h1 className={styles.title}>My Trainee Profile</h1>
           <p className={styles.muted}>
-            Un profil complet augmente vos chances d&apos;être contacté par les organisations.
+            A complete profile increases your chances of being contacted by organizations.
           </p>
         </div>
 
         <div className={styles.scoreBox}>
-          <div className={styles.scoreLabel}>Profil complété</div>
+          <div className={styles.scoreLabel}>Profile Completion</div>
           <div className={styles.scoreValue}>{score}%</div>
           <div className={styles.progressTrack}>
             <div className={styles.progressFill} style={{ width: `${score}%` }} />
           </div>
           <p className={styles.scoreTip}>
-            {score < 50 && "Ajoutez vos infos de base pour commencer."}
-            {score >= 50 && score < 80 && "Presque prêt ! Ajoutez votre CV et vos compétences."}
-            {score >= 80 && score < 100 && "Excellent ! Quelques détails manquants."}
-            {score === 100 && "Profil complet — vous êtes prêt à postuler !"}
+            {score < 50 && "Add your basic info to get started."}
+            {score >= 50 && score < 80 && "Almost there! Add your CV and skills."}
+            {score >= 80 && score < 100 && "Excellent! Just a few details missing."}
+            {score === 100 && "Profile complete — you're ready to apply!"}
           </p>
         </div>
       </div>
 
       {/* ── BASIC INFO ── */}
       <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Informations personnelles</h2>
+        <h2 className={styles.sectionTitle}>Personal Information</h2>
         <div className={styles.grid2}>
           <div className={styles.field}>
-            <label>Nom complet</label>
+            <label>Full Name</label>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Sophie Martin" />
           </div>
           <div className={styles.field}>
-            <label>Formation (programme/filière)</label>
-            <input value={formation} onChange={(e) => setFormation(e.target.value)} placeholder="Master Informatique" />
+            <label>Program / Major</label>
+            <input value={formation} onChange={(e) => setFormation(e.target.value)} placeholder="Master's in Computer Science" />
           </div>
           <div className={styles.field}>
-            <label>École / Université</label>
-            <input value={school} onChange={(e) => setSchool(e.target.value)} placeholder="Université Paris Cité" />
+            <label>School / University</label>
+            <input value={school} onChange={(e) => setSchool(e.target.value)} placeholder="University of Paris" />
           </div>
           <div className={styles.field}>
-            <label>Niveau d&apos;études</label>
+            <label>Education Level</label>
             <select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}>
-              <option value="">Sélectionner</option>
+              <option value="">Select</option>
               {EDUCATION_LEVELS.map((l) => (
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
           </div>
           <div className={styles.field}>
-            <label>URL LinkedIn</label>
-            <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/votre-profil" type="url" />
+            <label>LinkedIn URL</label>
+            <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/your-profile" type="url" />
           </div>
           <div className={styles.field}>
-            <label>URL Photo (avatar)</label>
+            <label>Avatar URL</label>
             <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="https://..." type="url" />
           </div>
           <div className={styles.fieldFull}>
-            <label>Bio / Présentation</label>
+            <label>Bio / Introduction</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={4}
-              placeholder="Décrivez votre parcours, vos motivations et ce que vous recherchez en stage…"
+              placeholder="Describe your background, motivations and what you're looking for in an internship…"
             />
           </div>
         </div>
@@ -197,8 +197,8 @@ export default function TraineeProfilePage() {
 
       {/* ── SKILLS ── */}
       <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Compétences</h2>
-        <p className={styles.cardHint}>Sélectionnez au minimum 2 compétences.</p>
+        <h2 className={styles.sectionTitle}>Skills</h2>
+        <p className={styles.cardHint}>Select at least 2 skills.</p>
         <div className={styles.pills}>
           {SKILLS_OPTIONS.map((s) => (
             <button
@@ -215,10 +215,10 @@ export default function TraineeProfilePage() {
 
       {/* ── AVAILABILITY ── */}
       <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Disponibilité</h2>
+        <h2 className={styles.sectionTitle}>Availability</h2>
         <div className={styles.grid2}>
           <div className={styles.field}>
-            <label>Disponible à partir du</label>
+            <label>Available from</label>
             <input
               type="date"
               value={availabilityStart}
@@ -226,7 +226,7 @@ export default function TraineeProfilePage() {
             />
           </div>
           <div className={styles.field}>
-            <label>Jusqu&apos;au (optionnel)</label>
+            <label>Until (optional)</label>
             <input
               type="date"
               value={availabilityEnd}
@@ -242,15 +242,15 @@ export default function TraineeProfilePage() {
 
         {cvUrl && (
           <div className={styles.cvBanner}>
-            <span>✅ CV uploadé</span>
+            <span>✅ CV uploaded</span>
             <a href={cvUrl} target="_blank" rel="noopener noreferrer">
-              Voir mon CV actuel ↗
+              View my current CV ↗
             </a>
           </div>
         )}
 
         <label className={styles.cvLabel}>
-          {cvUrl ? "Remplacer le CV" : "Uploader votre CV"} (PDF)
+          {cvUrl ? "Replace CV" : "Upload your CV"} (PDF)
         </label>
         <input
           type="file"
@@ -262,18 +262,18 @@ export default function TraineeProfilePage() {
             if (file) handleCvUpload(file);
           }}
         />
-        {cvUploading && <p className={styles.uploading}>Upload en cours…</p>}
+        {cvUploading && <p className={styles.uploading}>Uploading…</p>}
       </div>
 
       {/* ── SAVE ── */}
       <div className={styles.actions}>
         <Link href="/dashboard/trainee" className={styles.backLink}>
-          ← Retour
+          ← Back
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {saved && <span className={styles.savedMsg}>✓ Profil sauvegardé</span>}
+          {saved && <span className={styles.savedMsg}>✓ Profile saved</span>}
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Sauvegarde…" : "Sauvegarder le profil"}
+            {saving ? "Saving…" : "Save Profile"}
           </Button>
         </div>
       </div>
