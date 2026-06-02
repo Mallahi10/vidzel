@@ -22,10 +22,10 @@ const C = {
 type CertData = {
   id:                 string;
   user_name:          string | null;
+  project_title:      string | null;
   role:               string | null;
   organization_email: string | null;
   issued_at:          string;
-  projects:           { title: string | null } | null;
 };
 
 export default function CertificatePage() {
@@ -41,7 +41,7 @@ export default function CertificatePage() {
     if (!user || !projectId) return;
     supabase
       .from("certificates")
-      .select("id, user_name, role, organization_email, issued_at, projects(title)")
+      .select("id, user_name, project_title, role, organization_email, issued_at")
       .eq("project_id", projectId)
       .eq("user_id", user.id)
       .maybeSingle()
@@ -80,7 +80,7 @@ export default function CertificatePage() {
     ? new Date(cert.issued_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
     : new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
   const participantName = cert.user_name  || user.email || "Participant";
-  const projectTitle    = cert.projects?.title || "Project";
+  const projectTitle    = cert.project_title || "Project";
   const orgName         = cert.organization_email || "Vidzel Organization";
   const role            = cert.role ? cert.role.charAt(0).toUpperCase() + cert.role.slice(1) : "Member";
 

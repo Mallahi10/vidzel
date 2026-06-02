@@ -11,10 +11,10 @@ type Certificate = {
   id: string;
   project_id: string;
   user_name: string | null;
+  project_title: string | null;
   role: string | null;
   organization_email: string | null;
   issued_at: string;
-  projects: { title: string | null } | null;
 };
 
 export default function CertificatesPage() {
@@ -26,7 +26,7 @@ export default function CertificatesPage() {
     if (!user) return;
     supabase
       .from("certificates")
-      .select("id, project_id, user_name, role, organization_email, issued_at, projects(title)")
+      .select("id, project_id, user_name, project_title, role, organization_email, issued_at")
       .eq("user_id", user.id)
       .order("issued_at", { ascending: false })
       .then(({ data }) => {
@@ -123,7 +123,7 @@ export default function CertificatesPage() {
 
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
-                    {cert.projects?.title || "Untitled Project"}
+                    {cert.project_title || "Untitled Project"}
                   </h3>
                   <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
                     {cert.organization_email || "Organization"}

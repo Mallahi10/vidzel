@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
         const participantName =
           (authUser.user_metadata?.full_name as string) ||
           (authUser.user_metadata?.name      as string) ||
-          authUser.email?.split("@")[0]                 ||
+          authUser.email                                ||
           "Participant";
 
         console.log("[certs/generate] Inserting cert for:", participantName, authUser.email);
@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
             project_id:         projectId,
             workspace_id:       workspaceIds[0] ?? inputWorkspaceId ?? null,
             user_name:          participantName,
+            project_title:      projectTitle,
             role:               p.role,
             organization_email: organizationEmail,
             issued_at:          new Date().toISOString(),

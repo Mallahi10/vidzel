@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   /* 1 ── Fetch certificate row */
   const { data: cert, error: certErr } = await supabaseAdmin
     .from("certificates")
-    .select("user_name, role, organization_email, issued_at, projects(title)")
+    .select("user_name, project_title, role, organization_email, issued_at")
     .eq("project_id", projectId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const data = {
     participantName: cert.user_name  ?? "Participant",
-    projectTitle:    (cert.projects as any)?.title ?? "Project",
+    projectTitle:    cert.project_title ?? "Project",
     orgName:         cert.organization_email ?? "Vidzel Organization",
     role:            roleLabel,
     date:            issuedDate,
