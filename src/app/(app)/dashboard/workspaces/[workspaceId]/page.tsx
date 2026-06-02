@@ -121,7 +121,15 @@ export default function WorkspacePage() {
 
     const updated = await updateWorkspace(workspace.id, { status: "completed" });
 
-    if (updated) setWorkspace(updated);
+    if (updated) {
+      setWorkspace(updated);
+      /* Trigger certificate generation for all active members */
+      fetch("/api/certificates/generate", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ workspaceId: workspace.id }),
+      }).catch(() => {/* non-blocking — certificates generate in background */});
+    }
   };
 
   /* ============================================================
