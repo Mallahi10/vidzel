@@ -87,11 +87,23 @@ export default function CertificatePage() {
   return (
     <>
       <style>{`
+        @page { size: A4 landscape; margin: 0.8cm; }
         @media print {
-          body > *:not(#cert-print-root) { display: none !important; }
-          #cert-print-root { position: fixed; inset: 0; z-index: 9999; }
-          .no-print { display: none !important; }
-          .cert-card { box-shadow: none !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body * { visibility: hidden !important; }
+          .cert-card, .cert-card * { visibility: visible !important; }
+          .cert-card {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            max-width: unset !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            animation: none !important;
+            overflow: visible !important;
+          }
+          .no-print { display: none !important; visibility: hidden !important; }
         }
         @keyframes certIn {
           from { opacity: 0; transform: translateY(12px); }
