@@ -85,7 +85,6 @@ export default function Page() {
 
   const handleComplete = async (id: string) => {
     if (!confirm("Mark this project as completed?")) return;
-    // organization_id guard: prevents completing projects not owned by this org
     const { error } = await supabase
       .from("projects")
       .update({ status: "completed" })
@@ -95,6 +94,15 @@ export default function Page() {
       setProjects((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: "completed" } : p))
       );
+      /* Generate certificates for all accepted applicants */
+      fetch("/api/certificates/generate", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ projectId: id }),
+      })
+        .then((r) => r.json())
+        .then((d) => console.log("[handleComplete] Certificates:", d))
+        .catch((e) => console.error("[handleComplete] Cert error:", e));
     }
   };
 
