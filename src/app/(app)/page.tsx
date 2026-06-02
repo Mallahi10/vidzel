@@ -7,10 +7,6 @@ import { Zap } from "lucide-react";
 
 const sora = Sora({ subsets: ["latin"], weight: ["400", "500"] });
 
-const PARTNERS = [
-  "Université Paris-Saclay", "HEC Paris", "ONG SolidAir", "UNESCO Youth", "Impact Factory",
-];
-
 export default function Home() {
   return (
     <main className={styles.main}>
@@ -35,13 +31,6 @@ export default function Home() {
             Vidzel connects organizations, students, trainees, volunteers, and mentors
             around shared impact goals — in one unified workspace.
           </p>
-
-          <div className={styles.socialProof}>
-            <span className={styles.proofLabel}>Trusted by</span>
-            {PARTNERS.map(p => (
-              <span key={p} className={styles.proofLogo}>{p}</span>
-            ))}
-          </div>
         </div>
       </section>
 
