@@ -7,93 +7,114 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
 
-  /* ── Parse body ─────────────────────────────────────────────────── */
+  /* ── 1. Parse body ──────────────────────────────────────────────── */
   try {
     body = await req.json();
     console.log("[certs/generate] ✅ Payload received:", JSON.stringify(body));
   } catch (e) {
-    console.error("[certs/generate] ❌ Failed to parse JSON body:", e);
+    console.error("[certs/generate] ❌ JSON parse error:", e);
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  /* ── Resolve projectId ──────────────────────────────────────────── */
-  // Supports:
-  //   - Direct call:          { projectId }
-  //   - Webhook (new format): { record: { project_id } } or { new: { project_id } }
-  //   - Via workspaceId:      { workspaceId }
-
+  /* ── 2. Resolve projectId ───────────────────────────────────────── */
   let projectId: string | null =
-    (body.projectId as string) ??
-    ((body.record as any)?.project_id as string) ??
-    ((body.new    as any)?.project_id as string) ??
+    (body.projectId as string)                    ??
+    ((body.record as any)?.project_id as string)  ??
+    ((body.new    as any)?.project_id as string)  ??
     null;
 
-  const workspaceId: string | null = (body.workspaceId as string) ?? null;
+  const inputWorkspaceId: string | null = (body.workspaceId as string) ?? null;
 
-  if (!projectId && workspaceId) {
-    console.log("[certs/generate] No projectId — resolving from workspaceId:", workspaceId);
+  if (!projectId && inputWorkspaceId) {
+    console.log("[certs/generate] Resolving projectId from workspaceId:", inputWorkspaceId);
     const { data: ws, error: wsErr } = await supabaseAdmin
       .from("workspaces")
       .select("project_id")
-      .eq("id", workspaceId)
+      .eq("id", inputWorkspaceId)
       .maybeSingle();
-
     if (wsErr) console.error("[certs/generate] Workspace lookup error:", wsErr.message);
     projectId = ws?.project_id ?? null;
   }
 
   if (!projectId) {
-    console.error("[certs/generate] ❌ Cannot determine projectId. Full body:", JSON.stringify(body));
+    console.error("[certs/generate] ❌ No projectId resolved. Body:", JSON.stringify(body));
     return NextResponse.json({ error: "Missing projectId" }, { status: 400 });
   }
 
-  console.log("[certs/generate] 🎯 Processing projectId:", projectId);
+  console.log("[certs/generate] 🎯 projectId:", projectId);
 
   try {
-    /* ── Fetch project info ───────────────────────────────────────── */
+    /* ── 3. Fetch project info ──────────────────────────────────────── */
     const { data: project, error: projErr } = await supabaseAdmin
       .from("projects")
       .select("id, title, organization_email")
       .eq("id", projectId)
       .maybeSingle();
 
-    if (projErr) console.error("[certs/generate] Project fetch error:", projErr.message);
-
+    if (projErr) console.error("[certs/generate] Project error:", projErr.message);
     const projectTitle      = project?.title          ?? "Project";
     const organizationEmail = project?.organization_email ?? "";
     console.log("[certs/generate] Project:", projectTitle);
 
-    /* ── Fetch participants (accepted applications) ───────────────── */
+    /* ── 4. Find ALL workspaces linked to this project ──────────────── */
+    const { data: workspaces, error: wsListErr } = await supabaseAdmin
+      .from("workspaces")
+      .select("id")
+      .eq("project_id", projectId);
+
+    if (wsListErr) console.error("[certs/generate] Workspaces error:", wsListErr.message);
+    const workspaceIds = (workspaces ?? []).map((w: any) => w.id);
+    console.log("[certs/generate] Workspaces found:", workspaceIds.length);
+
+    /* ── 5. Fetch ALL workspace_members (active) from those workspaces ── */
+    let allWsMembers: { user_id: string; internal_role: string; workspace_id: string }[] = [];
+    if (workspaceIds.length > 0) {
+      const { data: members, error: memErr } = await supabaseAdmin
+        .from("workspace_members")
+        .select("user_id, internal_role, workspace_id")
+        .in("workspace_id", workspaceIds)
+        .eq("status", "active");
+
+      if (memErr) console.error("[certs/generate] workspace_members error:", memErr.message);
+      allWsMembers = members ?? [];
+      console.log("[certs/generate] Active workspace members:", allWsMembers.length);
+
+      /* ── 5b. Mark ALL workspace_members as "completed" (admin = no RLS) ── */
+      if (allWsMembers.length > 0) {
+        const { error: updateErr } = await supabaseAdmin
+          .from("workspace_members")
+          .update({ status: "completed" })
+          .in("workspace_id", workspaceIds)
+          .eq("status", "active");
+
+        if (updateErr) {
+          console.error("[certs/generate] workspace_members update error:", updateErr.message);
+        } else {
+          console.log("[certs/generate] ✅ workspace_members → 'completed'");
+        }
+      }
+    }
+
+    /* ── 6. Fetch accepted applicants ───────────────────────────────── */
     const { data: applicants, error: appErr } = await supabaseAdmin
       .from("applications")
       .select("applicant_id, role")
       .eq("project_id", projectId)
       .eq("status", "accepted");
 
-    if (appErr) console.error("[certs/generate] Applications fetch error:", appErr.message);
-    console.log("[certs/generate] Accepted applicants found:", applicants?.length ?? 0);
+    if (appErr) console.error("[certs/generate] Applications error:", appErr.message);
+    console.log("[certs/generate] Accepted applicants:", applicants?.length ?? 0);
 
-    /* Also fetch workspace members if workspaceId was provided */
-    let wsMembers: { user_id: string; internal_role: string }[] = [];
-    if (workspaceId) {
-      const { data } = await supabaseAdmin
-        .from("workspace_members")
-        .select("user_id, internal_role")
-        .eq("workspace_id", workspaceId)
-        .eq("status", "active");
-      wsMembers = data ?? [];
-      console.log("[certs/generate] Workspace members found:", wsMembers.length);
-    }
-
-    /* Merge & deduplicate by user_id */
+    /* ── 7. Merge both sources, deduplicate ─────────────────────────── */
     const participantMap = new Map<string, { userId: string; role: string }>();
+
     for (const a of applicants ?? []) {
       participantMap.set(a.applicant_id, {
         userId: a.applicant_id,
         role:   a.role ?? "Participant",
       });
     }
-    for (const m of wsMembers) {
+    for (const m of allWsMembers) {
       if (!participantMap.has(m.user_id)) {
         participantMap.set(m.user_id, {
           userId: m.user_id,
@@ -107,16 +128,19 @@ export async function POST(req: NextRequest) {
 
     if (participants.length === 0) {
       console.warn("[certs/generate] ⚠️ No participants found for project:", projectId);
-      return NextResponse.json({ issued: 0, message: "No accepted applicants found for this project" });
+      return NextResponse.json({
+        issued: 0,
+        message: "No accepted applicants or workspace members found. Make sure the student has an accepted application for this project.",
+      });
     }
 
-    /* ── Generate certificate per participant ─────────────────────── */
-    const issued: string[] = [];
-    const errors: string[] = [];
+    /* ── 8. Generate one certificate per participant ────────────────── */
+    const issued:  string[] = [];
+    const errors:  string[] = [];
 
     for (const p of participants) {
       try {
-        /* Skip duplicates */
+        /* Skip if already issued */
         const { data: existing } = await supabaseAdmin
           .from("certificates")
           .select("id")
@@ -125,16 +149,16 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
 
         if (existing) {
-          console.log("[certs/generate] Certificate already exists for user:", p.userId);
+          console.log("[certs/generate] Already issued for:", p.userId);
           continue;
         }
 
-        /* Get auth user info */
+        /* Fetch auth user */
         const { data: { user: authUser }, error: authErr } =
           await supabaseAdmin.auth.admin.getUserById(p.userId);
 
         if (authErr || !authUser) {
-          console.error("[certs/generate] Auth user not found for:", p.userId, authErr?.message);
+          console.error("[certs/generate] Auth user not found:", p.userId, authErr?.message);
           continue;
         }
 
@@ -144,7 +168,7 @@ export async function POST(req: NextRequest) {
           authUser.email?.split("@")[0]                 ||
           "Participant";
 
-        console.log("[certs/generate] Inserting certificate for:", participantName, authUser.email);
+        console.log("[certs/generate] Inserting cert for:", participantName, authUser.email);
 
         /* Insert certificate */
         const { error: insertErr } = await supabaseAdmin
@@ -152,7 +176,7 @@ export async function POST(req: NextRequest) {
           .insert({
             user_id:            p.userId,
             project_id:         projectId,
-            workspace_id:       workspaceId ?? null,
+            workspace_id:       workspaceIds[0] ?? inputWorkspaceId ?? null,
             user_name:          participantName,
             role:               p.role,
             organization_email: organizationEmail,
@@ -160,12 +184,12 @@ export async function POST(req: NextRequest) {
           });
 
         if (insertErr) {
-          console.error("[certs/generate] ❌ Insert error for", p.userId, ":", insertErr.message);
+          console.error("[certs/generate] ❌ Insert error:", p.userId, insertErr.message);
           errors.push(`${p.userId}: ${insertErr.message}`);
           continue;
         }
 
-        console.log("[certs/generate] ✅ Certificate inserted for:", authUser.email);
+        console.log("[certs/generate] ✅ Certificate inserted:", authUser.email);
         issued.push(authUser.email ?? p.userId);
 
         /* Send email */
@@ -199,16 +223,16 @@ export async function POST(req: NextRequest) {
               </div>`,
           });
 
-          if (emailErr) console.error("[certs/generate] Email error for", authUser.email, ":", emailErr.message);
-          else          console.log("[certs/generate] 📧 Email sent to:", authUser.email);
+          if (emailErr) console.error("[certs/generate] Email error:", authUser.email, emailErr.message);
+          else          console.log("[certs/generate] 📧 Email sent:", authUser.email);
         }
-      } catch (participantErr) {
-        console.error("[certs/generate] Unexpected error for participant", p.userId, ":", participantErr);
-        errors.push(String(participantErr));
+      } catch (err) {
+        console.error("[certs/generate] Unexpected error for", p.userId, ":", err);
+        errors.push(String(err));
       }
     }
 
-    console.log("[certs/generate] 🏁 Done — issued:", issued.length, "errors:", errors.length);
+    console.log("[certs/generate] 🏁 Done — issued:", issued.length, "| errors:", errors.length);
     return NextResponse.json({ issued: issued.length, emails: issued, errors });
 
   } catch (globalErr) {
