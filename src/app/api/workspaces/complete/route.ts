@@ -51,21 +51,39 @@ export async function POST(req: NextRequest) {
   const projectTitle      = project?.title          ?? workspace.title;
   const organizationEmail = project?.organization_email ?? "";
 
-  /* 4 ── Fetch all active workspace members */
-  const { data: members } = await supabaseAdmin
-    .from("workspace_members")
-    .select("user_id, internal_role")
-    .eq("workspace_id", workspaceId)
-    .eq("status", "active");
+  /* 4 ── Fetch participants: accepted applicants + active workspace members (union) */
+  const [{ data: applicants }, { data: wsMembers }] = await Promise.all([
+    supabaseAdmin
+      .from("applications")
+      .select("applicant_id, role")
+      .eq("project_id", workspace.project_id)
+      .eq("status", "accepted"),
+    supabaseAdmin
+      .from("workspace_members")
+      .select("user_id, internal_role")
+      .eq("workspace_id", workspaceId)
+      .eq("status", "active"),
+  ]);
+
+  /* Merge both sources, deduplicate by user_id */
+  const participantMap = new Map<string, { userId: string; role: string }>();
+  for (const a of applicants ?? []) {
+    participantMap.set(a.applicant_id, { userId: a.applicant_id, role: a.role ?? "participant" });
+  }
+  for (const m of wsMembers ?? []) {
+    if (!participantMap.has(m.user_id)) {
+      participantMap.set(m.user_id, { userId: m.user_id, role: m.internal_role ?? "member" });
+    }
+  }
 
   const issued: string[] = [];
 
-  for (const member of members ?? []) {
+  for (const participant of Array.from(participantMap.values())) {
     /* Skip duplicates */
     const { data: existing } = await supabaseAdmin
       .from("certificates")
       .select("id")
-      .eq("user_id", member.user_id)
+      .eq("user_id", participant.userId)
       .eq("project_id", workspace.project_id)
       .maybeSingle();
 
@@ -73,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     /* Get participant info */
     const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(
-      member.user_id
+      participant.userId
     );
     if (!authUser) continue;
 
@@ -87,11 +105,11 @@ export async function POST(req: NextRequest) {
     const { error: insertErr } = await supabaseAdmin
       .from("certificates")
       .insert({
-        user_id:            member.user_id,
+        user_id:            participant.userId,
         project_id:         workspace.project_id,
         workspace_id:       workspaceId,
         user_name:          participantName,
-        role:               member.internal_role,
+        role:               participant.role,
         organization_email: organizationEmail,
         issued_at:          new Date().toISOString(),
       });
