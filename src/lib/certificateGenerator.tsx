@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  Document, Page, View, Text, Svg,
-  Path, Line, Circle, Rect,
+  Document, Page, View, Text,
+  Svg, Path, Polygon, Rect, Circle, Line,
   StyleSheet, renderToBuffer,
 } from "@react-pdf/renderer";
 
@@ -11,202 +11,176 @@ const C = {
   deep:    "#395886",
   primary: "#638ECB",
   soft:    "#8AAEE0",
+  light:   "#B1C9EF",
+  pale:    "#D5DEEF",
   muted:   "#94A3B8",
-  light:   "#D5DEEF",
-  cream:   "#FAFAFA",
   text:    "#1e293b",
+  white:   "#FFFFFF",
 };
 
 /* ── Styles ──────────────────────────────────────────────────────────── */
 const S = StyleSheet.create({
   page: {
-    backgroundColor: C.cream,
-    padding: 0,
+    backgroundColor: C.white,
     fontFamily: "Helvetica",
+    padding: 0,
   },
-
-  /* Double border frame */
-  outerFrame: {
-    position: "absolute",
-    top: 22, left: 22, right: 22, bottom: 22,
-    border: "2.5pt solid #395886",
-  },
-  innerFrame: {
-    position: "absolute",
-    top: 30, left: 30, right: 30, bottom: 30,
-    border: "0.75pt solid #8AAEE0",
-  },
-
-  /* Main content area */
   content: {
     position: "absolute",
-    top: 38, left: 38, right: 38, bottom: 38,
+    top: 36, left: 52, right: 52, bottom: 34,
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    paddingTop: 28,
-    paddingHorizontal: 40,
-    paddingBottom: 22,
   },
 
-  /* Header */
-  logoText: {
-    fontSize: 30,
-    fontFamily: "Helvetica-Bold",
-    color: C.navy,
-    letterSpacing: 6,
-    textAlign: "center",
-    marginBottom: 3,
+  /* Logo row */
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 22,
+    gap: 8,
   },
-  logoSub: {
-    fontSize: 7.5,
-    color: C.muted,
-    letterSpacing: 2.5,
-    textAlign: "center",
-    textTransform: "uppercase",
-    marginBottom: 14,
-  },
-  certTitle: {
-    fontSize: 10,
+  logoName: {
+    fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: C.deep,
-    letterSpacing: 4,
-    textAlign: "center",
+    letterSpacing: 1.5,
+  },
+  logoSub: {
+    fontSize: 7,
+    color: C.muted,
+    letterSpacing: 0.5,
+  },
+
+  /* Title */
+  certTitle: {
+    fontSize: 52,
+    fontFamily: "Helvetica-Bold",
+    color: C.deep,
+    letterSpacing: -1,
+    lineHeight: 1,
+    marginBottom: 2,
+  },
+  certSubtitle: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: C.primary,
+    letterSpacing: 5,
     textTransform: "uppercase",
+    marginBottom: 18,
+  },
+
+  /* Divider */
+  dividerLine: {
+    height: 0.75,
+    backgroundColor: C.pale,
     marginBottom: 16,
+    width: "65%",
+  },
+  dividerLineFull: {
+    height: 0.75,
+    backgroundColor: C.pale,
+    marginBottom: 20,
   },
 
   /* Body */
-  presentsLabel: {
-    fontSize: 10.5,
+  presentedLabel: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
     color: C.muted,
-    fontFamily: "Helvetica-Oblique",
-    textAlign: "center",
+    letterSpacing: 3,
+    textTransform: "uppercase",
     marginBottom: 6,
   },
   participantName: {
-    fontSize: 38,
+    fontSize: 34,
     fontFamily: "Times-Bold",
-    color: C.navy,
-    textAlign: "center",
+    color: C.deep,
+    letterSpacing: 0.5,
     marginBottom: 10,
-    letterSpacing: 1,
   },
-  completedLabel: {
+  descriptionText: {
     fontSize: 10.5,
     color: C.text,
-    fontFamily: "Helvetica",
-    textAlign: "center",
-    marginBottom: 6,
+    lineHeight: 1.65,
+    maxWidth: 380,
+    marginBottom: 5,
   },
-  projectTitle: {
-    fontSize: 15,
-    fontFamily: "Helvetica-Bold",
-    color: C.deep,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 0,
-    marginBottom: 4,
-  },
-  metaText: {
+  roleLine: {
     fontSize: 9,
     color: C.muted,
-    textAlign: "center",
     letterSpacing: 0.5,
-  },
-  dot: {
-    fontSize: 9,
-    color: C.light,
-    marginHorizontal: 6,
+    marginBottom: 22,
   },
 
   /* Footer */
   footer: {
-    position: "absolute",
-    bottom: 44,
-    left: 50,
-    right: 50,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
+    marginTop: "auto",
   },
-  signatureBlock: {
-    alignItems: "center",
-    width: 130,
-  },
-  signatureLine: {
-    borderTop: "0.75pt solid #395886",
-    width: 110,
-    marginBottom: 5,
-  },
-  signatureLabel: {
-    fontSize: 8,
-    color: C.muted,
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  dateBlock: {
-    alignItems: "center",
+  dateBlock: {},
+  dateValue: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: C.text,
+    letterSpacing: 0.3,
+    marginBottom: 3,
   },
   dateLabel: {
     fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
     color: C.muted,
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: "uppercase",
+  },
+  signBlock: {
+    alignItems: "flex-end",
+  },
+  signName: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Oblique",
+    color: C.text,
     marginBottom: 3,
   },
-  dateValue: {
-    fontSize: 9.5,
+  signLabel: {
+    fontSize: 7.5,
     fontFamily: "Helvetica-Bold",
-    color: C.deep,
-    textAlign: "center",
-  },
-  badgeBlock: {
-    alignItems: "center",
-    width: 130,
+    color: C.muted,
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
 });
 
-/* ── Ornamental divider ──────────────────────────────────────────────── */
-function Divider({ width = 320 }: { width?: number }) {
-  const cx = width / 2;
+/* ── Decorative corner shapes ────────────────────────────────────────── */
+function TopRightShapes() {
   return (
-    <Svg height="16" width={width} style={{ marginBottom: 10 }}>
-      <Line x1={0}      y1={8} x2={cx - 14} y2={8} stroke={C.soft}  strokeWidth={0.6} />
-      <Circle cx={cx - 6} cy={8} r={2} fill={C.primary} />
-      <Circle cx={cx}      cy={8} r={3} fill={C.deep}    />
-      <Circle cx={cx + 6} cy={8} r={2} fill={C.primary} />
-      <Line x1={cx + 14} y1={8} x2={width}  y2={8} stroke={C.soft}  strokeWidth={0.6} />
+    <Svg style={{ position: "absolute", top: 0, right: 0 }} width={260} height={240}>
+      {/* Layer 1 — lightest, most rotated */}
+      <Rect x={100} y={-50} width={220} height={220} rx={40} ry={40}
+        fill={C.pale} opacity={0.7}
+        transform="rotate(20, 210, 60)" />
+      {/* Layer 2 */}
+      <Rect x={120} y={-20} width={175} height={175} rx={30} ry={30}
+        fill={C.light} opacity={0.85}
+        transform="rotate(12, 208, 68)" />
+      {/* Layer 3 — darkest, least rotated */}
+      <Rect x={148} y={22} width={112} height={112} rx={20} ry={20}
+        fill={C.soft} opacity={0.9}
+        transform="rotate(5, 204, 78)" />
     </Svg>
   );
 }
 
-/* ── Corner ornament ─────────────────────────────────────────────────── */
-function CornerOrnaments() {
-  const s = 18;
-  const pageW = 841.89;
-  const pageH = 595.28;
-  const m = 30;
-
+function BottomLeftShapes() {
   return (
-    <Svg style={{ position: "absolute", top: 0, left: 0 }} width={pageW} height={pageH}>
-      {/* Top-left */}
-      <Path d={`M ${m} ${m + s} L ${m} ${m} L ${m + s} ${m}`}
-        stroke={C.deep} strokeWidth={1.5} fill="none" />
-      {/* Top-right */}
-      <Path d={`M ${pageW - m - s} ${m} L ${pageW - m} ${m} L ${pageW - m} ${m + s}`}
-        stroke={C.deep} strokeWidth={1.5} fill="none" />
-      {/* Bottom-left */}
-      <Path d={`M ${m} ${pageH - m - s} L ${m} ${pageH - m} L ${m + s} ${pageH - m}`}
-        stroke={C.deep} strokeWidth={1.5} fill="none" />
-      {/* Bottom-right */}
-      <Path d={`M ${pageW - m - s} ${pageH - m} L ${pageW - m} ${pageH - m} L ${pageW - m} ${pageH - m - s}`}
-        stroke={C.deep} strokeWidth={1.5} fill="none" />
+    <Svg style={{ position: "absolute", bottom: 0, left: 0 }} width={210} height={185}>
+      <Rect x={-50} y={35} width={205} height={205} rx={42} ry={42}
+        fill={C.pale} opacity={0.7}
+        transform="rotate(-22, 52, 138)" />
+      <Rect x={-15} y={50} width={150} height={150} rx={28} ry={28}
+        fill={C.soft} opacity={0.85}
+        transform="rotate(-10, 60, 125)" />
     </Svg>
   );
 }
@@ -214,14 +188,38 @@ function CornerOrnaments() {
 /* ── Verified badge ──────────────────────────────────────────────────── */
 function VerifiedBadge() {
   return (
-    <Svg height="52" width="130">
+    <Svg style={{ position: "absolute", right: 42, top: "35%" }} width={88} height={110}>
       {/* Outer ring */}
-      <Circle cx={65} cy={26} r={24} stroke={C.deep} strokeWidth={1.2} fill="none" />
+      <Circle cx={44} cy={44} r={40} stroke={C.deep} strokeWidth={2} fill={C.white} />
       {/* Inner ring */}
-      <Circle cx={65} cy={26} r={20} stroke={C.soft} strokeWidth={0.5} fill="rgba(57,88,134,0.04)" />
+      <Circle cx={44} cy={44} r={33} stroke={C.soft} strokeWidth={0.75} fill="none" />
       {/* Checkmark */}
-      <Path d="M 56 26 L 62 32 L 74 20" stroke={C.deep} strokeWidth={1.8}
+      <Path d="M 30 44 L 40 54 L 58 34"
+        stroke={C.deep} strokeWidth={2.5}
         fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Stars row */}
+      <Polygon points="44,80 46,86 52,86 47,90 49,96 44,92 39,96 41,90 36,86 42,86"
+        fill={C.primary} />
+      <Polygon points="26,80 27.5,85 33,85 28.5,88 30,94 26,91 22,94 23.5,88 19,85 24.5,85"
+        fill={C.primary} />
+      <Polygon points="62,80 63.5,85 69,85 64.5,88 66,94 62,91 58,94 59.5,88 55,85 60.5,85"
+        fill={C.primary} />
+      {/* Label */}
+      <Text style={{ fontSize: 6, fontFamily: "Helvetica-Bold", color: C.deep,
+        textAlign: "center", letterSpacing: 1 }}
+        x={44} y={70}>
+        {"VERIFIED"}
+      </Text>
+    </Svg>
+  );
+}
+
+/* ── Diamond logo icon ───────────────────────────────────────────────── */
+function DiamondIcon() {
+  return (
+    <Svg width={18} height={18}>
+      <Polygon points="9,1 17,9 9,17 1,9" fill={C.deep} />
+      <Polygon points="9,4 14,9 9,14 4,9" fill={C.white} />
     </Svg>
   );
 }
@@ -233,18 +231,11 @@ export interface CertificateData {
   orgName:          string;
   role:             string;
   date:             string;
-  message?:         string;
 }
 
 /* ── PDF Document ────────────────────────────────────────────────────── */
 export function CertificateDocument({ data }: { data: CertificateData }) {
-  const {
-    participantName,
-    projectTitle,
-    orgName,
-    role,
-    date,
-  } = data;
+  const { participantName, projectTitle, orgName, role, date } = data;
 
   return (
     <Document
@@ -254,72 +245,59 @@ export function CertificateDocument({ data }: { data: CertificateData }) {
     >
       <Page size="A4" orientation="landscape" style={S.page}>
 
-        {/* ── Double border ── */}
-        <View style={S.outerFrame} />
-        <View style={S.innerFrame} />
+        {/* Decorative corner shapes */}
+        <TopRightShapes />
+        <BottomLeftShapes />
 
-        {/* ── Corner ornaments ── */}
-        <CornerOrnaments />
+        {/* Verified badge */}
+        <VerifiedBadge />
 
-        {/* ── Main content ── */}
+        {/* Main content */}
         <View style={S.content}>
 
-          {/* Logo */}
-          <Text style={S.logoText}>VIDZEL</Text>
-          <Text style={S.logoSub}>Virtual Impact & Development Zone for Engaged Leaders</Text>
+          {/* Logo row */}
+          <View style={S.logoRow}>
+            <DiamondIcon />
+            <View>
+              <Text style={S.logoName}>VIDZEL</Text>
+              <Text style={S.logoSub}>Virtual Impact & Development Zone</Text>
+            </View>
+          </View>
 
-          {/* Title */}
-          <Text style={S.certTitle}>Certificate of Participation</Text>
+          {/* Certificate title */}
+          <Text style={S.certTitle}>Certificate</Text>
+          <Text style={S.certSubtitle}>Of Participation</Text>
 
-          {/* Top divider */}
-          <Divider width={340} />
+          {/* Short divider */}
+          <View style={S.dividerLine} />
 
           {/* Presented to */}
-          <Text style={S.presentsLabel}>This is proudly presented to</Text>
+          <Text style={S.presentedLabel}>This certificate is presented to</Text>
 
           {/* Participant name */}
           <Text style={S.participantName}>{participantName}</Text>
 
-          {/* Completion text */}
-          <Text style={S.completedLabel}>for successfully completing</Text>
+          {/* Description */}
+          <Text style={S.descriptionText}>
+            {`For successfully completing the project "${projectTitle}" on the Vidzel Collaborative Impact Platform. This achievement demonstrates commitment, collaboration, and excellence.`}
+          </Text>
 
-          {/* Project title */}
-          <Text style={S.projectTitle}>"{projectTitle}"</Text>
+          {/* Role · Org */}
+          <Text style={S.roleLine}>{`${role}  ·  ${orgName}`}</Text>
 
-          {/* Meta: role · org */}
-          <View style={S.metaRow}>
-            <Text style={S.metaText}>{role}</Text>
-            <Text style={S.dot}> · </Text>
-            <Text style={S.metaText}>{orgName}</Text>
-          </View>
+          {/* Full divider */}
+          <View style={S.dividerLineFull} />
 
-          {/* Bottom divider */}
-          <Divider width={260} />
-
-        </View>
-
-        {/* ── Footer ── */}
-        <View style={S.footer}>
-
-          {/* Signature block */}
-          <View style={S.signatureBlock}>
-            <View style={S.signatureLine} />
-            <Text style={S.signatureLabel}>Authorized by Vidzel Platform</Text>
-          </View>
-
-          {/* Date center */}
-          <View style={S.dateBlock}>
-            <Text style={S.dateLabel}>Date of Issue</Text>
-            <Text style={S.dateValue}>{date}</Text>
-          </View>
-
-          {/* Verified badge */}
-          <View style={S.badgeBlock}>
-            <VerifiedBadge />
-            <Text style={{ fontSize: 7, color: C.muted, textAlign: "center",
-              letterSpacing: 1, marginTop: 3 }}>
-              VERIFIED BY VIDZEL
-            </Text>
+          {/* Footer */}
+          <View style={S.footer}>
+            <View style={S.dateBlock}>
+              <Text style={S.dateValue}>{date.toUpperCase()}</Text>
+              <Text style={S.dateLabel}>Date</Text>
+            </View>
+            <View style={S.signBlock}>
+              <Text style={S.signName}>Vidzel Platform</Text>
+              <Text style={S.signLabel}>Signature</Text>
+            </View>
           </View>
 
         </View>
