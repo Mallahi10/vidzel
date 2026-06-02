@@ -2,8 +2,14 @@ import React from "react";
 import {
   Document, Page, View, Text,
   Svg, Path, Rect, Circle, Line,
-  StyleSheet, renderToBuffer,
+  StyleSheet, Font, renderToBuffer,
 } from "@react-pdf/renderer";
+
+/* ── Signature font (Great Vibes — Google Fonts) ─────────────────────── */
+Font.register({
+  family: "SignatureFont",
+  src: "https://fonts.gstatic.com/s/greatvibes/v19/RWmMoKWb4e8kqMfBT4hqDQ.ttf",
+});
 
 /* ── Palette ─────────────────────────────────────────────────────────── */
 const C = {
@@ -15,138 +21,179 @@ const C = {
   pale:    "#D5DEEF",
   muted:   "#94A3B8",
   text:    "#1e293b",
+  ink:     "#1a2744",
   white:   "#FFFFFF",
 };
 
+/* ── Styles ──────────────────────────────────────────────────────────── */
 const S = StyleSheet.create({
   page: {
     backgroundColor: C.white,
     fontFamily: "Helvetica",
     padding: 0,
   },
+
+  /* Content area — left-aligned, padded */
   content: {
     position: "absolute",
-    top: 36, left: 52, right: 52, bottom: 34,
+    top: 38, left: 52, right: 52, bottom: 32,
     flexDirection: "column",
   },
+
+  /* Logo row */
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 22,
+    marginBottom: 20,
     gap: 8,
   },
+  logoTextBlock: { flexDirection: "column", gap: 1 },
   logoName: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: C.deep,
-    letterSpacing: 1.5,
+    letterSpacing: 1.8,
   },
   logoSub: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: C.muted,
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
+
+  /* Main title */
   certTitle: {
-    fontSize: 52,
+    fontSize: 54,
     fontFamily: "Helvetica-Bold",
     color: C.deep,
-    letterSpacing: -1,
+    letterSpacing: -1.2,
     lineHeight: 1,
     marginBottom: 2,
   },
   certSubtitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: "Helvetica-Bold",
     color: C.primary,
-    letterSpacing: 5,
-    marginBottom: 18,
-  },
-  dividerShort: {
-    height: 0.75,
-    backgroundColor: C.pale,
+    letterSpacing: 5.5,
     marginBottom: 16,
-    width: "65%",
+  },
+
+  /* Dividers */
+  dividerShort: {
+    height: 0.6,
+    backgroundColor: C.pale,
+    marginBottom: 14,
+    width: "60%",
   },
   dividerFull: {
-    height: 0.75,
+    height: 0.6,
     backgroundColor: C.pale,
-    marginBottom: 20,
+    marginBottom: 18,
   },
+
+  /* Body text */
   presentedLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontFamily: "Helvetica-Bold",
     color: C.muted,
-    letterSpacing: 3,
-    marginBottom: 6,
+    letterSpacing: 3.5,
+    marginBottom: 5,
   },
   participantName: {
     fontSize: 34,
     fontFamily: "Times-Bold",
     color: C.deep,
-    letterSpacing: 0.5,
-    marginBottom: 10,
+    letterSpacing: 0.4,
+    marginBottom: 9,
   },
-  descriptionText: {
-    fontSize: 10.5,
+  descText: {
+    fontSize: 10,
     color: C.text,
-    lineHeight: 1.65,
-    maxWidth: 380,
-    marginBottom: 5,
+    lineHeight: 1.7,
+    maxWidth: 390,
+    marginBottom: 4,
   },
   roleLine: {
-    fontSize: 9,
+    fontSize: 8.5,
     color: C.muted,
-    letterSpacing: 0.5,
-    marginBottom: 22,
+    letterSpacing: 0.6,
+    marginBottom: 18,
   },
+
+  /* ── Footer ── */
   footer: {
+    marginTop: "auto",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    marginTop: "auto",
+  },
+
+  /* Date block */
+  dateBlock: {
+    flexDirection: "column",
+    width: 160,
+  },
+  dateLine: {
+    height: 0.75,
+    backgroundColor: C.deep,
+    marginBottom: 6,
+    width: "100%",
   },
   dateValue: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
-    color: C.text,
+    color: C.ink,
     letterSpacing: 0.3,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   dateLabel: {
-    fontSize: 7.5,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     color: C.muted,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
   },
-  signName: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Oblique",
-    color: C.text,
-    marginBottom: 3,
+
+  /* Signature block */
+  signBlock: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    width: 200,
+  },
+  signLine: {
+    height: 0.75,
+    backgroundColor: C.deep,
+    marginBottom: 4,
+    width: "100%",
+  },
+  signatureText: {
+    fontFamily: "SignatureFont",
+    fontSize: 24,
+    color: C.ink,
+    marginBottom: 2,
     textAlign: "right",
   },
   signLabel: {
-    fontSize: 7.5,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
     color: C.muted,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
     textAlign: "right",
   },
+
   /* Badge */
   badgeWrap: {
     position: "absolute",
-    right: 44,
-    top: 140,
+    right: 42,
+    top: 148,
     alignItems: "center",
     width: 90,
   },
-  badgeText: {
-    fontSize: 6.5,
+  badgeLabel: {
+    fontSize: 6,
     fontFamily: "Helvetica-Bold",
     color: C.deep,
-    letterSpacing: 0.8,
+    letterSpacing: 1,
     textAlign: "center",
-    marginTop: -6,
+    marginTop: -4,
     lineHeight: 1.5,
   },
 });
@@ -155,67 +202,67 @@ const S = StyleSheet.create({
 function TopRightShapes() {
   return (
     <Svg style={{ position: "absolute", top: 0, right: 0 }} width={260} height={240}>
-      <Rect x={100} y={-50} width={220} height={220} rx={40} ry={40}
-        fill={C.pale} opacity={0.7} transform="rotate(20, 210, 60)" />
-      <Rect x={120} y={-20} width={175} height={175} rx={30} ry={30}
-        fill={C.light} opacity={0.85} transform="rotate(12, 208, 68)" />
-      <Rect x={148} y={22} width={112} height={112} rx={20} ry={20}
-        fill={C.soft} opacity={0.9} transform="rotate(5, 204, 78)" />
+      <Rect x={100} y={-50} width={220} height={220} rx={42} ry={42}
+        fill={C.pale} opacity={0.65} transform="rotate(20, 210, 60)" />
+      <Rect x={120} y={-18} width={178} height={178} rx={32} ry={32}
+        fill={C.light} opacity={0.80} transform="rotate(12, 209, 71)" />
+      <Rect x={150} y={24} width={112} height={112} rx={20} ry={20}
+        fill={C.soft} opacity={0.90} transform="rotate(5, 206, 80)" />
     </Svg>
   );
 }
 
 function BottomLeftShapes() {
   return (
-    <Svg style={{ position: "absolute", bottom: 0, left: 0 }} width={210} height={185}>
-      <Rect x={-50} y={35} width={205} height={205} rx={42} ry={42}
-        fill={C.pale} opacity={0.7} transform="rotate(-22, 52, 138)" />
-      <Rect x={-15} y={50} width={150} height={150} rx={28} ry={28}
-        fill={C.soft} opacity={0.85} transform="rotate(-10, 60, 125)" />
+    <Svg style={{ position: "absolute", bottom: 0, left: 0 }} width={200} height={175}>
+      <Rect x={-50} y={30} width={200} height={200} rx={42} ry={42}
+        fill={C.pale} opacity={0.65} transform="rotate(-22, 50, 130)" />
+      <Rect x={-15} y={48} width={148} height={148} rx={28} ry={28}
+        fill={C.soft} opacity={0.80} transform="rotate(-10, 59, 122)" />
     </Svg>
   );
 }
 
-/* ── Verified badge (SVG circle + checkmark, text outside SVG) ───────── */
+/* ── Verified badge ──────────────────────────────────────────────────── */
 function VerifiedBadge() {
   return (
     <View style={S.badgeWrap}>
-      <Svg width={90} height={90}>
-        <Circle cx={45} cy={45} r={41} stroke={C.deep} strokeWidth={2} fill={C.white} />
-        <Circle cx={45} cy={45} r={34} stroke={C.soft} strokeWidth={0.75} fill="none" />
+      <Svg width={86} height={86}>
+        {/* Outer ring */}
+        <Circle cx={43} cy={43} r={40} stroke={C.deep} strokeWidth={1.8} fill={C.white} />
+        {/* Inner ring */}
+        <Circle cx={43} cy={43} r={33} stroke={C.soft} strokeWidth={0.6} fill="none" />
         {/* Checkmark */}
-        <Path d="M 28 45 L 40 57 L 62 35"
+        <Path d="M 27 43 L 39 55 L 60 33"
           stroke={C.deep} strokeWidth={2.5}
           fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        {/* Top tick marks */}
-        <Line x1={45} y1={8} x2={45} y2={14} stroke={C.primary} strokeWidth={1.5} />
-        <Line x1={55} y1={10} x2={52} y2={15} stroke={C.primary} strokeWidth={1.5} />
-        <Line x1={35} y1={10} x2={38} y2={15} stroke={C.primary} strokeWidth={1.5} />
+        {/* Decorative dots at top */}
+        <Circle cx={43} cy={7}  r={2} fill={C.primary} />
+        <Circle cx={55} cy={10} r={1.5} fill={C.light} />
+        <Circle cx={31} cy={10} r={1.5} fill={C.light} />
       </Svg>
-      <Text style={S.badgeText}>VERIFIED{"\n"}BY VIDZEL</Text>
+      <Text style={S.badgeLabel}>{"VERIFIED\nBY VIDZEL"}</Text>
     </View>
   );
 }
 
-/* ── Diamond logo icon using Path ────────────────────────────────────── */
-function DiamondIcon() {
+/* ── Diamond logo ────────────────────────────────────────────────────── */
+function DiamondLogo() {
   return (
     <Svg width={18} height={18}>
-      {/* Outer diamond */}
       <Path d="M 9 1 L 17 9 L 9 17 L 1 9 Z" fill={C.deep} />
-      {/* Inner diamond (white cutout) */}
-      <Path d="M 9 4 L 14 9 L 9 14 L 4 9 Z" fill={C.white} />
+      <Path d="M 9 4.5 L 13.5 9 L 9 13.5 L 4.5 9 Z" fill={C.white} />
     </Svg>
   );
 }
 
 /* ── Export types ────────────────────────────────────────────────────── */
 export interface CertificateData {
-  participantName:  string;
-  projectTitle:     string;
-  orgName:          string;
-  role:             string;
-  date:             string;
+  participantName: string;
+  projectTitle:    string;
+  orgName:         string;
+  role:            string;
+  date:            string;
 }
 
 /* ── PDF Document ────────────────────────────────────────────────────── */
@@ -235,10 +282,11 @@ export function CertificateDocument({ data }: { data: CertificateData }) {
         <VerifiedBadge />
 
         <View style={S.content}>
+
           {/* Logo */}
           <View style={S.logoRow}>
-            <DiamondIcon />
-            <View>
+            <DiamondLogo />
+            <View style={S.logoTextBlock}>
               <Text style={S.logoName}>VIDZEL</Text>
               <Text style={S.logoSub}>Virtual Impact & Development Zone</Text>
             </View>
@@ -249,12 +297,11 @@ export function CertificateDocument({ data }: { data: CertificateData }) {
           <Text style={S.certSubtitle}>OF PARTICIPATION</Text>
           <View style={S.dividerShort} />
 
-          {/* Presented to */}
+          {/* Body */}
           <Text style={S.presentedLabel}>THIS CERTIFICATE IS PRESENTED TO</Text>
           <Text style={S.participantName}>{participantName}</Text>
 
-          {/* Description */}
-          <Text style={S.descriptionText}>
+          <Text style={S.descText}>
             {`For successfully completing the project "${projectTitle}" on the Vidzel Collaborative Impact Platform. This achievement demonstrates commitment, collaboration, and excellence.`}
           </Text>
           <Text style={S.roleLine}>{`${role}  ·  ${orgName}`}</Text>
@@ -263,14 +310,21 @@ export function CertificateDocument({ data }: { data: CertificateData }) {
 
           {/* Footer */}
           <View style={S.footer}>
-            <View>
-              <Text style={S.dateValue}>{date.toUpperCase()}</Text>
-              <Text style={S.dateLabel}>DATE</Text>
+
+            {/* Date block */}
+            <View style={S.dateBlock}>
+              <View style={S.dateLine} />
+              <Text style={S.dateValue}>{date}</Text>
+              <Text style={S.dateLabel}>DATE OF ISSUE</Text>
             </View>
-            <View>
-              <Text style={S.signName}>Vidzel Platform</Text>
-              <Text style={S.signLabel}>SIGNATURE</Text>
+
+            {/* Signature block */}
+            <View style={S.signBlock}>
+              <View style={S.signLine} />
+              <Text style={S.signatureText}>Vidzel Platform</Text>
+              <Text style={S.signLabel}>AUTHORIZED SIGNATURE</Text>
             </View>
+
           </View>
         </View>
 
