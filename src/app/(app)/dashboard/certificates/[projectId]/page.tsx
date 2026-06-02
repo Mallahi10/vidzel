@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Download, ArrowLeft, Inbox, CheckCircle } from "lucide-react";
@@ -30,8 +30,7 @@ type CertData = {
 
 export default function CertificatePage() {
   const { projectId } = useParams() as { projectId: string };
-  const { user }      = useAuth();
-  const printRef      = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   const [cert,     setCert]     = useState<CertData | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -87,23 +86,32 @@ export default function CertificatePage() {
   return (
     <>
       <style>{`
-        @page { size: A4 landscape; margin: 0.8cm; }
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
         @media print {
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           body * { visibility: hidden !important; }
           .cert-card, .cert-card * { visibility: visible !important; }
           .cert-card {
             position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
             max-width: unset !important;
             margin: 0 !important;
+            padding: 32px 48px !important;
             border-radius: 0 !important;
             box-shadow: none !important;
             animation: none !important;
             overflow: visible !important;
+            box-sizing: border-box !important;
           }
-          .no-print { display: none !important; visibility: hidden !important; }
+          .no-print { display: none !important; }
         }
         @keyframes certIn {
           from { opacity: 0; transform: translateY(12px); }
@@ -111,30 +119,24 @@ export default function CertificatePage() {
         }
       `}</style>
 
-      <div id="cert-print-root" style={{ minHeight: "100vh", background: C.bg, padding: "28px 20px", fontFamily: "system-ui,-apple-system,'Inter',sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: C.bg, padding: "28px 20px", fontFamily: "system-ui,-apple-system,'Inter',sans-serif" }}>
 
         {/* Action bar */}
         <div className="no-print" style={{ maxWidth: 900, margin: "0 auto 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <Link href="/dashboard/certificates" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.primary, fontWeight: 600, fontSize: 14, textDecoration: "none" }}>
             <ArrowLeft size={14} /> My Certificates
           </Link>
-          <div style={{ display: "flex", gap: 8 }}>
-            <a
-              href={`/api/certificates/pdf?projectId=${projectId}&userId=${user.id}`}
-              download
-              style={{ display: "inline-flex", alignItems: "center", gap: 7, background: `linear-gradient(135deg,${C.deep},${C.primary})`, color: "white", textDecoration: "none", padding: "9px 20px", borderRadius: 10, fontWeight: 600, fontSize: 13, boxShadow: "0 4px 12px rgba(99,142,203,0.35)" }}
-            >
-              <Download size={14} /> Download PDF
-            </a>
-            <button onClick={handlePrint} style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "white", color: C.deep, border: `1.5px solid ${C.pale}`, padding: "9px 16px", borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
-              Print
-            </button>
-          </div>
+          {/* Single Download PDF button — uses browser print → save as PDF */}
+          <button
+            onClick={handlePrint}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: `linear-gradient(135deg,${C.deep},${C.primary})`, color: "white", border: "none", padding: "10px 22px", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 14px rgba(99,142,203,0.35)" }}
+          >
+            <Download size={15} /> Download PDF
+          </button>
         </div>
 
         {/* ══ CERTIFICATE CARD ══ */}
         <div
-          ref={printRef}
           className="cert-card"
           style={{
             maxWidth: 900,
