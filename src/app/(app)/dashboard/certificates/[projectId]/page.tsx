@@ -109,12 +109,23 @@ export default function CertificatePage() {
           <Link href="/dashboard/certificates" style={{ display: "inline-flex", alignItems: "center", gap: 7, color: C.primary, fontWeight: 600, fontSize: 14, textDecoration: "none" }}>
             <ArrowLeft size={15} /> My Certificates
           </Link>
-          <button
-            onClick={handlePrint}
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: `linear-gradient(135deg,${C.deep},${C.primary})`, color: "white", border: "none", padding: "10px 22px", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 14px rgba(99,142,203,0.35)" }}
-          >
-            <Download size={15} /> Download / Print
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            {/* Download PDF (server-generated) */}
+            <a
+              href={`/api/certificates/pdf?projectId=${projectId}&userId=${user.id}`}
+              download
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: `linear-gradient(135deg,${C.deep},${C.primary})`, color: "white", textDecoration: "none", padding: "10px 22px", borderRadius: 10, fontWeight: 600, fontSize: 14, boxShadow: "0 4px 14px rgba(99,142,203,0.35)" }}
+            >
+              <Download size={15} /> Download PDF
+            </a>
+            {/* Print browser version */}
+            <button
+              onClick={handlePrint}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "white", color: C.deep, border: `1.5px solid ${C.border}`, padding: "10px 18px", borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              Print
+            </button>
+          </div>
         </div>
 
         {/* ══ CERTIFICATE CARD ══ */}
