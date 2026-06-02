@@ -119,16 +119,16 @@ export default function WorkspacePage() {
   const completeProject = async () => {
     if (!isOrganizationOwner || isArchived) return;
 
-    const updated = await updateWorkspace(workspace.id, { status: "completed" });
+    /* Use server-side API (admin client) to bypass RLS on workspace UPDATE */
+    const res = await fetch("/api/workspaces/complete", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ workspaceId: workspace.id, organizationUserId: user.id }),
+    });
 
-    if (updated) {
-      setWorkspace(updated);
-      /* Trigger certificate generation for all active members */
-      fetch("/api/certificates/generate", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ workspaceId: workspace.id }),
-      }).catch(() => {/* non-blocking — certificates generate in background */});
+    if (res.ok) {
+      const { workspace: updated } = await res.json();
+      if (updated) setWorkspace(updated);
     }
   };
 
