@@ -145,8 +145,8 @@
 }
 
 .statItem:nth-child(1) { animation-delay: 0.08s; border-top-color: #638ECB; }
-.statItem:nth-child(2) { animation-delay: 0.16s; border-top-color: #10B981; }
-.statItem:nth-child(3) { animation-delay: 0.24s; border-top-color: #F59E0B; }
+.statItem:nth-child(2) { animation-delay: 0.16s; border-top-color: #395886; }
+.statItem:nth-child(3) { animation-delay: 0.24s; border-top-color: #8AAEE0; }
 
 .statItem:hover {
   box-shadow: 0 8px 28px rgba(57, 88, 134, 0.14);
@@ -171,18 +171,18 @@
 }
 
 .statItem:nth-child(2) .statIcon {
-  background: linear-gradient(135deg, #059669, #10B981);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  background: linear-gradient(135deg, #1e3a5f, #395886);
+  box-shadow: 0 4px 14px rgba(57, 88, 134, 0.35);
 }
 
 .statItem:nth-child(3) .statIcon {
-  background: linear-gradient(135deg, #D97706, #F59E0B);
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #638ECB, #8AAEE0);
+  box-shadow: 0 4px 14px rgba(99, 142, 203, 0.32);
 }
 
 /* Per-card background tints */
-.statItem:nth-child(2) { background: linear-gradient(160deg, rgba(16,185,129,0.07) 0%, white 55%); }
-.statItem:nth-child(3) { background: linear-gradient(160deg, rgba(245,158,11,0.07) 0%, white 55%); }
+.statItem:nth-child(2) { background: linear-gradient(160deg, rgba(57,88,134,0.06) 0%, white 55%); }
+.statItem:nth-child(3) { background: linear-gradient(160deg, rgba(138,174,224,0.07) 0%, white 55%); }
 
 .statItem p {
   font-size: 13px;
@@ -200,8 +200,8 @@
 
 /* Per-card number colors */
 .statItem:nth-child(1) h4 { color: #395886; }
-.statItem:nth-child(2) h4 { color: #059669; }
-.statItem:nth-child(3) h4 { color: #D97706; }
+.statItem:nth-child(2) h4 { color: #1e3a5f; }
+.statItem:nth-child(3) h4 { color: #638ECB; }
 
 /* ================= GRID ================= */
 
@@ -368,10 +368,10 @@
   box-shadow: 0 3px 8px rgba(99, 142, 203, 0.35);
 }
 
-.quickItem:nth-child(2) .quickIcon { background: linear-gradient(135deg, #0E7490, #0891B2); box-shadow: 0 3px 8px rgba(8,145,178,0.32); }
-.quickItem:nth-child(3) .quickIcon { background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 3px 8px rgba(16,185,129,0.32); }
-.quickItem:nth-child(4) .quickIcon { background: linear-gradient(135deg, #D97706, #F59E0B); box-shadow: 0 3px 8px rgba(245,158,11,0.30); }
-.quickItem:nth-child(5) .quickIcon { background: linear-gradient(135deg, #6D28D9, #7C3AED); box-shadow: 0 3px 8px rgba(124,58,237,0.32); }
+.quickItem:nth-child(2) .quickIcon { background: linear-gradient(135deg, #1e3a5f, #395886); box-shadow: 0 3px 8px rgba(57,88,134,0.30); }
+.quickItem:nth-child(3) .quickIcon { background: linear-gradient(135deg, #638ECB, #8AAEE0); box-shadow: 0 3px 8px rgba(99,142,203,0.28); }
+.quickItem:nth-child(4) .quickIcon { background: linear-gradient(135deg, #2d4f7c, #5B7FA6); box-shadow: 0 3px 8px rgba(57,88,134,0.28); }
+.quickItem:nth-child(5) .quickIcon { background: linear-gradient(135deg, #395886, #8AAEE0); box-shadow: 0 3px 8px rgba(99,142,203,0.30); }
 
 .quickItem span {
   font-size: 14px;
@@ -410,34 +410,34 @@
   box-shadow: 0 4px 14px rgba(99, 142, 203, 0.38);
 }
 
-/* Card 2 (Browse Profiles) — teal */
+/* Card 2 (Browse Profiles) — deep blue */
 .bottomGrid > .card:nth-child(2) {
-  border-top: 3px solid #0891B2;
-  background: linear-gradient(160deg, rgba(8,145,178,0.06) 0%, white 55%);
+  border-top: 3px solid #395886;
+  background: linear-gradient(160deg, rgba(57,88,134,0.06) 0%, white 55%);
 }
 .bottomGrid > .card:nth-child(2) .actionIcon {
-  background: linear-gradient(135deg, #0E7490, #0891B2);
-  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.35);
+  background: linear-gradient(135deg, #1e3a5f, #395886);
+  box-shadow: 0 4px 14px rgba(57, 88, 134, 0.35);
 }
 
-/* Card 3 (My Workspaces) — purple */
+/* Card 3 (My Workspaces) — soft blue */
 .bottomGrid > .card:nth-child(3) {
-  border-top: 3px solid #7C3AED;
-  background: linear-gradient(160deg, rgba(124,58,237,0.06) 0%, white 55%);
+  border-top: 3px solid #8AAEE0;
+  background: linear-gradient(160deg, rgba(138,174,224,0.07) 0%, white 55%);
 }
 .bottomGrid > .card:nth-child(3) .actionIcon {
-  background: linear-gradient(135deg, #6D28D9, #7C3AED);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  background: linear-gradient(135deg, #638ECB, #8AAEE0);
+  box-shadow: 0 4px 14px rgba(99, 142, 203, 0.32);
 }
 
-/* Card 4 (Organization Profile) — emerald */
+/* Card 4 (Organization Profile) — mid blue */
 .bottomGrid > .card:nth-child(4) {
-  border-top: 3px solid #059669;
-  background: linear-gradient(160deg, rgba(5,150,105,0.06) 0%, white 55%);
+  border-top: 3px solid #5B7FA6;
+  background: linear-gradient(160deg, rgba(91,127,166,0.06) 0%, white 55%);
 }
 .bottomGrid > .card:nth-child(4) .actionIcon {
-  background: linear-gradient(135deg, #047857, #059669);
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  background: linear-gradient(135deg, #395886, #5B7FA6);
+  box-shadow: 0 4px 14px rgba(57, 88, 134, 0.30);
 }
 
 .cardContent {
