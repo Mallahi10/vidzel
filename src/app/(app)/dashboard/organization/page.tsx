@@ -29,6 +29,19 @@ export default function OrganizationDashboard() {
   const [projectCounts, setProjectCounts] = useState({ active: 0, completed: 0 });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [orgName, setOrgName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("organization_profiles")
+      .select("organization_name, contact_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.organization_name) setOrgName(data.organization_name);
+      });
+  }, [user?.id]);
 
   // AJOUTÉ [Étape 5] : chargement des vraies données depuis Supabase
   useEffect(() => {
@@ -108,7 +121,7 @@ export default function OrganizationDashboard() {
       {/* HERO */}
       <div className={styles.hero}>
         <div>
-          <h1>Welcome back</h1>
+          <h1>Welcome back{orgName ? `, ${orgName}` : ""}!</h1>
           <p>Manage your activity and track your work in one place.</p>
           <span className={styles.roleBadge}>Organization Dashboard</span>
         </div>

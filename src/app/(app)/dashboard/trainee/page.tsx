@@ -49,6 +49,7 @@ export default function TraineeDashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [profileScore, setProfileScore] = useState(0);
   const [cvUploaded, setCvUploaded] = useState(false);
+  const [firstName, setFirstName] = useState("");
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [recentApps, setRecentApps] = useState<
     { org_name: string; title: string; status: string; created_at: string }[]
@@ -67,6 +68,7 @@ export default function TraineeDashboard() {
       if (profileData) {
         setProfileScore(calculateProfileScore(profileData));
         setCvUploaded(Boolean(profileData.cv_url));
+        if (profileData.full_name) setFirstName(profileData.full_name.split(" ")[0]);
       }
 
       // Recent applications — 2-step fetch (no join, avoids PostgREST schema cache issues)
@@ -175,7 +177,7 @@ export default function TraineeDashboard() {
       {/* ── HERO ── */}
       <div className={styles.hero}>
         <div>
-          <h1>Welcome back</h1>
+          <h1>Welcome back{firstName ? `, ${firstName}` : ""}!</h1>
           <p>Manage your applications, explore internship offers and track your missions.</p>
           <span className={styles.roleBadge}>Trainee Dashboard</span>
         </div>

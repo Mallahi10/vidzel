@@ -1,73 +1,79 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { CheckCircle, Loader2, Trash2 } from "lucide-react";
 import styles from "./profile.module.css";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
-import { Trash2 } from "lucide-react";
+import {
+  loadStudentProfile,
+  saveStudentProfile,
+  getEmptyStudentProfile,
+  StudentProfile,
+} from "@/lib/localStudentProfiles";
 
-/* ================= OPTIONS ================= */
+/* ================================================================
+   CONSTANTS
+================================================================ */
 
 const IMPACT_AREAS = [
-  "Education",
-  "Health",
-  "Environment",
-  "Technology for Good",
-  "Youth Development",
-  "Human Rights",
-  "Public Policy",
-  "Entrepreneurship",
-  "Social Innovation",
-  "Other",
+  "Education", "Health", "Environment", "Technology for Good",
+  "Youth Development", "Human Rights", "Public Policy",
+  "Entrepreneurship", "Social Innovation", "Other",
 ];
 
 const SKILLS = [
-  "Research",
-  "Academic Writing",
-  "Public Speaking",
-  "Data Analysis",
-  "Graphic Design",
-  "Programming",
-  "Project Management",
-  "Community Outreach",
-  "Content Creation",
-  "Leadership",
-  "Other",
+  "Research", "Academic Writing", "Public Speaking", "Data Analysis",
+  "Graphic Design", "Programming", "Project Management",
+  "Community Outreach", "Content Creation", "Leadership", "Other",
 ];
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DURATIONS = [
-  "Short-term (1–4 weeks)",
-  "Medium (1–3 months)",
-  "Long-term (3+ months)",
-];
 const COLLAB_TYPES = ["Remote", "In-person", "Hybrid"];
 const ROLES = [
-  "Research Support",
-  "Strategy & Planning",
-  "Field Work",
-  "Technical Support",
-  "Communications",
-  "Open to Any",
+  "Research Support", "Strategy & Planning", "Field Work",
+  "Technical Support", "Communications", "Open to Any",
 ];
 
-/* ================= COMPONENT ================= */
+const TOTAL_STEPS = 5;
+const STEP_LABELS = [
+  "Basic Identity",
+  "Impact & Skills",
+  "Collaboration",
+  "Experience & Goals",
+  "Documents",
+];
+
+/* ================================================================
+   COMPONENT
+================================================================ */
 
 export default function StudentProfilePage() {
-  const { user } = useAuth();
-  const [form, setForm] = useState<any>({
-    impactAreas: [],
-    skills: [],
-    days: [],
-  });
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  const [cvUrl, setCvUrl]         = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+
+  const [profile, setProfile] = useState<StudentProfile>(getEmptyStudentProfile());
+
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvUploading, setCvUploading] = useState(false);
-  const [cvDeleting, setCvDeleting]   = useState(false);
+  const [cvDeleting, setCvDeleting] = useState(false);
 
-  // AJOUTÉ [Task 3] : charger le CV existant depuis profiles
+  /* ---- Redirect if not logged in ---- */
+  useEffect(() => {
+    if (!loading && !user) router.push("/login");
+  }, [loading, user, router]);
+
+  /* ---- Load existing profile from Supabase ---- */
   useEffect(() => {
     if (!user) return;
+    loadStudentProfile(user.id).then((p) => {
+      if (p) setProfile(p);
+    });
     supabase
       .from("profiles")
       .select("cv_url")
@@ -78,418 +84,423 @@ export default function StudentProfilePage() {
       });
   }, [user?.id]);
 
-  // AJOUTÉ [Task 3] : upload CV vers Storage + sauvegarde URL dans profiles
+  /* ---- Auto-hide saved banner after 4 s ---- */
+  useEffect(() => {
+    if (!showSaved) return;
+    const t = setTimeout(() => setShowSaved(false), 4000);
+    return () => clearTimeout(t);
+  }, [showSaved]);
+
+  /* ---- Profile completion score ---- */
+  const score = useMemo(() => {
+    const checks = [
+      profile.full_name, profile.location, profile.school, profile.major,
+      profile.year_of_study, profile.graduation_year, profile.headline,
+      profile.impact_areas.length, profile.skills.length,
+      profile.collab_type, profile.role_preference,
+      profile.available_days.length, profile.hours_per_week,
+      profile.experience, profile.goals,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [profile]);
+
+  /* ---- Toggle array field ---- */
+  const toggle = (field: keyof StudentProfile, value: string) => {
+    setProfile((prev) => {
+      const arr = (prev[field] as string[]) ?? [];
+      return {
+        ...prev,
+        [field]: arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value],
+      };
+    });
+  };
+
+  /* ---- Save current step data to Supabase ---- */
+  const saveCurrentStep = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    setIsSaving(true);
+    try {
+      await saveStudentProfile(user.id, profile);
+      setShowSaved(true);
+      return true;
+    } catch (err) {
+      console.error("[StudentProfile] save error:", err);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, profile]);
+
+  /* ---- Navigation ---- */
+  const handleNext = async () => {
+    const ok = await saveCurrentStep();
+    if (!ok) return;
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep((s) => s + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      router.push("/dashboard/student");
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep((s) => Math.max(1, s - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  /* ---- CV handlers ---- */
   const handleCvUpload = async (file: File) => {
     if (!user) return;
     setCvUploading(true);
-
     const filePath = `${user.id}/${Date.now()}_${file.name}`;
-    const { error: uploadError } = await supabase.storage
+    const { error } = await supabase.storage
       .from("cv-uploads")
       .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
-      console.error("[CV upload]", uploadError.message);
-      setCvUploading(false);
-      return;
+    if (!error) {
+      const { data } = supabase.storage.from("cv-uploads").getPublicUrl(filePath);
+      await supabase.from("profiles").update({ cv_url: data.publicUrl }).eq("id", user.id);
+      setCvUrl(data.publicUrl);
     }
-
-    const { data: urlData } = supabase.storage
-      .from("cv-uploads")
-      .getPublicUrl(filePath);
-
-    const publicUrl = urlData.publicUrl;
-
-    await supabase
-      .from("profiles")
-      .update({ cv_url: publicUrl })
-      .eq("id", user.id);
-
-    setCvUrl(publicUrl);
     setCvUploading(false);
   };
 
   const handleDeleteCV = async () => {
     if (!user || !cvUrl) return;
     setCvDeleting(true);
-
-    // Extract the storage path from the full public URL
-    // Format: .../storage/v1/object/public/cv-uploads/<path>
     const marker = "/cv-uploads/";
-    const markerIdx = cvUrl.indexOf(marker);
-    if (markerIdx !== -1) {
-      const storagePath = cvUrl.substring(markerIdx + marker.length);
-      await supabase.storage.from("cv-uploads").remove([storagePath]);
+    const idx = cvUrl.indexOf(marker);
+    if (idx !== -1) {
+      await supabase.storage.from("cv-uploads").remove([cvUrl.substring(idx + marker.length)]);
     }
-
     await supabase.from("profiles").update({ cv_url: null }).eq("id", user.id);
     setCvUrl(null);
     setCvDeleting(false);
   };
 
-  /* ================= PROFILE SCORE ================= */
+  if (loading) return null;
 
-  const score = useMemo(() => {
-    let total = 15;
-    let filled = 0;
+  const progressPct = Math.round((currentStep / TOTAL_STEPS) * 100);
 
-    if (form.fullName) filled++;
-    if (form.location) filled++;
-    if (form.school) filled++;
-    if (form.major) filled++;
-    if (form.year) filled++;
-    if (form.gradYear) filled++;
-    if (form.headline) filled++;
-    if (form.impactAreas.length) filled++;
-    if (form.skills.length) filled++;
-    if (form.collabType) filled++;
-    if (form.role) filled++;
-    if (form.days.length) filled++;
-    if (form.hours) filled++;
-    if (form.experience) filled++;
-    if (form.goals) filled++;
-
-    return Math.round((filled / total) * 100);
-  }, [form]);
-
-  /* ================= HELPERS ================= */
-
-  const toggleMulti = (field: string, value: string) => {
-    setForm((prev: any) => ({
-      ...prev,
-      [field]: prev[field]?.includes(value)
-        ? prev[field].filter((v: string) => v !== value)
-        : [...(prev[field] || []), value],
-    }));
-  };
-
-  /* ================= UI ================= */
-
+  /* ================================================================
+     RENDER
+  ================================================================ */
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Student Profile</h1>
-      <p className={styles.muted}>
-        Build your impact-focused academic profile.
-      </p>
 
-      {/* PROFILE SCORE */}
-      <div className={styles.scoreBox}>
-        <div className={styles.scoreLabel}>Profile Completion</div>
-        <div className={styles.scoreValue}>{score}%</div>
+      {/* ── PAGE HEADER ── */}
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className={styles.title}>Student Profile</h1>
+          <p className={styles.muted}>Build your impact-focused academic profile.</p>
+        </div>
+        {showSaved && (
+          <div className={styles.autoSave}>
+            <CheckCircle size={14} />
+            All changes saved to cloud
+          </div>
+        )}
+      </div>
+
+      {/* ── STEP PROGRESS ── */}
+      <div className={styles.progressWrapper}>
+        <div className={styles.progressHeader}>
+          <span className={styles.stepLabel}>
+            Step {currentStep} of {TOTAL_STEPS} &mdash;{" "}
+            <strong>{STEP_LABELS[currentStep - 1]}</strong>
+          </span>
+          <span className={styles.scoreChip}>{score}% profile complete</span>
+        </div>
         <div className={styles.progressTrack}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${score}%` }}
-          />
+          <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
         </div>
-      </div>
-
-      {/* ================= BASIC IDENTITY ================= */}
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Basic Identity</h2>
-
-        <div className={styles.formGrid}>
-          <Field label="Full Name">
-            <input
-              placeholder="Your legal full name"
-              onChange={(e) =>
-                setForm({ ...form, fullName: e.target.value })
-              }
+        <div className={styles.stepDots}>
+          {STEP_LABELS.map((label, i) => (
+            <div
+              key={label}
+              title={label}
+              className={[
+                styles.dot,
+                i + 1 < currentStep ? styles.dotDone : "",
+                i + 1 === currentStep ? styles.dotActive : "",
+              ].join(" ")}
             />
-          </Field>
-
-          <Field label="Location">
-            <input
-              placeholder="City, Country"
-              onChange={(e) =>
-                setForm({ ...form, location: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="University / School">
-            <input
-              placeholder="Name of your institution"
-              onChange={(e) =>
-                setForm({ ...form, school: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="Degree / Major">
-            <input
-              placeholder="Your academic focus"
-              onChange={(e) =>
-                setForm({ ...form, major: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="Year of Study">
-            <input
-              placeholder="Example: 2nd Year"
-              onChange={(e) =>
-                setForm({ ...form, year: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="Expected Graduation Year">
-            <input
-              placeholder="Example: 2027"
-              onChange={(e) =>
-                setForm({ ...form, gradYear: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="Headline" full>
-            <input
-              placeholder="Public Policy student passionate about youth education reform."
-              onChange={(e) =>
-                setForm({ ...form, headline: e.target.value })
-              }
-            />
-          </Field>
-        </div>
-      </div>
-
-      {/* ================= IMPACT AREAS ================= */}
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Impact Interests</h2>
-
-        <div className={styles.pills}>
-          {IMPACT_AREAS.map((area) => (
-            <button
-              key={area}
-              type="button"
-              className={`${styles.pill} ${
-                form.impactAreas.includes(area)
-                  ? styles.pillActive
-                  : ""
-              }`}
-              onClick={() => toggleMulti("impactAreas", area)}
-            >
-              {area}
-            </button>
           ))}
         </div>
-
-        {form.impactAreas.includes("Other") && (
-          <div className={styles.fieldFull}>
-            <input
-              placeholder="Specify your impact area"
-              onChange={(e) =>
-                setForm({ ...form, impactOther: e.target.value })
-              }
-            />
-          </div>
-        )}
       </div>
 
-      {/* ================= SKILLS ================= */}
-
+      {/* ── FORM CARD ── */}
       <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Skills & Capabilities</h2>
 
-        <div className={styles.pills}>
-          {SKILLS.map((skill) => (
-            <button
-              key={skill}
-              type="button"
-              className={`${styles.pill} ${
-                form.skills.includes(skill)
-                  ? styles.pillActive
-                  : ""
-              }`}
-              onClick={() => toggleMulti("skills", skill)}
-            >
-              {skill}
-            </button>
-          ))}
-        </div>
-
-        {form.skills.includes("Other") && (
-          <div className={styles.fieldFull}>
-            <input
-              placeholder="Specify additional skill"
-              onChange={(e) =>
-                setForm({ ...form, skillOther: e.target.value })
-              }
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ================= COLLAB ================= */}
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Collaboration Preferences</h2>
-
-        <div className={styles.formGrid}>
-          <Field label="Collaboration Type">
-            <select
-              onChange={(e) =>
-                setForm({ ...form, collabType: e.target.value })
-              }
-            >
-              <option value="">Select</option>
-              {COLLAB_TYPES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Preferred Role">
-            <select
-              onChange={(e) =>
-                setForm({ ...form, role: e.target.value })
-              }
-            >
-              <option value="">Select</option>
-              {ROLES.map((r) => (
-                <option key={r}>{r}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
-      </div>
-
-      {/* ================= AVAILABILITY ================= */}
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Availability</h2>
-
-        <div className={styles.pills}>
-          {DAYS.map((day) => (
-            <button
-              key={day}
-              type="button"
-              className={`${styles.pill} ${
-                form.days.includes(day)
-                  ? styles.pillActive
-                  : ""
-              }`}
-              onClick={() => toggleMulti("days", day)}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.formGrid}>
-          <Field label="Hours per Week">
-            <input
-              placeholder="Example: 8–10 hours"
-              onChange={(e) =>
-                setForm({ ...form, hours: e.target.value })
-              }
-            />
-          </Field>
-
-          <Field label="Duration Preference">
-            <select
-              onChange={(e) =>
-                setForm({ ...form, duration: e.target.value })
-              }
-            >
-              <option value="">Select</option>
-              {DURATIONS.map((d) => (
-                <option key={d}>{d}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
-      </div>
-
-      {/* ================= EXPERIENCE ================= */}
-
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>Experience & Goals</h2>
-
-        <Field label="Relevant Experience" full>
-          <textarea
-            placeholder="Describe projects, internships, volunteering, leadership roles, or real-world work you’ve done."
-            onChange={(e) =>
-              setForm({ ...form, experience: e.target.value })
-            }
-          />
-        </Field>
-
-        <Field label="What do you hope to gain from Vidzel?" full>
-          <textarea
-            placeholder="Example: I want hands-on experience in policy design and mentorship in social innovation."
-            onChange={(e) =>
-              setForm({ ...form, goals: e.target.value })
-            }
-          />
-        </Field>
-      </div>
-
-      {/* AJOUTÉ [Task 3] : section upload CV/Resume */}
-      <div className={styles.card}>
-        <h2 className={styles.sectionTitle}>CV / Resume</h2>
-
-        {cvUrl && (
-          <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "0.9rem", color: "#166534", fontWeight: 600 }}>
-              ✅ CV uploaded
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <a
-                href={cvUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: "0.85rem", color: "#2563eb", fontWeight: 600 }}
-              >
-                View current CV
-              </a>
-              <button
-                onClick={handleDeleteCV}
-                disabled={cvDeleting}
-                title="Delete CV"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: cvDeleting ? "wait" : "pointer",
-                  padding: "2px",
-                  display: "flex",
-                  alignItems: "center",
-                  color: "#dc2626",
-                  opacity: cvDeleting ? 0.5 : 1,
-                  transition: "opacity 0.15s",
-                }}
-              >
-                <Trash2 size={16} />
-              </button>
+        {/* ── STEP 1 : BASIC IDENTITY ── */}
+        {currentStep === 1 && (
+          <>
+            <h2 className={styles.sectionTitle}>Basic Identity</h2>
+            <div className={styles.formGrid}>
+              <Field label="Full Name">
+                <input
+                  value={profile.full_name}
+                  placeholder="Your legal full name"
+                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                />
+              </Field>
+              <Field label="Location">
+                <input
+                  value={profile.location}
+                  placeholder="City, Country"
+                  onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                />
+              </Field>
+              <Field label="University / School">
+                <input
+                  value={profile.school}
+                  placeholder="Name of your institution"
+                  onChange={(e) => setProfile({ ...profile, school: e.target.value })}
+                />
+              </Field>
+              <Field label="Degree / Major">
+                <input
+                  value={profile.major}
+                  placeholder="Your academic focus"
+                  onChange={(e) => setProfile({ ...profile, major: e.target.value })}
+                />
+              </Field>
+              <Field label="Year of Study">
+                <input
+                  value={profile.year_of_study}
+                  placeholder="Example: 2nd Year"
+                  onChange={(e) => setProfile({ ...profile, year_of_study: e.target.value })}
+                />
+              </Field>
+              <Field label="Expected Graduation Year">
+                <input
+                  value={profile.graduation_year}
+                  placeholder="Example: 2027"
+                  onChange={(e) => setProfile({ ...profile, graduation_year: e.target.value })}
+                />
+              </Field>
+              <Field label="Languages">
+                <input
+                  value={profile.languages}
+                  placeholder="English, French…"
+                  onChange={(e) => setProfile({ ...profile, languages: e.target.value })}
+                />
+              </Field>
+              <Field label="Headline" full>
+                <input
+                  value={profile.headline}
+                  placeholder="Public Policy student passionate about youth education reform."
+                  onChange={(e) => setProfile({ ...profile, headline: e.target.value })}
+                />
+              </Field>
             </div>
-          </div>
+          </>
         )}
 
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, fontSize: "0.9rem", color: "#374151" }}>
-          {cvUrl ? "Replace CV" : "Upload your CV"} (PDF)
-        </label>
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx"
-          disabled={cvUploading}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleCvUpload(file);
-          }}
-          style={{ width: "100%", marginBottom: "0.5rem" }}
-        />
-        {cvUploading && (
-          <p style={{ fontSize: "0.85rem", color: "#2563eb", margin: 0 }}>Uploading...</p>
+        {/* ── STEP 2 : IMPACT & SKILLS ── */}
+        {currentStep === 2 && (
+          <>
+            <h2 className={styles.sectionTitle}>Impact Interests</h2>
+            <p className={styles.cardHint}>Select all areas that align with your goals.</p>
+            <div className={styles.pills}>
+              {IMPACT_AREAS.map((area) => (
+                <button
+                  key={area}
+                  type="button"
+                  className={`${styles.pill} ${profile.impact_areas.includes(area) ? styles.pillActive : ""}`}
+                  onClick={() => toggle("impact_areas", area)}
+                >
+                  {area}
+                </button>
+              ))}
+            </div>
+
+            <h2 className={styles.sectionTitle} style={{ marginTop: 28 }}>Skills & Capabilities</h2>
+            <p className={styles.cardHint}>Pick at least 2 skills you can contribute.</p>
+            <div className={styles.pills}>
+              {SKILLS.map((skill) => (
+                <button
+                  key={skill}
+                  type="button"
+                  className={`${styles.pill} ${profile.skills.includes(skill) ? styles.pillActive : ""}`}
+                  onClick={() => toggle("skills", skill)}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
+          </>
         )}
+
+        {/* ── STEP 3 : COLLABORATION & AVAILABILITY ── */}
+        {currentStep === 3 && (
+          <>
+            <h2 className={styles.sectionTitle}>Collaboration Preferences</h2>
+            <div className={styles.formGrid}>
+              <Field label="Collaboration Type">
+                <select
+                  value={profile.collab_type}
+                  onChange={(e) => setProfile({ ...profile, collab_type: e.target.value })}
+                >
+                  <option value="">Select</option>
+                  {COLLAB_TYPES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </Field>
+              <Field label="Preferred Role">
+                <select
+                  value={profile.role_preference}
+                  onChange={(e) => setProfile({ ...profile, role_preference: e.target.value })}
+                >
+                  <option value="">Select</option>
+                  {ROLES.map((r) => <option key={r}>{r}</option>)}
+                </select>
+              </Field>
+            </div>
+
+            <h2 className={styles.sectionTitle} style={{ marginTop: 28 }}>Availability</h2>
+            <p className={styles.cardHint}>Select the days you are typically free.</p>
+            <div className={styles.pills}>
+              {DAYS.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  className={`${styles.pill} ${profile.available_days.includes(day) ? styles.pillActive : ""}`}
+                  onClick={() => toggle("available_days", day)}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+            <div className={styles.formGrid} style={{ marginTop: 16 }}>
+              <Field label="Hours per Week">
+                <input
+                  value={profile.hours_per_week}
+                  placeholder="Example: 8–10 hours"
+                  onChange={(e) => setProfile({ ...profile, hours_per_week: e.target.value })}
+                />
+              </Field>
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 4 : EXPERIENCE & GOALS ── */}
+        {currentStep === 4 && (
+          <>
+            <h2 className={styles.sectionTitle}>Experience & Goals</h2>
+            <div className={styles.fieldFull} style={{ marginBottom: 16 }}>
+              <label>Relevant Experience</label>
+              <textarea
+                value={profile.experience}
+                placeholder="Describe projects, internships, volunteering, leadership roles, or real-world work you've done."
+                onChange={(e) => setProfile({ ...profile, experience: e.target.value })}
+              />
+            </div>
+            <div className={styles.fieldFull}>
+              <label>What do you hope to gain from Vidzel?</label>
+              <textarea
+                value={profile.goals}
+                placeholder="Example: I want hands-on experience in policy design and mentorship in social innovation."
+                onChange={(e) => setProfile({ ...profile, goals: e.target.value })}
+              />
+            </div>
+          </>
+        )}
+
+        {/* ── STEP 5 : DOCUMENTS & SUMMARY ── */}
+        {currentStep === 5 && (
+          <>
+            <h2 className={styles.sectionTitle}>CV / Resume</h2>
+
+            {cvUrl && (
+              <div className={styles.cvBanner}>
+                <span>✅ CV uploaded successfully</span>
+                <div className={styles.cvBannerActions}>
+                  <a href={cvUrl} target="_blank" rel="noopener noreferrer">
+                    View current CV
+                  </a>
+                  <button
+                    onClick={handleDeleteCV}
+                    disabled={cvDeleting}
+                    className={styles.deleteBtn}
+                    title="Delete CV"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <label className={styles.cvLabel}>
+              {cvUrl ? "Replace CV" : "Upload your CV"} (PDF, DOC)
+            </label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              disabled={cvUploading}
+              className={styles.fileInput}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleCvUpload(file);
+              }}
+            />
+            {cvUploading && <p className={styles.uploading}>Uploading…</p>}
+
+            {/* Completion summary */}
+            <div className={styles.completionCard}>
+              <div className={styles.completionScore}>{score}%</div>
+              <div>
+                <p className={styles.completionTitle}>Profile Completion</p>
+                <p className={styles.completionHint}>
+                  {score < 50 && "Add your basic info and skills to stand out to organizations."}
+                  {score >= 50 && score < 80 && "Almost there! A few more details will boost your visibility."}
+                  {score >= 80 && score < 100 && "Excellent! Just a couple of fields missing."}
+                  {score === 100 && "Your profile is 100% complete — ready to match!"}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── STICKY FOOTER NAVIGATION ── */}
+        <div className={styles.stickyFooter}>
+          {currentStep > 1 ? (
+            <button
+              type="button"
+              className={styles.btnBack}
+              onClick={handleBack}
+              disabled={isSaving}
+            >
+              ← Back
+            </button>
+          ) : (
+            <div />
+          )}
+
+          <button
+            type="button"
+            className={styles.btnNext}
+            onClick={handleNext}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <span className={styles.spinnerWrap}>
+                <Loader2 size={15} className={styles.spinIcon} />
+                Saving…
+              </span>
+            ) : currentStep === TOTAL_STEPS ? (
+              "Complete Profile 🎉"
+            ) : (
+              "Save & Next →"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ================= FIELD COMPONENT ================= */
+/* ================================================================
+   FIELD HELPER
+================================================================ */
 
 function Field({
   label,
@@ -501,13 +512,7 @@ function Field({
   full?: boolean;
 }) {
   return (
-    <div
-      className={
-        full
-          ? `${styles.field} ${styles.fieldFull}`
-          : styles.field
-      }
-    >
+    <div className={full ? `${styles.field} ${styles.fieldFull}` : styles.field}>
       <label>{label}</label>
       {children}
     </div>

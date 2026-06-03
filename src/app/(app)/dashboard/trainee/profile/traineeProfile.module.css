@@ -280,3 +280,257 @@
   .page { padding: 16px 12px; }
   .card { padding: 20px 16px; }
 }
+
+/* ================================================================
+   WIZARD — PAGE HEADER + AUTO-SAVE
+================================================================ */
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.autoSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  animation: fadeSlideIn 0.3s ease both;
+  white-space: nowrap;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   WIZARD — STEP PROGRESS TRACKER
+================================================================ */
+
+.progressWrapper {
+  background: linear-gradient(160deg, rgba(14,165,233,0.06) 0%, #ffffff 60%);
+  border-radius: 20px;
+  padding: 16px 20px 14px;
+  box-shadow: 0 4px 18px rgba(14,165,233,0.10);
+  border: 1.5px solid rgba(14,165,233,0.16);
+  border-top: 3px solid #0EA5E9;
+  margin-bottom: 20px;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stepLabel {
+  font-size: 13px;
+  color: #475569;
+}
+
+.stepLabel strong {
+  color: #0284C7;
+}
+
+.scoreChip {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0284C7;
+  background: rgba(14,165,233,0.12);
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.stepDots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dot {
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: rgba(14,165,233,0.20);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dotActive {
+  width: 24px;
+  background: #0EA5E9;
+}
+
+.dotDone {
+  background: #0284C7;
+}
+
+/* Override card bottom padding for wizard */
+.card {
+  padding-bottom: 0;
+}
+
+/* ================================================================
+   WIZARD — STICKY FOOTER NAVIGATION
+================================================================ */
+
+.stickyFooter {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0 20px;
+  margin-top: 28px;
+  border-top: 1px solid rgba(14,165,233,0.15);
+  background: linear-gradient(to top, #ffffff 70%, rgba(255,255,255,0));
+}
+
+.btnBack {
+  background: transparent;
+  border: 1.5px solid rgba(14,165,233,0.35);
+  color: #0284C7;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btnBack:hover:not(:disabled) {
+  background: rgba(14,165,233,0.07);
+  border-color: rgba(14,165,233,0.55);
+}
+
+.btnBack:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btnNext {
+  background: linear-gradient(135deg, #0284C7, #0EA5E9);
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px 30px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 14px rgba(14,165,233,0.30);
+  min-width: 148px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnNext:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(14,165,233,0.38);
+}
+
+.btnNext:active:not(:disabled) { transform: translateY(0); }
+.btnNext:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.spinnerWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinIcon {
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ================================================================
+   WIZARD — CV SECTION
+================================================================ */
+
+.cvBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cvBannerActions a {
+  font-size: 13px;
+  color: #0284C7;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.cvBannerActions a:hover { text-decoration: underline; }
+
+.deleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: opacity 0.15s;
+}
+
+.deleteBtn:disabled { opacity: 0.4; cursor: wait; }
+
+/* ================================================================
+   WIZARD — COMPLETION SUMMARY CARD
+================================================================ */
+
+.completionCard {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(14,165,233,0.07), rgba(56,189,248,0.04));
+  border-radius: 16px;
+  border: 1.5px solid rgba(14,165,233,0.18);
+}
+
+.completionScore {
+  font-size: 38px;
+  font-weight: 800;
+  color: #0284C7;
+  min-width: 72px;
+  line-height: 1;
+}
+
+.completionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 5px;
+}
+
+.completionHint {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+}
+
+.cardHint {
+  font-size: 13px;
+  color: #64748b;
+  margin: -10px 0 14px;
+}

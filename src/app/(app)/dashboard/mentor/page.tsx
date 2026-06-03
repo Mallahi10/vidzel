@@ -30,6 +30,19 @@ export default function MentorDashboard() {
     pendingReviews:     0,
     completedProjects:  0,
   });
+  const [firstName, setFirstName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("mentor_profiles")
+      .select("full_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.full_name) setFirstName(data.full_name.split(" ")[0]);
+      });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -70,7 +83,7 @@ export default function MentorDashboard() {
       {/* HERO */}
       <div className={styles.hero}>
         <div>
-          <h1>Welcome back</h1>
+          <h1>Welcome back{firstName ? `, ${firstName}` : ""}!</h1>
           <p>Support projects, guide participants, and track your impact.</p>
           <span className={styles.roleBadge}>Mentor Dashboard</span>
         </div>

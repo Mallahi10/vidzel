@@ -24,6 +24,19 @@ export default function VolunteerDashboard() {
 
   // AJOUTÉ : vraies stats depuis Supabase
   const [stats, setStats] = useState({ applications: 0, activeProjects: 0, pending: 0, completed: 0 });
+  const [firstName, setFirstName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("volunteer_profiles")
+      .select("full_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.full_name) setFirstName(data.full_name.split(" ")[0]);
+      });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -53,7 +66,7 @@ export default function VolunteerDashboard() {
       {/* ================= HERO ================= */}
       <div className={styles.hero}>
         <div>
-          <h1>Welcome back</h1>
+          <h1>Welcome back{firstName ? `, ${firstName}` : ""}!</h1>
           <p>Track your applications, projects, and contributions.</p>
           <span className={styles.roleBadge}>Volunteer Dashboard</span>
         </div>

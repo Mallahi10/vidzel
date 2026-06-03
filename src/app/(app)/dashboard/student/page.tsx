@@ -24,6 +24,19 @@ import {
 export default function StudentDashboard() {
   const { user, loading } = useAuth();
   const [stats, setStats] = useState({ applications: 0, activeProjects: 0, pendingReviews: 0, completedProjects: 0 });
+  const [firstName, setFirstName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("student_profiles")
+      .select("full_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.full_name) setFirstName(data.full_name.split(" ")[0]);
+      });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -53,7 +66,7 @@ export default function StudentDashboard() {
       {/* ================= HERO ================= */}
       <div className={styles.hero}>
         <div>
-          <h1>Welcome back</h1>
+          <h1>Welcome back{firstName ? `, ${firstName}` : ""}!</h1>
           <p>
             Track your learning journey, project contributions, and skill
             development.
