@@ -32,9 +32,33 @@ export default function CertificatePage() {
   const { projectId } = useParams() as { projectId: string };
   const { user } = useAuth();
 
-  const [cert,     setCert]     = useState<CertData | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [cert,        setCert]        = useState<CertData | null>(null);
+  const [loading,     setLoading]     = useState(true);
+  const [notFound,    setNotFound]    = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  /* Fetch full name from the role-specific profile table */
+  useEffect(() => {
+    if (!user) return;
+    const tableMap: Record<string, { table: string; col: string }> = {
+      student:      { table: "student_profiles",     col: "full_name" },
+      trainee:      { table: "trainee_profiles",      col: "full_name" },
+      mentor:       { table: "mentor_profiles",       col: "full_name" },
+      volunteer:    { table: "volunteer_profiles",    col: "full_name" },
+      organization: { table: "organization_profiles", col: "organization_name" },
+    };
+    const mapping = tableMap[user.role as string];
+    if (!mapping) return;
+    supabase
+      .from(mapping.table)
+      .select(mapping.col)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const row = data as Record<string, string> | null;
+        if (row?.[mapping.col]) setProfileName(row[mapping.col]);
+      });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user || !projectId) return;
@@ -78,7 +102,7 @@ export default function CertificatePage() {
   const issuedDate      = cert.issued_at
     ? new Date(cert.issued_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
     : new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
-  const participantName = cert.user_name  || user.email || "Participant";
+  const participantName = profileName || cert.user_name || user.email || "Participant";
   const projectTitle    = cert.project_title || "Project";
   const orgName         = cert.organization_email || "Vidzel Organization";
   const role            = cert.role ? cert.role.charAt(0).toUpperCase() + cert.role.slice(1) : "Member";
